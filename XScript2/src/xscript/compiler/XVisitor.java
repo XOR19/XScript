@@ -4,6 +4,7 @@ import xscript.compiler.XTree.XAnnotation;
 import xscript.compiler.XTree.XBlock;
 import xscript.compiler.XTree.XBreak;
 import xscript.compiler.XTree.XCast;
+import xscript.compiler.XTree.XCatch;
 import xscript.compiler.XTree.XClassDecl;
 import xscript.compiler.XTree.XClassFile;
 import xscript.compiler.XTree.XConstant;
@@ -27,6 +28,7 @@ import xscript.compiler.XTree.XOperatorStatement;
 import xscript.compiler.XTree.XReturn;
 import xscript.compiler.XTree.XSynchroized;
 import xscript.compiler.XTree.XThrow;
+import xscript.compiler.XTree.XTry;
 import xscript.compiler.XTree.XType;
 import xscript.compiler.XTree.XTypeParam;
 import xscript.compiler.XTree.XVarDecl;
@@ -98,5 +100,9 @@ public interface XVisitor {
 	public void visitCast(XCast xCast);
 
 	public void visitLambda(XLambda xLambda);
+
+	public void visitTry(XTry xTry);
+
+	public void visitCatch(XCatch xCatch);
 
 }

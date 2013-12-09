@@ -6,6 +6,7 @@ import xscript.compiler.XTree.XAnnotation;
 import xscript.compiler.XTree.XBlock;
 import xscript.compiler.XTree.XBreak;
 import xscript.compiler.XTree.XCast;
+import xscript.compiler.XTree.XCatch;
 import xscript.compiler.XTree.XClassDecl;
 import xscript.compiler.XTree.XClassFile;
 import xscript.compiler.XTree.XConstant;
@@ -29,6 +30,7 @@ import xscript.compiler.XTree.XOperatorStatement;
 import xscript.compiler.XTree.XReturn;
 import xscript.compiler.XTree.XSynchroized;
 import xscript.compiler.XTree.XThrow;
+import xscript.compiler.XTree.XTry;
 import xscript.compiler.XTree.XType;
 import xscript.compiler.XTree.XTypeParam;
 import xscript.compiler.XTree.XVarDecl;
@@ -227,6 +229,21 @@ public class XTreeChanger implements XVisitor {
 	public void visitLambda(XLambda xLambda) {
 		xLambda.params = visitTree(xLambda.params);
 		xLambda.statement = visitTree(xLambda.statement);
+	}
+
+	@Override
+	public void visitTry(XTry xTry) {
+		xTry.resource = visitTree(xTry.resource);
+		xTry.block = visitTree(xTry.block);
+		xTry.catchs = visitTree(xTry.catchs);
+		xTry.finallyBlock = visitTree(xTry.finallyBlock);
+	}
+
+	@Override
+	public void visitCatch(XCatch xCatch) {
+		xCatch.modifier = visitTree(xCatch.modifier);
+		xCatch.types = visitTree(xCatch.types);
+		xCatch.block = visitTree(xCatch.block);
 	}
 
 }

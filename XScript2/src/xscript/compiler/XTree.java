@@ -10,7 +10,7 @@ public abstract class XTree{
 		FOR, IF, RETURN, THROW, VARDECLS, GROUP, SYNCHRONIZED, FLOATLITERAL,
 		DOUBLELITERAL, LONGLITERAL, INTLITERAL, CHARLITERAL, STRINGLITERAL, 
 		TRUE, FALSE, NULL, METHODCALL, NEW, OPERATOR, OPERATORSUFFIXPREFIX, 
-		INDEX, IFOPERATOR, CAST, LAMBDA;
+		INDEX, IFOPERATOR, CAST, LAMBDA, TRY, CATCH;
 	}
 	
 	public static class XError extends XTree{
@@ -815,6 +815,66 @@ public abstract class XTree{
 		@Override
 		public void accept(XVisitor v) {
 			v.visitLambda(this);
+		}
+		
+	}
+	
+	public static class XTry extends XStatement{
+		
+		public XStatement resource;
+		
+		public XStatement block;
+		
+		public List<XCatch> catchs;
+		
+		public XStatement finallyBlock;
+		
+		public XTry(XLineDesk line, XStatement resource, XStatement block, List<XCatch> catchs, XStatement finallyBlock) {
+			super(line);
+			this.resource = resource;
+			this.block = block;
+			this.catchs = catchs;
+			this.finallyBlock = finallyBlock;
+		}
+
+		@Override
+		public XTag getTag() {
+			return XTag.TRY;
+		}
+
+		@Override
+		public void accept(XVisitor v) {
+			v.visitTry(this);
+		}
+		
+	}
+	
+	public static class XCatch extends XTree{
+
+		public XModifier modifier;
+		
+		public List<XType> types;
+		
+		public String varName;
+		
+		public XStatement block;
+		
+		public XCatch(XLineDesk line, XModifier modifier, List<XType> types, String varName, XStatement block) {
+			super(line);
+			this.modifier = modifier;
+			this.types = types;
+			this.varName = varName;
+			this.block = block;
+		}
+
+		@Override
+		public XTag getTag() {
+			return XTag.CATCH;
+		}
+
+		@Override
+		public void accept(XVisitor v) {
+			v.visitCatch(this);
 		}
 		
 	}

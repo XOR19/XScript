@@ -15,6 +15,7 @@ import xscript.compiler.XTree.XAnnotation;
 import xscript.compiler.XTree.XBlock;
 import xscript.compiler.XTree.XBreak;
 import xscript.compiler.XTree.XCast;
+import xscript.compiler.XTree.XCatch;
 import xscript.compiler.XTree.XClassDecl;
 import xscript.compiler.XTree.XClassFile;
 import xscript.compiler.XTree.XConstant;
@@ -38,6 +39,8 @@ import xscript.compiler.XTree.XReturn;
 import xscript.compiler.XTree.XStatement;
 import xscript.compiler.XTree.XSynchroized;
 import xscript.compiler.XTree.XTag;
+import xscript.compiler.XTree.XThrow;
+import xscript.compiler.XTree.XTry;
 import xscript.compiler.XTree.XType;
 import xscript.compiler.XTree.XTypeParam;
 import xscript.compiler.XTree.XVarDecl;
@@ -443,7 +446,6 @@ public class XParser {
 				startLineBlock();
 				name = qualident();
 				if(token.kind==XTokenKind.SMALLER){
-					knowRealy = true;
 					nextToken();
 					typeParam = new ArrayList<XType>();
 					typeParam.add(makeType());
@@ -451,7 +453,8 @@ public class XParser {
 						nextToken();
 						typeParam.add(makeType());
 					}
-					expected(XTokenKind.GREATER);
+					if(expected(XTokenKind.GREATER))
+						knowRealy = true;
 				}
 				while(token.kind==XTokenKind.LINDEX){
 					nextToken();
@@ -505,7 +508,7 @@ public class XParser {
 					}
 				}
 			}
-			if((knowRealy || token.kind==XTokenKind.RGROUP) && name != null){
+			if((knowRealy || (token.kind==XTokenKind.RGROUP && !unhandledUnexpected)) && name != null){
 				endMessageBuffer(true);
 				unhandledUnexpected |= error;
 				lexer.sure();
@@ -856,7 +859,8 @@ public class XParser {
 			if(token.kind==XTokenKind.SEMICOLON){
 				nextToken();
 			}else{
-				statement = makeStatement();
+				statement = makeStatement(false);
+				expected(XTokenKind.SEMICOLON);
 			}
 			if(token.kind==XTokenKind.SEMICOLON){
 				nextToken();
@@ -881,11 +885,36 @@ public class XParser {
 		case THROW:
 			nextToken();
 			statement = makeInnerStatement();
-			return new XReturn(endLineBlock(), statement);
+			return new XThrow(endLineBlock(), statement);
 		case TRY:
 			nextToken();
-			parserMessage(XMessageLevel.ERROR, "unexpected.keyword", token.kind.name);
-			return null;
+			if(token.kind==XTokenKind.LGROUP){
+				statement = makeStatement(false);
+				expected(XTokenKind.RGROUP);
+			}
+			block = makeBlock();
+			List<XCatch> catchs = new ArrayList<XCatch>();
+			while(token.kind==XTokenKind.CATCH){
+				startLineBlock();
+				nextToken();
+				XModifier modifier = makeModifier();
+				List<XType> types = new ArrayList<XType>();
+				types.add(makeType());
+				while(token.kind==XTokenKind.OR){
+					nextToken();
+					types.add(makeType());
+				}
+				String name = ident();
+				block2 = makeBlock();
+				catchs.add(new XCatch(endLineBlock(), modifier, types, name, block2));
+			}
+			if(token.kind==XTokenKind.FINALLY){
+				nextToken();
+				statement2 = makeBlock();
+			}else if(catchs.isEmpty()){
+				expected(XTokenKind.FINALLY);
+			}
+			return new XTry(endLineBlock(), statement, block, catchs, statement2);
 		case LBRAKET:
 			endLineBlock();
 			return makeBlock();
@@ -935,7 +964,7 @@ public class XParser {
 		}
 	}
 	
-	public XStatement makeStatement(){
+	public XStatement makeStatement(boolean needEnding){
 		XStatement block = null;
 		XStatement statement = null;
 		XToken oldtoken;
@@ -1002,7 +1031,8 @@ public class XParser {
 				endMessageBuffer(true);
 				lexer.sure();
 				unhandledUnexpected|=bv;
-				expected(XTokenKind.SEMICOLON);
+				if(needEnding)
+					expected(XTokenKind.SEMICOLON);
 				return decl;
 			}else{
 				endMessageBuffer(false);
@@ -1028,7 +1058,7 @@ public class XParser {
 		if(expected(XTokenKind.LBRAKET)){
 			List<XStatement> statements = new ArrayList<XTree.XStatement>();
 			while(token.kind!=XTokenKind.RBRAKET && token.kind!=XTokenKind.EOF){
-				statements.add(makeStatement());
+				statements.add(makeStatement(true));
 				if(unhandledUnexpected){
 					skip(false, true, true, true, false, true, true);
 				}
