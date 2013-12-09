@@ -5,6 +5,7 @@ import java.util.List;
 import xscript.compiler.XTree.XAnnotation;
 import xscript.compiler.XTree.XBlock;
 import xscript.compiler.XTree.XBreak;
+import xscript.compiler.XTree.XCast;
 import xscript.compiler.XTree.XClassDecl;
 import xscript.compiler.XTree.XClassFile;
 import xscript.compiler.XTree.XConstant;
@@ -18,6 +19,7 @@ import xscript.compiler.XTree.XIf;
 import xscript.compiler.XTree.XIfOperator;
 import xscript.compiler.XTree.XImport;
 import xscript.compiler.XTree.XIndex;
+import xscript.compiler.XTree.XLambda;
 import xscript.compiler.XTree.XMethodCall;
 import xscript.compiler.XTree.XMethodDecl;
 import xscript.compiler.XTree.XModifier;
@@ -271,6 +273,18 @@ public class XTreePrinter implements XVisitor {
 		accept("eq", xIfOperator.left);
 		accept("then", xIfOperator.statement);
 		accept("else", xIfOperator.right);
+	}
+
+	@Override
+	public void visitCast(XCast xCast) {
+		accept("type", xCast.type);
+		accept("statement", xCast.statement);
+	}
+
+	@Override
+	public void visitLambda(XLambda xLambda) {
+		accept("params", xLambda.params);
+		accept("statement", xLambda.statement);
 	}
 
 }

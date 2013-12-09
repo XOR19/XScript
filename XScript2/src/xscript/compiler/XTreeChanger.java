@@ -5,6 +5,7 @@ import java.util.List;
 import xscript.compiler.XTree.XAnnotation;
 import xscript.compiler.XTree.XBlock;
 import xscript.compiler.XTree.XBreak;
+import xscript.compiler.XTree.XCast;
 import xscript.compiler.XTree.XClassDecl;
 import xscript.compiler.XTree.XClassFile;
 import xscript.compiler.XTree.XConstant;
@@ -18,6 +19,7 @@ import xscript.compiler.XTree.XIf;
 import xscript.compiler.XTree.XIfOperator;
 import xscript.compiler.XTree.XImport;
 import xscript.compiler.XTree.XIndex;
+import xscript.compiler.XTree.XLambda;
 import xscript.compiler.XTree.XMethodCall;
 import xscript.compiler.XTree.XMethodDecl;
 import xscript.compiler.XTree.XModifier;
@@ -213,6 +215,18 @@ public class XTreeChanger implements XVisitor {
 		xIfOperator.left = visitTree(xIfOperator.left);
 		xIfOperator.statement = visitTree(xIfOperator.statement);
 		xIfOperator.right = visitTree(xIfOperator.right);
+	}
+
+	@Override
+	public void visitCast(XCast xCast) {
+		xCast.type = visitTree(xCast.type);
+		xCast.statement = visitTree(xCast.statement);
+	}
+
+	@Override
+	public void visitLambda(XLambda xLambda) {
+		xLambda.params = visitTree(xLambda.params);
+		xLambda.statement = visitTree(xLambda.statement);
 	}
 
 }

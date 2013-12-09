@@ -9,7 +9,8 @@ public abstract class XTree{
 		TYPEPARAM, VARDECL, METHODDECL, BLOCK, BREAK, CONTINUE, DO, WHILE, 
 		FOR, IF, RETURN, THROW, VARDECLS, GROUP, SYNCHRONIZED, FLOATLITERAL,
 		DOUBLELITERAL, LONGLITERAL, INTLITERAL, CHARLITERAL, STRINGLITERAL, 
-		TRUE, FALSE, NULL, METHODCALL, NEW, OPERATOR, OPERATORSUFFIXPREFIX, INDEX, IFOPERATOR;
+		TRUE, FALSE, NULL, METHODCALL, NEW, OPERATOR, OPERATORSUFFIXPREFIX, 
+		INDEX, IFOPERATOR, CAST, LAMBDA;
 	}
 	
 	public static class XError extends XTree{
@@ -766,6 +767,54 @@ public abstract class XTree{
 		@Override
 		public void accept(XVisitor v) {
 			v.visitIfOperator(this);
+		}
+		
+	}
+	
+	public static class XCast extends XStatement{
+		
+		public XType type;
+		
+		public XStatement statement;
+		
+		public XCast(XLineDesk line, XType type, XStatement statement) {
+			super(line);
+			this.type = type;
+			this.statement = statement;
+		}
+
+		@Override
+		public XTag getTag() {
+			return XTag.CAST;
+		}
+
+		@Override
+		public void accept(XVisitor v) {
+			v.visitCast(this);
+		}
+		
+	}
+	
+	public static class XLambda extends XStatement{
+
+		public List<XVarDecl> params;
+		
+		public XStatement statement;
+		
+		public XLambda(XLineDesk line, List<XVarDecl> params, XStatement statement) {
+			super(line);
+			this.params = params;
+			this.statement = statement;
+		}
+
+		@Override
+		public XTag getTag() {
+			return XTag.LAMBDA;
+		}
+
+		@Override
+		public void accept(XVisitor v) {
+			v.visitLambda(this);
 		}
 		
 	}

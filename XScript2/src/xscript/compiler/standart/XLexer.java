@@ -10,48 +10,42 @@ import xscript.compiler.XTokenParser;
 public class XLexer {
 
 	private XTokenParser parser;
-	private List<XToken> tokens;
-	private int i;
-	private boolean read;
+	private List<XToken> tokens = new ArrayList<XToken>();
+	private List<Integer> pos = new ArrayList<Integer>();
+	private int acPos;
 	
 	public XLexer(String source, XMessageList messages){
 		parser = new XTokenParser(source, messages);
 	}
 	
 	public XToken getNextToken(){
-		if(read && tokens!=null){
-			if(tokens.isEmpty()){
-				tokens = null;
-			}else{
-				XToken token = tokens.remove(0);
-				if(tokens.isEmpty())
-					tokens = null;
-				return token;
-			}
-		}
-		if(!read && tokens!=null && tokens.size()>i){
-			return tokens.get(i++);
+		if(!pos.isEmpty() && tokens.size()>acPos){
+			return tokens.get(acPos++);
+		}else if(pos.isEmpty() && !tokens.isEmpty()){
+			return tokens.remove(0);
 		}
 		XToken token = parser.readNextToken();
-		if(!read && tokens!=null){
+		if(!pos.isEmpty()){
 			tokens.add(token);
+			acPos++;
 		}
 		return token;
 	}
 	
 	public void notSure(){
-		if(tokens==null)
-			tokens = new ArrayList<XToken>();
-		read = false;
-		i=0;
+		pos.add(0, acPos);
 	}
 	
 	public void sure(){
-		tokens = null;
+		pos.remove(0);
+		if(pos.isEmpty()){
+			tokens.clear();
+			acPos=0;
+		}
 	}
 	
 	public void reset(){
-		read = true;
+		acPos = pos.remove(0);
 	}
 	
 }

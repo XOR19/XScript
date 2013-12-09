@@ -14,6 +14,7 @@ import xscript.compiler.XTree;
 import xscript.compiler.XTree.XAnnotation;
 import xscript.compiler.XTree.XBlock;
 import xscript.compiler.XTree.XBreak;
+import xscript.compiler.XTree.XCast;
 import xscript.compiler.XTree.XClassDecl;
 import xscript.compiler.XTree.XClassFile;
 import xscript.compiler.XTree.XConstant;
@@ -26,6 +27,7 @@ import xscript.compiler.XTree.XIf;
 import xscript.compiler.XTree.XIfOperator;
 import xscript.compiler.XTree.XImport;
 import xscript.compiler.XTree.XIndex;
+import xscript.compiler.XTree.XLambda;
 import xscript.compiler.XTree.XMethodCall;
 import xscript.compiler.XTree.XMethodDecl;
 import xscript.compiler.XTree.XModifier;
@@ -410,14 +412,216 @@ public class XParser {
 		return list;
 	}
 	
+	public XVarDecl makeLambdaParamDecl(){
+		startLineBlock();
+		XType type = makeType();
+		XVarDecl varDecl;
+		if(token.kind==XTokenKind.IDENT || type.array!=0 || type.typeParam!=null || type.name.name.indexOf('.')!=-1){
+			endLineBlock();
+			varDecl = new XVarDecl(endLineBlock(), null, ident(), type, null);
+		}else{
+			endLineBlock();
+			varDecl = new XVarDecl(type.line, null, type.name.name, null, null);
+		}
+		return varDecl;
+	}
+	
+	public Object[] makeCastTypeOrLambdaParams(){
+		startLineBlock();
+		XToken oldToken = token;
+		lexer.notSure();
+		boolean error = unhandledUnexpected;
+		startMessageBuffer();
+		boolean knowRealy = false;
+		XIdent name = null;
+		List<XType> typeParam = null;
+		int array = 0;
+		List<XVarDecl> varDecls = null;
+		if(expected(XTokenKind.LGROUP)){
+			switch(token.kind){
+			case IDENT:
+				startLineBlock();
+				name = qualident();
+				if(token.kind==XTokenKind.SMALLER){
+					knowRealy = true;
+					nextToken();
+					typeParam = new ArrayList<XType>();
+					typeParam.add(makeType());
+					while(token.kind==XTokenKind.COMMA){
+						nextToken();
+						typeParam.add(makeType());
+					}
+					expected(XTokenKind.GREATER);
+				}
+				while(token.kind==XTokenKind.LINDEX){
+					nextToken();
+					array++;
+					if(expected(XTokenKind.RINDEX)){
+						knowRealy = true;
+					}
+				}
+				if(name.name.indexOf('.') == -1 && (token.kind==XTokenKind.IDENT || (token.kind==XTokenKind.COMMA && !knowRealy))){
+					knowRealy = true;
+					varDecls = new ArrayList<XVarDecl>();
+					if(token.kind==XTokenKind.IDENT){
+						varDecls.add(new XVarDecl(endLineBlock(), null, ident(), new XType(name.line, name, typeParam, array), null));
+					}else{
+						endLineBlock();
+						varDecls.add(new XVarDecl(name.line, null, name.name, null, null));
+					}
+					while(token.kind==XTokenKind.COMMA){
+						nextToken();
+						varDecls.add(makeLambdaParamDecl());
+					}
+					name = null;
+				}else{
+					endLineBlock();
+				}
+				break;
+			case BOOL:
+			case BYTE:
+			case SHORT:
+			case CHAR:
+			case INT:
+			case FLOAT:
+			case DOUBLE:
+			case VOID:
+				knowRealy = true;
+				name = new XIdent(new XLineDesk(token.lineDesk), token.kind.name);
+				nextToken();
+				break;
+			case RGROUP:
+				varDecls = new ArrayList<XVarDecl>();
+				knowRealy = true;
+			default:
+				break;
+			}
+			if(name!=null){
+				while(token.kind==XTokenKind.LINDEX){
+					nextToken();
+					array++;
+					if(expected(XTokenKind.RINDEX)){
+						knowRealy = true;
+					}
+				}
+			}
+			if((knowRealy || token.kind==XTokenKind.RGROUP) && name != null){
+				endMessageBuffer(true);
+				unhandledUnexpected |= error;
+				lexer.sure();
+				expected(XTokenKind.RGROUP);
+				return new Object[]{knowRealy, new XType(endLineBlock(), name, typeParam, array)};
+			}else if(varDecls!=null){
+				endMessageBuffer(true);
+				unhandledUnexpected |= error;
+				lexer.sure();
+				expected(XTokenKind.RGROUP);
+				return new Object[]{knowRealy, varDecls};
+			}
+		}
+		endLineBlock();
+		endMessageBuffer(false);
+		lexer.reset();
+		unhandledUnexpected = error;
+		token = oldToken;
+		return null;
+	}
+	
+	@SuppressWarnings("unchecked")
 	public XStatement makeNumRead(boolean b){
 		XToken oldToken = token;
 		switch(token.kind){
-		case LGROUP:
-			return makeGroup();
-		case IDENT:
-			return qualident();
-		case FLOATLITERAL:
+		case LGROUP:{
+			startLineBlock();
+			Object[] ret = makeCastTypeOrLambdaParams();
+			if(ret==null){
+				endLineBlock();
+				return makeGroup();
+			}else{
+				boolean knowRealy = (Boolean) ret[0];
+				if(knowRealy){
+					if(ret[1] instanceof XType){
+						XStatement s = makeStatementWithSuffixAndPrefix();
+						return new XCast(endLineBlock(), (XType) ret[1], s);
+					}else{
+						startLineBlock();
+						boolean ok=token.kind==XTokenKind.SUB;
+						if(ok)
+							nextToken();
+						if(token.kind==XTokenKind.GREATER){
+							nextToken();
+							ok &= !token.space;
+						}else{
+							ok = false;
+						}
+						if(ok){
+							endLineBlock();
+						}else{
+							syntaxError("expected", "->");
+						}
+						XStatement s = makeSecoundStatement(false);
+						return new XLambda(endLineBlock(), (List<XVarDecl>)ret[1], s);
+					}
+				}else{
+					XType type = (XType)ret[1];
+					if(token.kind==XTokenKind.SUB){
+						lexer.notSure();
+						XToken oldT = token;
+						nextToken();
+						if(token.kind==XTokenKind.GREATER && !token.space){
+							lexer.sure();
+							nextToken();
+							XStatement s = makeSecoundStatement(false);
+							List<XVarDecl> l = new ArrayList<XVarDecl>();
+							l.add(new XVarDecl(type.line, null, type.name.name, null, null));
+							return new XLambda(endLineBlock(), l, s);
+						}
+						lexer.reset();
+						token = oldT;
+					}
+					boolean error = unhandledUnexpected;
+					unhandledUnexpected = false;
+					startMessageBuffer();
+					XToken oldT = token;
+					lexer.notSure();
+					XStatement s = makeStatementWithSuffixAndPrefix();
+					if(unhandledUnexpected){
+						endMessageBuffer(false);
+						lexer.reset();
+						token = oldT;
+						endLineBlock();
+						unhandledUnexpected = error;
+						return new XGroup(type.line, type.name);
+					}else{
+						endMessageBuffer(true);
+						lexer.sure();
+						unhandledUnexpected |= error;
+						return new XCast(endLineBlock(), type, s);
+					}
+				}
+			}
+		}case IDENT:{
+			startLineBlock();
+			XIdent ident = qualident();
+			if(token.kind==XTokenKind.SUB && ident.name.indexOf('.')==-1){
+				XToken oldT = token;
+				lexer.notSure();
+				nextToken();
+				if(token.kind==XTokenKind.GREATER && !token.space){
+					lexer.sure();
+					nextToken();
+					XStatement s = makeSecoundStatement(false);
+					List<XVarDecl> l = new ArrayList<XVarDecl>();
+					l.add(new XVarDecl(ident.line, null, ident.name, null, null));
+					return new XLambda(endLineBlock(), l, s);
+				}else{
+					lexer.reset();
+					token = oldT;
+				}
+			}
+			endLineBlock();
+			return ident;
+		}case FLOATLITERAL:
 			nextToken();
 			return new XConstant(oldToken.lineDesk, XTag.FLOATLITERAL, oldToken.param);
 		case DOUBLELITERAL:
@@ -590,13 +794,150 @@ public class XParser {
 		return statement;
 	}
 	
-	public XStatement makeStatement(){
-		String lable = null;
-		XStatement block = null;
-		XStatement block2 = null;
+	public XStatement makeSecoundStatement(boolean needEnding){
 		XStatement statement = null;
 		XStatement statement2 = null;
 		XStatement statement3 = null;
+		String lable = null;
+		XStatement block = null;
+		XStatement block2 = null;
+		switch(token.kind){
+		case SYNCHRONIZED:
+			nextToken();
+			expected(XTokenKind.LGROUP);
+			statement = makeInnerStatement();
+			block = makeBlock();
+			return new XSynchroized(endLineBlock(), statement, block);
+		case BREAK:
+			nextToken();
+			if(token.kind==XTokenKind.IDENT){
+				lable = ident();
+			}
+			expected(XTokenKind.SEMICOLON);
+			return new XBreak(endLineBlock(), lable);
+		case CONTINUE:
+			nextToken();
+			if(token.kind==XTokenKind.IDENT){
+				lable = ident();
+			}
+			expected(XTokenKind.SEMICOLON);
+			return new XContinue(endLineBlock(), lable);
+		case RETURN:
+			nextToken();
+			statement = makeInnerStatement();
+			return new XReturn(endLineBlock(), statement);
+		case IF:
+			nextToken();
+			expected(XTokenKind.LGROUP);
+			statement = makeInnerStatement();
+			expected(XTokenKind.RGROUP);
+			block = makeSecoundStatement(true);
+			if(token.kind==XTokenKind.ELSE){
+				nextToken();
+				block = makeSecoundStatement(true);
+			}
+			return new XIf(endLineBlock(), statement, block, block2);
+		case SWITCH:
+			parserMessage(XMessageLevel.ERROR, "unexpected.keyword", token.kind.name);
+			return null;
+		case DO:
+			nextToken();
+			block = makeSecoundStatement(true);
+			expected(XTokenKind.WHILE);
+			expected(XTokenKind.LGROUP);
+			statement = makeInnerStatement();
+			expected(XTokenKind.RGROUP);
+			if(needEnding)
+				expected(XTokenKind.SEMICOLON);
+			return new XDo(endLineBlock(), block, statement);
+		case FOR:
+			nextToken();
+			expected(XTokenKind.LGROUP);
+			if(token.kind==XTokenKind.SEMICOLON){
+				nextToken();
+			}else{
+				statement = makeStatement();
+			}
+			if(token.kind==XTokenKind.SEMICOLON){
+				nextToken();
+			}else{
+				statement2 = makeInnerStatement();
+			}
+			if(token.kind==XTokenKind.SEMICOLON){
+				nextToken();
+			}else{
+				statement3 = makeInnerStatement();
+			}
+			expected(XTokenKind.RGROUP);
+			block = makeSecoundStatement(needEnding);
+			return new XFor(endLineBlock(), statement, statement2, statement3, block);
+		case WHILE:
+			nextToken();
+			expected(XTokenKind.LGROUP);
+			statement = makeInnerStatement();
+			expected(XTokenKind.RGROUP);
+			block = makeSecoundStatement(needEnding);
+			return new XWhile(endLineBlock(), block, statement);
+		case THROW:
+			nextToken();
+			statement = makeInnerStatement();
+			return new XReturn(endLineBlock(), statement);
+		case TRY:
+			nextToken();
+			parserMessage(XMessageLevel.ERROR, "unexpected.keyword", token.kind.name);
+			return null;
+		case LBRAKET:
+			endLineBlock();
+			return makeBlock();
+		case CASE:
+		case DEFAULT:
+			endLineBlock();
+			nextToken();
+			parserMessage(XMessageLevel.ERROR, "unexpected.keyword", token.kind.name);
+			return null;
+		case ELSE:
+		case CATCH:
+		case FINALLY:
+			parserMessage(XMessageLevel.ERROR, "unexpected.keyword", token.kind.name);
+			nextToken();
+			makeBlock();
+			endLineBlock();
+			return null;
+		case IDENT:
+		case ADD:
+		case BNOT:
+		case CHARLITERAL:
+		case DOUBLELITERAL:
+		case FALSE:
+		case FLOATLITERAL:
+		case INTLITERAL:
+		case LGROUP:
+		case LONGLITERAL:
+		case NOT:
+		case NULL:
+		case STRINGLITERAL:
+		case SUB:
+		case SUPER:
+		case THIS:
+		case TRUE:
+			statement = makeInnerStatement();
+			if(needEnding)
+				expected(XTokenKind.SEMICOLON);
+			return statement;
+		case SEMICOLON:
+			endLineBlock();
+			nextToken();
+			return null;
+		default:
+			endLineBlock();
+			parserMessage(XMessageLevel.ERROR, "unexpected", token.kind.name);
+			return null;
+		}
+	}
+	
+	public XStatement makeStatement(){
+		XStatement block = null;
+		XStatement statement = null;
 		XToken oldtoken;
 		startLineBlock();
 		switch(token.kind){
@@ -636,100 +977,6 @@ public class XParser {
 		case INTERFACE:
 		case ANNOTATION:
 			return makeDeclStatement();
-		case BREAK:
-			nextToken();
-			if(token.kind==XTokenKind.IDENT){
-				lable = ident();
-			}
-			expected(XTokenKind.SEMICOLON);
-			return new XBreak(endLineBlock(), lable);
-		case CONTINUE:
-			nextToken();
-			if(token.kind==XTokenKind.IDENT){
-				lable = ident();
-			}
-			expected(XTokenKind.SEMICOLON);
-			return new XContinue(endLineBlock(), lable);
-		case DO:
-			nextToken();
-			block = makeStatement();
-			expected(XTokenKind.WHILE);
-			expected(XTokenKind.LGROUP);
-			statement = makeInnerStatement();
-			expected(XTokenKind.RGROUP);
-			expected(XTokenKind.SEMICOLON);
-			return new XDo(endLineBlock(), block, statement);
-		case FOR:
-			nextToken();
-			expected(XTokenKind.LGROUP);
-			if(token.kind==XTokenKind.SEMICOLON){
-				nextToken();
-			}else{
-				statement = makeStatement();
-			}
-			if(token.kind==XTokenKind.SEMICOLON){
-				nextToken();
-			}else{
-				statement2 = makeInnerStatement();
-			}
-			if(token.kind==XTokenKind.SEMICOLON){
-				nextToken();
-			}else{
-				statement3 = makeInnerStatement();
-			}
-			expected(XTokenKind.RGROUP);
-			block = makeStatement();
-			return new XFor(endLineBlock(), statement, statement2, statement3, block);
-		case IF:
-			nextToken();
-			expected(XTokenKind.LGROUP);
-			statement = makeInnerStatement();
-			expected(XTokenKind.RGROUP);
-			block = makeStatement();
-			if(token.kind==XTokenKind.ELSE){
-				nextToken();
-				block = makeStatement();
-			}
-			return new XIf(endLineBlock(), statement, block, block2);
-		case RETURN:
-			nextToken();
-			statement = makeInnerStatement();
-			return new XReturn(endLineBlock(), statement);
-		case SWITCH:
-			parserMessage(XMessageLevel.ERROR, "unexpected.keyword", token.kind.name);
-			return null;
-		case WHILE:
-			nextToken();
-			expected(XTokenKind.LGROUP);
-			statement = makeInnerStatement();
-			expected(XTokenKind.RGROUP);
-			block = makeStatement();
-			return new XWhile(endLineBlock(), block, statement);
-		case THROW:
-			nextToken();
-			statement = makeInnerStatement();
-			return new XReturn(endLineBlock(), statement);
-		case TRY:
-			nextToken();
-			parserMessage(XMessageLevel.ERROR, "unexpected.keyword", token.kind.name);
-			return null;
-		case LBRAKET:
-			endLineBlock();
-			return makeBlock();
-		case CASE:
-		case DEFAULT:
-			endLineBlock();
-			nextToken();
-			parserMessage(XMessageLevel.ERROR, "unexpected.keyword", token.kind.name);
-			return null;
-		case ELSE:
-		case CATCH:
-		case FINALLY:
-			parserMessage(XMessageLevel.ERROR, "unexpected.keyword", token.kind.name);
-			nextToken();
-			makeBlock();
-			endLineBlock();
-			return null;
 		case IDENT:
 			lexer.notSure();
 			oldtoken = token;
@@ -763,33 +1010,8 @@ public class XParser {
 				unhandledUnexpected=bv;
 				token = oldtoken;
 			}
-		case ADD:
-		case BNOT:
-		case CHARLITERAL:
-		case DOUBLELITERAL:
-		case FALSE:
-		case FLOATLITERAL:
-		case INTLITERAL:
-		case LGROUP:
-		case LONGLITERAL:
-		case NOT:
-		case NULL:
-		case STRINGLITERAL:
-		case SUB:
-		case SUPER:
-		case THIS:
-		case TRUE:
-			statement = makeInnerStatement();
-			expected(XTokenKind.SEMICOLON);
-			return statement;
-		case SEMICOLON:
-			endLineBlock();
-			nextToken();
-			return null;
 		default:
-			endLineBlock();
-			parserMessage(XMessageLevel.ERROR, "unexpected", token.kind.name);
-			return null;
+			return makeSecoundStatement(true);
 		}
 	}
 

@@ -3,6 +3,7 @@ package xscript.compiler;
 import xscript.compiler.XTree.XAnnotation;
 import xscript.compiler.XTree.XBlock;
 import xscript.compiler.XTree.XBreak;
+import xscript.compiler.XTree.XCast;
 import xscript.compiler.XTree.XClassDecl;
 import xscript.compiler.XTree.XClassFile;
 import xscript.compiler.XTree.XConstant;
@@ -16,6 +17,7 @@ import xscript.compiler.XTree.XIf;
 import xscript.compiler.XTree.XIfOperator;
 import xscript.compiler.XTree.XImport;
 import xscript.compiler.XTree.XIndex;
+import xscript.compiler.XTree.XLambda;
 import xscript.compiler.XTree.XMethodCall;
 import xscript.compiler.XTree.XMethodDecl;
 import xscript.compiler.XTree.XModifier;
@@ -92,5 +94,9 @@ public interface XVisitor {
 	public void visitIndex(XIndex xIndex);
 
 	public void visitIfOperator(XIfOperator xIfOperator);
+
+	public void visitCast(XCast xCast);
+
+	public void visitLambda(XLambda xLambda);
 
 }
