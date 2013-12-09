@@ -1,4 +1,3 @@
-import xscript.compiler.XMessageList;
 import xscript.compiler.XMessagePrinter;
 import xscript.compiler.XTree;
 import xscript.compiler.XTreePrinter;

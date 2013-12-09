@@ -10,7 +10,7 @@ public abstract class XTree{
 		FOR, IF, RETURN, THROW, VARDECLS, GROUP, SYNCHRONIZED, FLOATLITERAL,
 		DOUBLELITERAL, LONGLITERAL, INTLITERAL, CHARLITERAL, STRINGLITERAL, 
 		TRUE, FALSE, NULL, METHODCALL, NEW, OPERATOR, OPERATORSUFFIXPREFIX, 
-		INDEX, IFOPERATOR, CAST, LAMBDA, TRY, CATCH;
+		INDEX, IFOPERATOR, CAST, LAMBDA, TRY, CATCH, NEWARRAY, ARRAYINITIALIZE;
 	}
 	
 	public static class XError extends XTree{
@@ -674,14 +674,17 @@ public abstract class XTree{
 	
 	public static class XNew extends XStatement{
 		
-		public XIdent className;
+		public XType type;
 		
 		public List<XStatement> params;
 		
-		public XNew(XLineDesk line, XIdent className, List<XStatement> params) {
+		public XClassDecl classDecl;
+		
+		public XNew(XLineDesk line, XType type, List<XStatement> params, XClassDecl classDecl) {
 			super(line);
-			this.className = className;
+			this.type = type;
 			this.params = params;
+			this.classDecl = classDecl;
 		}
 
 		@Override
@@ -692,6 +695,33 @@ public abstract class XTree{
 		@Override
 		public void accept(XVisitor v) {
 			v.visitNew(this);
+		}
+		
+	}
+	
+	public static class XNewArray extends XStatement{
+		
+		public XType type;
+		
+		public List<Integer> arraySizes;
+		
+		public XStatement arrayInitialize;
+		
+		public XNewArray(XLineDesk line, XType type, List<Integer> arraySizes, XStatement arrayInitialize) {
+			super(line);
+			this.type = type;
+			this.arraySizes = arraySizes;
+			this.arrayInitialize = arrayInitialize;
+		}
+
+		@Override
+		public XTag getTag() {
+			return XTag.NEWARRAY;
+		}
+
+		@Override
+		public void accept(XVisitor v) {
+			v.visitNewArray(this);
 		}
 		
 	}
@@ -875,6 +905,27 @@ public abstract class XTree{
 		@Override
 		public void accept(XVisitor v) {
 			v.visitCatch(this);
+		}
+		
+	}
+	
+	public static class XArrayInitialize extends XStatement{
+
+		public List<XStatement> statements;
+		
+		public XArrayInitialize(XLineDesk line, List<XStatement> statements) {
+			super(line);
+			this.statements = statements;
+		}
+
+		@Override
+		public XTag getTag() {
+			return XTag.ARRAYINITIALIZE;
+		}
+
+		@Override
+		public void accept(XVisitor v) {
+			v.visitArrayInitialize(this);
 		}
 		
 	}

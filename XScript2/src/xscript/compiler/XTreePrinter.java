@@ -3,6 +3,7 @@ package xscript.compiler;
 import java.util.List;
 
 import xscript.compiler.XTree.XAnnotation;
+import xscript.compiler.XTree.XArrayInitialize;
 import xscript.compiler.XTree.XBlock;
 import xscript.compiler.XTree.XBreak;
 import xscript.compiler.XTree.XCast;
@@ -25,6 +26,7 @@ import xscript.compiler.XTree.XMethodCall;
 import xscript.compiler.XTree.XMethodDecl;
 import xscript.compiler.XTree.XModifier;
 import xscript.compiler.XTree.XNew;
+import xscript.compiler.XTree.XNewArray;
 import xscript.compiler.XTree.XOperatorPrefixSuffix;
 import xscript.compiler.XTree.XOperatorStatement;
 import xscript.compiler.XTree.XReturn;
@@ -246,8 +248,9 @@ public class XTreePrinter implements XVisitor {
 
 	@Override
 	public void visitNew(XNew xNew) {
-		accept("className", xNew.className);
+		accept("className", xNew.type);
 		accept("params", xNew.params);
+		accept("classDecl", xNew.classDecl);
 	}
 
 	@Override
@@ -303,6 +306,18 @@ public class XTreePrinter implements XVisitor {
 		accept("type", xCatch.types);
 		println("param:"+xCatch.varName);
 		accept("block", xCatch.block);
+	}
+
+	@Override
+	public void visitNewArray(XNewArray xNewArray) {
+		accept("className", xNewArray.type);
+		println("params:"+xNewArray.arraySizes);
+		accept("arrayInitialize", xNewArray.arrayInitialize);
+	}
+
+	@Override
+	public void visitArrayInitialize(XArrayInitialize xArrayInitialize) {
+		accept("arrayInitialize", xArrayInitialize);
 	}
 
 }

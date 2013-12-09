@@ -3,6 +3,7 @@ package xscript.compiler.standart;
 import java.util.ArrayList;
 import java.util.List;
 
+import xscript.compiler.XCasts;
 import xscript.compiler.XLineDesk;
 import xscript.compiler.XMessageLevel;
 import xscript.compiler.XMessageList;
@@ -12,6 +13,7 @@ import xscript.compiler.XToken;
 import xscript.compiler.XTokenKind;
 import xscript.compiler.XTree;
 import xscript.compiler.XTree.XAnnotation;
+import xscript.compiler.XTree.XArrayInitialize;
 import xscript.compiler.XTree.XBlock;
 import xscript.compiler.XTree.XBreak;
 import xscript.compiler.XTree.XCast;
@@ -33,6 +35,7 @@ import xscript.compiler.XTree.XMethodCall;
 import xscript.compiler.XTree.XMethodDecl;
 import xscript.compiler.XTree.XModifier;
 import xscript.compiler.XTree.XNew;
+import xscript.compiler.XTree.XNewArray;
 import xscript.compiler.XTree.XOperatorPrefixSuffix;
 import xscript.compiler.XTree.XOperatorStatement;
 import xscript.compiler.XTree.XReturn;
@@ -530,6 +533,30 @@ public class XParser {
 		return null;
 	}
 	
+	public int readIntLiteral(){
+		int ret = 0;
+		if(token.kind==XTokenKind.INTLITERAL){
+			ret = XCasts.s2i(token.param);
+		}
+		expected(XTokenKind.INTLITERAL);
+		return ret;
+	}
+	
+	public XStatement makeArrayInitialize(){
+		startLineBlock();
+		expected(XTokenKind.LBRAKET);
+		List<XStatement> statements = null;
+		if(token.kind!=XTokenKind.RBRAKET){
+			statements = new ArrayList<XStatement>();
+			statements.add(makeInnerStatement());
+			while(token.kind==XTokenKind.COMMA){
+				statements.add(makeInnerStatement());
+			}
+		}
+		expected(XTokenKind.RBRAKET);
+		return new XArrayInitialize(endLineBlock(), statements);
+	}
+	
 	@SuppressWarnings("unchecked")
 	public XStatement makeNumRead(boolean b){
 		XToken oldToken = token;
@@ -651,15 +678,39 @@ public class XParser {
 		case NULL:
 			nextToken();
 			return new XConstant(oldToken.lineDesk, XTag.NULL, oldToken.param);
+		case LBRAKET:
+			return makeArrayInitialize();
 		case NEW:
 			startLineBlock();
 			nextToken();
-			XIdent className = qualident();
+			XType type = makeType();
 			if(token.kind==XTokenKind.LINDEX){
-				
+				List<Integer> l = new ArrayList<Integer>();
+				while(token.kind==XTokenKind.LINDEX){
+					nextToken();
+					if(token.kind==XTokenKind.INTLITERAL){
+						l.add(readIntLiteral());
+					}else{
+						l.add(null);
+					}
+					expected(XTokenKind.RINDEX);
+				}
+				XStatement arrayInitialize = null;
+				if(token.kind==XTokenKind.LBRAKET){
+					arrayInitialize = makeArrayInitialize();
+				}
+				return new XNewArray(endLineBlock(), type, l, arrayInitialize);
 			}else{
 				List<XStatement> params = makeMethodCallParamList();
-				return new XNew(endLineBlock(), className, params);
+				XClassDecl classDecl = null;
+				if(token.kind==XTokenKind.LBRAKET){
+					startLineBlock();
+					List<XTree> body = classAndInterfaceBody(false, null);
+					List<XType> superClasses = new ArrayList<XTree.XType>();
+					superClasses.add(type);
+					classDecl = new XClassDecl(endLineBlock(), null, null, null, superClasses, body);
+				}
+				return new XNew(endLineBlock(), type, params, classDecl);
 			}
 		default:
 			if(b)
@@ -1133,7 +1184,7 @@ public class XParser {
 		}
 		List<XTypeParam> typeParam = makeTypeParamList();
 		XType type = makeType();
-		boolean isConstructor = token.kind==XTokenKind.LGROUP && type.name.name.equals(className);
+		boolean isConstructor = token.kind==XTokenKind.LGROUP && className!=null && type.name.name.equals(className);
 		XLineDesk line = new XLineDesk(token.lineDesk);
 		String name = isConstructor?"<init>":ident();
 		if(isConstructor || token.kind==XTokenKind.LGROUP){
@@ -1209,6 +1260,18 @@ public class XParser {
 		return new XClassDecl(line, modifier, name, typeParam, superClasses, body);
 	}
 	
+	public XMethodCall enumConstInit(){
+		startLineBlock();
+		startLineBlock();
+		String n = ident();
+		XIdent name = new XIdent(endLineBlock(), n);
+		List<XStatement> l = new ArrayList<XStatement>();
+		if(token.kind==XTokenKind.LGROUP){
+			l = makeMethodCallParamList();
+		}
+		return new XMethodCall(endLineBlock(), name, l);
+	}
+	
 	public List<XTree> enumBody(String name){
 		expected(XTokenKind.LBRAKET);
 		if(unhandledUnexpected){
@@ -1217,6 +1280,12 @@ public class XParser {
 				nextToken();
 		}
 		List<XTree> list = new ArrayList<XTree>();
+		while(token.kind!=XTokenKind.SEMICOLON){
+			list.add(enumConstInit());
+			if(token.kind!=XTokenKind.COMMA)
+				break;
+			nextToken();
+		}
 		if(token.kind==XTokenKind.SEMICOLON){
 			nextToken();
 			while(token.kind!=XTokenKind.EOF && token.kind!=XTokenKind.RBRAKET){

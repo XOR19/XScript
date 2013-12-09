@@ -1,6 +1,7 @@
 package xscript.compiler;
 
 import xscript.compiler.XTree.XAnnotation;
+import xscript.compiler.XTree.XArrayInitialize;
 import xscript.compiler.XTree.XBlock;
 import xscript.compiler.XTree.XBreak;
 import xscript.compiler.XTree.XCast;
@@ -23,6 +24,7 @@ import xscript.compiler.XTree.XMethodCall;
 import xscript.compiler.XTree.XMethodDecl;
 import xscript.compiler.XTree.XModifier;
 import xscript.compiler.XTree.XNew;
+import xscript.compiler.XTree.XNewArray;
 import xscript.compiler.XTree.XOperatorPrefixSuffix;
 import xscript.compiler.XTree.XOperatorStatement;
 import xscript.compiler.XTree.XReturn;
@@ -104,5 +106,9 @@ public interface XVisitor {
 	public void visitTry(XTry xTry);
 
 	public void visitCatch(XCatch xCatch);
+
+	public void visitNewArray(XNewArray xNewArray);
+
+	public void visitArrayInitialize(XArrayInitialize xArrayInitialize);
 
 }

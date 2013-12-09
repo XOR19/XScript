@@ -3,6 +3,7 @@ package xscript.compiler;
 import java.util.List;
 
 import xscript.compiler.XTree.XAnnotation;
+import xscript.compiler.XTree.XArrayInitialize;
 import xscript.compiler.XTree.XBlock;
 import xscript.compiler.XTree.XBreak;
 import xscript.compiler.XTree.XCast;
@@ -25,6 +26,7 @@ import xscript.compiler.XTree.XMethodCall;
 import xscript.compiler.XTree.XMethodDecl;
 import xscript.compiler.XTree.XModifier;
 import xscript.compiler.XTree.XNew;
+import xscript.compiler.XTree.XNewArray;
 import xscript.compiler.XTree.XOperatorPrefixSuffix;
 import xscript.compiler.XTree.XOperatorStatement;
 import xscript.compiler.XTree.XReturn;
@@ -191,8 +193,9 @@ public class XTreeChanger implements XVisitor {
 
 	@Override
 	public void visitNew(XNew xNew) {
-		xNew.className = visitTree(xNew.className);
+		xNew.type = visitTree(xNew.type);
 		xNew.params = visitTree(xNew.params);
+		xNew.classDecl = visitTree(xNew.classDecl);
 	}
 
 	@Override
@@ -244,6 +247,17 @@ public class XTreeChanger implements XVisitor {
 		xCatch.modifier = visitTree(xCatch.modifier);
 		xCatch.types = visitTree(xCatch.types);
 		xCatch.block = visitTree(xCatch.block);
+	}
+
+	@Override
+	public void visitNewArray(XNewArray xNewArray) {
+		xNewArray.type = visitTree(xNewArray.type);
+		xNewArray.arrayInitialize = visitTree(xNewArray.arrayInitialize);
+	}
+
+	@Override
+	public void visitArrayInitialize(XArrayInitialize xArrayInitialize) {
+		xArrayInitialize.statements = visitTree(xArrayInitialize.statements);
 	}
 
 }

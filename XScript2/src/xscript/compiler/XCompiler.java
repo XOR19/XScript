@@ -20,13 +20,13 @@ public class XCompiler {
 		
 	}
 	
-	private void registerSourceProvider(XSourceProvider sourceProvider) {
+	public void registerSourceProvider(XSourceProvider sourceProvider) {
 		for(String c:sourceProvider.getProvidedClasses()){
 			classes2Compile.put(c, sourceProvider);
 		}
 	}
 	
-	private void compile(){
+	public void compile(){
 		Iterator<Entry<String, XSourceProvider>> iterator = classes2Compile.entrySet().iterator();
 		while(iterator.hasNext()){
 			Entry<String, XSourceProvider> e = iterator.next();
