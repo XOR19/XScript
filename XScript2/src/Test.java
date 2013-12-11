@@ -10,7 +10,7 @@ public class Test {
 	public static void main(String[] args){
 		
 		XStandartTreeMaker maker = new XStandartTreeMaker();
-		XTree tree = maker.makeTree("public class A {public void v(A.c...b){a->a+3;}}", new XMessagePrinter());
+		XTree tree = maker.makeTree("public class A {public void A(A.c...b){a->a+3;}}", new XMessagePrinter());
 		XTreePrinter treePrinter = new XTreePrinter();
 		tree.accept(treePrinter);
 		

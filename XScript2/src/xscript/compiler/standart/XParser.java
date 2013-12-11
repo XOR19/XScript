@@ -1194,6 +1194,7 @@ public class XParser {
 		List<XStatement> superConstructors = null;
 		if(isConstructor){
 			if(token.kind==XTokenKind.COLON){
+				nextToken();
 				superConstructors = new ArrayList<XTree.XStatement>();
 				superConstructors.add(makeStatementWithSuffixAndPrefix());
 				while(token.kind==XTokenKind.COMMA){
