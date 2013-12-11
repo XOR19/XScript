@@ -1345,7 +1345,7 @@ public class XParser {
 		return new XClassDecl(line, modifier, name, typeParam, superClasses, body);
 	}
 	
-	public XMethodCall enumConstInit(){
+	public XNew enumConstInit(){
 		startLineBlock();
 		startLineBlock();
 		String n = ident();
@@ -1354,7 +1354,13 @@ public class XParser {
 		if(token.kind==XTokenKind.LGROUP){
 			l = makeMethodCallParamList();
 		}
-		return new XMethodCall(endLineBlock(), name, l);
+		XClassDecl cdecl = null;
+		if(token.kind==XTokenKind.LBRAKET){
+			startLineBlock();
+			List<XTree> body = classAndInterfaceBody(false, null);
+			cdecl = new XClassDecl(endLineBlock(), null, null, null, null, body);
+		}
+		return new XNew(endLineBlock(), new XType(name.line, name, null, 0), l, cdecl);
 	}
 	
 	public List<XTree> enumBody(String name){
