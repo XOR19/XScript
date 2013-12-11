@@ -15,6 +15,7 @@ import xscript.compiler.XTree.XContinue;
 import xscript.compiler.XTree.XDo;
 import xscript.compiler.XTree.XError;
 import xscript.compiler.XTree.XFor;
+import xscript.compiler.XTree.XForeach;
 import xscript.compiler.XTree.XGroup;
 import xscript.compiler.XTree.XIdent;
 import xscript.compiler.XTree.XIf;
@@ -165,6 +166,7 @@ public class XTreePrinter implements XVisitor {
 		accept("params",xMethodDecl.paramTypes);
 		accept("throws", xMethodDecl.throwList);
 		accept("block", xMethodDecl.block);
+		accept("superConstructors", xMethodDecl.superConstructors);
 	}
 
 	@Override
@@ -318,6 +320,13 @@ public class XTreePrinter implements XVisitor {
 	@Override
 	public void visitArrayInitialize(XArrayInitialize xArrayInitialize) {
 		accept("arrayInitialize", xArrayInitialize);
+	}
+
+	@Override
+	public void visitForeach(XForeach xForeach) {
+		accept("var", xForeach.var);
+		accept("in", xForeach.in);
+		accept("block", xForeach.block);
 	}
 
 }

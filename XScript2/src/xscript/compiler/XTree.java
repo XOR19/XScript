@@ -10,7 +10,8 @@ public abstract class XTree{
 		FOR, IF, RETURN, THROW, VARDECLS, GROUP, SYNCHRONIZED, FLOATLITERAL,
 		DOUBLELITERAL, LONGLITERAL, INTLITERAL, CHARLITERAL, STRINGLITERAL, 
 		TRUE, FALSE, NULL, METHODCALL, NEW, OPERATOR, OPERATORSUFFIXPREFIX, 
-		INDEX, IFOPERATOR, CAST, LAMBDA, TRY, CATCH, NEWARRAY, ARRAYINITIALIZE;
+		INDEX, IFOPERATOR, CAST, LAMBDA, TRY, CATCH, NEWARRAY, ARRAYINITIALIZE, 
+		FOREACH;
 	}
 	
 	public static class XError extends XTree{
@@ -323,7 +324,9 @@ public abstract class XTree{
 
 		public XBlock block;
 		
-		public XMethodDecl(XLineDesk line, XModifier modifier, String name, List<XTypeParam> typeParam, XType returnType, List<XVarDecl> paramTypes, List<XType> throwList, XBlock block) {
+		public List<XStatement> superConstructors;
+		
+		public XMethodDecl(XLineDesk line, XModifier modifier, String name, List<XTypeParam> typeParam, XType returnType, List<XVarDecl> paramTypes, List<XType> throwList, XBlock block, List<XStatement> superConstructors) {
 			super(line);
 			this.modifier = modifier;
 			this.name = name;
@@ -332,6 +335,7 @@ public abstract class XTree{
 			this.paramTypes = paramTypes;
 			this.throwList = throwList;
 			this.block = block;
+			this.superConstructors = superConstructors;
 		}
 		
 		@Override
@@ -480,6 +484,33 @@ public abstract class XTree{
 		@Override
 		public void accept(XVisitor v) {
 			v.visitFor(this);
+		}
+		
+	}
+	
+	public static class XForeach extends XStatement{
+
+		public XStatement var;
+		
+		public XStatement in;
+		
+		public XStatement block;
+		
+		public XForeach(XLineDesk line, XStatement var, XStatement in, XStatement block) {
+			super(line);
+			this.var = var;
+			this.in = in;
+			this.block = block;
+		}
+
+		@Override
+		public XTag getTag() {
+			return XTag.FOREACH;
+		}
+
+		@Override
+		public void accept(XVisitor v) {
+			v.visitForeach(this);
 		}
 		
 	}

@@ -16,6 +16,7 @@ import xscript.compiler.XTree.XContinue;
 import xscript.compiler.XTree.XDo;
 import xscript.compiler.XTree.XError;
 import xscript.compiler.XTree.XFor;
+import xscript.compiler.XTree.XForeach;
 import xscript.compiler.XTree.XGroup;
 import xscript.compiler.XTree.XIdent;
 import xscript.compiler.XTree.XIf;
@@ -114,32 +115,27 @@ public class XTreeCompiler implements XVisitor {
 
 	@Override
 	public void visitModifier(XModifier xModifier) {
-		// TODO Auto-generated method stub
-
+		compilerMessage(XMessageLevel.ERROR, "unexpected", xModifier.line);
 	}
 
 	@Override
 	public void visitError(XError xError) {
-		// TODO Auto-generated method stub
-
+		compilerMessage(XMessageLevel.ERROR, "unexpected", xError.line);
 	}
 
 	@Override
 	public void visitIdent(XIdent xIdent) {
-		// TODO Auto-generated method stub
-
+		
 	}
 
 	@Override
 	public void visitType(XType xType) {
-		// TODO Auto-generated method stub
-
+		compilerMessage(XMessageLevel.ERROR, "unexpected", xType.line);
 	}
 
 	@Override
 	public void visitTypeParam(XTypeParam xTypeParam) {
-		// TODO Auto-generated method stub
-
+		compilerMessage(XMessageLevel.ERROR, "unexpected", xTypeParam.line);
 	}
 
 	@Override
@@ -301,6 +297,12 @@ public class XTreeCompiler implements XVisitor {
 
 	@Override
 	public void visitArrayInitialize(XArrayInitialize xArrayInitialize) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void visitForeach(XForeach xForeach) {
 		// TODO Auto-generated method stub
 		
 	}

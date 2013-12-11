@@ -15,6 +15,7 @@ import xscript.compiler.XTree.XContinue;
 import xscript.compiler.XTree.XDo;
 import xscript.compiler.XTree.XError;
 import xscript.compiler.XTree.XFor;
+import xscript.compiler.XTree.XForeach;
 import xscript.compiler.XTree.XGroup;
 import xscript.compiler.XTree.XIdent;
 import xscript.compiler.XTree.XIf;
@@ -116,6 +117,7 @@ public class XTreeChanger implements XVisitor {
 		xMethodDecl.paramTypes = visitTree(xMethodDecl.paramTypes);
 		xMethodDecl.throwList = visitTree(xMethodDecl.throwList);
 		xMethodDecl.block = visitTree(xMethodDecl.block);
+		xMethodDecl.superConstructors = visitTree(xMethodDecl.superConstructors);
 	}
 
 	@Override
@@ -258,6 +260,13 @@ public class XTreeChanger implements XVisitor {
 	@Override
 	public void visitArrayInitialize(XArrayInitialize xArrayInitialize) {
 		xArrayInitialize.statements = visitTree(xArrayInitialize.statements);
+	}
+
+	@Override
+	public void visitForeach(XForeach xForeach) {
+		xForeach.var = visitTree(xForeach.var);
+		xForeach.in = visitTree(xForeach.in);
+		xForeach.block = visitTree(xForeach.block);
 	}
 
 }

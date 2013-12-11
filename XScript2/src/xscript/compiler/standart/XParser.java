@@ -24,6 +24,7 @@ import xscript.compiler.XTree.XConstant;
 import xscript.compiler.XTree.XContinue;
 import xscript.compiler.XTree.XDo;
 import xscript.compiler.XTree.XFor;
+import xscript.compiler.XTree.XForeach;
 import xscript.compiler.XTree.XGroup;
 import xscript.compiler.XTree.XIdent;
 import xscript.compiler.XTree.XIf;
@@ -721,6 +722,7 @@ public class XParser {
 	
 	public XStatement makeStatementWithSuffixAndPrefix(){
 		startLineBlock();
+		startLineBlock();
 		XOperator operator;
 		List<XOperator> prefix = new ArrayList<XOperator>();
 		while(isOperator(token.kind)){
@@ -741,10 +743,10 @@ public class XParser {
 		}
 		if(suffix.isEmpty())
 			suffix = null;
-		if(prefix == null && suffix == null){
+		if(suffix == null){
 			endLineBlock();
 		}else{
-			statement = new XOperatorPrefixSuffix(endLineBlock(), prefix, statement, suffix);
+			statement = new XOperatorPrefixSuffix(endLineBlock(), null, statement, suffix);
 		}
 		while(token.kind==XTokenKind.LGROUP || token.kind==XTokenKind.LINDEX){
 			startLineBlock();
@@ -772,6 +774,14 @@ public class XParser {
 			}else{
 				statement = new XOperatorPrefixSuffix(endLineBlock(), null, statement, suffix);
 			}
+		}
+		if(prefix == null){
+			endLineBlock();
+		}else if(statement instanceof XOperatorPrefixSuffix){
+			endLineBlock();
+			((XOperatorPrefixSuffix) statement).prefix = prefix;
+		}else{
+			statement = new XOperatorPrefixSuffix(endLineBlock(), prefix, statement, null);
 		}
 		return statement;
 	}
@@ -843,6 +853,9 @@ public class XParser {
 				between = makeStatementWithSuffixAndPrefix();
 				expected(XTokenKind.COLON);
 			}
+			if(o==XOperator.NONE){
+				break;
+			}
 			statement = mergeStatements(endLineBlock(), statement, o, makeStatementWithSuffixAndPrefix(), between);
 		}
 		return statement;
@@ -855,13 +868,45 @@ public class XParser {
 		String lable = null;
 		XStatement block = null;
 		XStatement block2 = null;
+		startLineBlock();
 		switch(token.kind){
 		case SYNCHRONIZED:
+			lexer.notSure();
+			XToken oldtoken = token;
 			nextToken();
-			expected(XTokenKind.LGROUP);
-			statement = makeInnerStatement();
-			block = makeBlock();
-			return new XSynchroized(endLineBlock(), statement, block);
+			if(token.kind==XTokenKind.LGROUP){
+				lexer.sure();
+				nextToken();
+				statement = makeInnerStatement();
+				block = makeBlock();
+				return new XSynchroized(endLineBlock(), statement, block);
+			}else{
+				lexer.reset();
+				token = oldtoken;
+			}
+		case ABSTRACT:
+		case AT:
+		case FINAL:
+		case NATIVE:
+		case PRIVATE:
+		case PROTECTED:
+		case PUBLIC:
+		case STATIC:
+		case BOOL:
+		case BYTE:
+		case CHAR:
+		case DOUBLE:
+		case FLOAT:
+		case INT:
+		case LONG:
+		case SHORT:
+		case VOID:
+		case CLASS:
+		case ENUM:
+		case INTERFACE:
+		case ANNOTATION:
+			endLineBlock();
+			return makeDeclStatement();
 		case BREAK:
 			nextToken();
 			if(token.kind==XTokenKind.IDENT){
@@ -892,6 +937,7 @@ public class XParser {
 			}
 			return new XIf(endLineBlock(), statement, block, block2);
 		case SWITCH:
+			endLineBlock();
 			parserMessage(XMessageLevel.ERROR, "unexpected.keyword", token.kind.name);
 			return null;
 		case DO:
@@ -907,25 +953,38 @@ public class XParser {
 		case FOR:
 			nextToken();
 			expected(XTokenKind.LGROUP);
+			boolean foreach=false;
 			if(token.kind==XTokenKind.SEMICOLON){
 				nextToken();
 			}else{
 				statement = makeStatement(false);
-				expected(XTokenKind.SEMICOLON);
+				if(token.kind==XTokenKind.COLON){
+					nextToken();
+					foreach = true;
+				}else{
+					expected(XTokenKind.SEMICOLON);
+				}
 			}
-			if(token.kind==XTokenKind.SEMICOLON){
-				nextToken();
-			}else{
+			if(foreach){
 				statement2 = makeInnerStatement();
-			}
-			if(token.kind==XTokenKind.SEMICOLON){
-				nextToken();
+				expected(XTokenKind.RGROUP);
+				block = makeStatement(needEnding);
+				return new XForeach(endLineBlock(), statement, statement2, block);
 			}else{
-				statement3 = makeInnerStatement();
+				if(token.kind==XTokenKind.SEMICOLON){
+					nextToken();
+				}else{
+					statement2 = makeInnerStatement();
+				}
+				if(token.kind==XTokenKind.SEMICOLON){
+					nextToken();
+				}else{
+					statement3 = makeInnerStatement();
+				}
+				expected(XTokenKind.RGROUP);
+				block = makeSecoundStatement(needEnding);
+				return new XFor(endLineBlock(), statement, statement2, statement3, block);
 			}
-			expected(XTokenKind.RGROUP);
-			block = makeSecoundStatement(needEnding);
-			return new XFor(endLineBlock(), statement, statement2, statement3, block);
 		case WHILE:
 			nextToken();
 			expected(XTokenKind.LGROUP);
@@ -1000,6 +1059,7 @@ public class XParser {
 		case SUPER:
 		case THIS:
 		case TRUE:
+			endLineBlock();
 			statement = makeInnerStatement();
 			if(needEnding)
 				expected(XTokenKind.SEMICOLON);
@@ -1016,47 +1076,8 @@ public class XParser {
 	}
 	
 	public XStatement makeStatement(boolean needEnding){
-		XStatement block = null;
-		XStatement statement = null;
 		XToken oldtoken;
-		startLineBlock();
 		switch(token.kind){
-		case SYNCHRONIZED:
-			lexer.notSure();
-			oldtoken = token;
-			nextToken();
-			if(token.kind==XTokenKind.LGROUP){
-				lexer.sure();
-				nextToken();
-				statement = makeInnerStatement();
-				block = makeBlock();
-				return new XSynchroized(endLineBlock(), statement, block);
-			}else{
-				lexer.reset();
-				token = oldtoken;
-			}
-		case ABSTRACT:
-		case AT:
-		case FINAL:
-		case NATIVE:
-		case PRIVATE:
-		case PROTECTED:
-		case PUBLIC:
-		case STATIC:
-		case BOOL:
-		case BYTE:
-		case CHAR:
-		case DOUBLE:
-		case FLOAT:
-		case INT:
-		case LONG:
-		case SHORT:
-		case VOID:
-		case CLASS:
-		case ENUM:
-		case INTERFACE:
-		case ANNOTATION:
-			return makeDeclStatement();
 		case IDENT:
 			lexer.notSure();
 			oldtoken = token;
@@ -1092,7 +1113,7 @@ public class XParser {
 				token = oldtoken;
 			}
 		default:
-			return makeSecoundStatement(true);
+			return makeSecoundStatement(needEnding);
 		}
 	}
 
@@ -1121,14 +1142,25 @@ public class XParser {
 		return null;
 	}
 	
-	public XMethodDecl makeMethodDecl(XLineDesk line, XModifier modifier, List<XTypeParam> typeParam, XType returnType, String name, boolean isInterface){
+	public XMethodDecl makeMethodDecl(XLineDesk line, XModifier modifier, List<XTypeParam> typeParam, XType returnType, String name, boolean isInterface, boolean isConstructor){
 		List<XVarDecl> paramTypes = makeParamList();
 		List<XType> throwList = null;
 		if(token.kind==XTokenKind.THROWS){
 			throwList = makeTypeList(XTokenKind.COMMA);
 		}
+		List<XStatement> superConstructors = null;
+		if(isConstructor){
+			if(token.kind==XTokenKind.COLON){
+				superConstructors = new ArrayList<XTree.XStatement>();
+				superConstructors.add(makeStatementWithSuffixAndPrefix());
+				while(token.kind==XTokenKind.COMMA){
+					nextToken();
+					superConstructors.add(makeStatementWithSuffixAndPrefix());
+				}
+			}
+		}
 		XBlock block = null;
-		if((isInterface && token.kind!=XTokenKind.DEFAULT) || xscript.runtime.XModifier.isAbstract(modifier.modifier)){
+		if(((isInterface && token.kind!=XTokenKind.DEFAULT) || xscript.runtime.XModifier.isAbstract(modifier.modifier)) && !isConstructor){
 			if(!expected(XTokenKind.SEMICOLON) && token.kind==XTokenKind.LBRAKET){
 				block = makeBlock();
 			}
@@ -1138,7 +1170,7 @@ public class XParser {
 			}
 			block = makeBlock();
 		}
-		return new XMethodDecl(line, modifier, name, typeParam, returnType, paramTypes, throwList, block);
+		return new XMethodDecl(line, modifier, name, typeParam, returnType, paramTypes, throwList, block, superConstructors);
 	}
 	
 	public XVarDecl makeVarDecl(XLineDesk line, XModifier modifier, XType type, String name, int arrayAdd){
@@ -1182,13 +1214,22 @@ public class XParser {
 		if(token.kind==XTokenKind.CLASS || token.kind==XTokenKind.INTERFACE || token.kind==XTokenKind.ENUM || token.kind==XTokenKind.ANNOTATION){
 			return classDecl(modifier);
 		}
+		if(token.kind==XTokenKind.LBRAKET && xscript.runtime.XModifier.isStatic(modifier.modifier)){
+			if(modifier.annotations!=null){
+				parserMessage(XMessageLevel.ERROR, "staticblock.noannotations", modifier.line);
+			}
+			if(modifier.modifier!=xscript.runtime.XModifier.STATIC){
+				parserMessage(XMessageLevel.ERROR, "staticblock.wrongmodifier", modifier.line, xscript.runtime.XModifier.toString(modifier.modifier & ~xscript.runtime.XModifier.STATIC));
+			}
+			return makeBlock();
+		}
 		List<XTypeParam> typeParam = makeTypeParamList();
 		XType type = makeType();
 		boolean isConstructor = token.kind==XTokenKind.LGROUP && className!=null && type.name.name.equals(className);
 		XLineDesk line = new XLineDesk(token.lineDesk);
 		String name = isConstructor?"<init>":ident();
 		if(isConstructor || token.kind==XTokenKind.LGROUP){
-			return makeMethodDecl(line, modifier, typeParam, type, name, isInterface);
+			return makeMethodDecl(line, modifier, typeParam, type, name, isInterface, isConstructor);
 		}else{
 			XTree tree = makeVarDecls(line, modifier, type, name);
 			expected(XTokenKind.SEMICOLON);

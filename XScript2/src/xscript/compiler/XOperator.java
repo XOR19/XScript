@@ -11,6 +11,7 @@ public enum XOperator {
 	MUL("*", INFIX, 11),
 	DIV("/", INFIX, 11),
 	MOD("%", INFIX, 11),
+	POW("**", INFIX, 12),
 	SHR("<<", INFIX, 9),
 	SHL(">>", INFIX, 9),
 	
@@ -55,15 +56,13 @@ public enum XOperator {
 	DECS("--", SUFFIX, -1),
 	COPYS("<:", SUFFIX, -1),
 	
-	ELEMENT(".", INFIX, 12),
+	ELEMENT(".", INFIX, 13),
 	
 	IF("?", INFIX, 1),
 	
-	//TODO POW("**", INFIX, ?),
-	
 	;
 	
-	public final static boolean[] L2R = {false, false, true, true, true, true, true, true, true, true, true, true, true};
+	public final static boolean[] L2R = {false, false, true, true, true, true, true, true, true, true, true, true, true, true};
 	
 	public final String op;
 	public final Type type;
