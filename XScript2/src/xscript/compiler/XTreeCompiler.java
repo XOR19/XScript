@@ -247,8 +247,7 @@ public class XTreeCompiler implements XVisitor {
 	}
 
 	@Override
-	public void visitOperatorPrefixSuffix(
-			XOperatorPrefixSuffix xOperatorPrefixSuffix) {
+	public void visitOperatorPrefixSuffix(XOperatorPrefixSuffix xOperatorPrefixSuffix) {
 		// TODO Auto-generated method stub
 
 	}

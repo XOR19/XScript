@@ -167,6 +167,7 @@ public class XTreePrinter implements XVisitor {
 		accept("throws", xMethodDecl.throwList);
 		accept("block", xMethodDecl.block);
 		accept("superConstructors", xMethodDecl.superConstructors);
+		println("varargs:"+xMethodDecl.varargs);
 	}
 
 	@Override

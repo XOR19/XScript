@@ -346,26 +346,55 @@ public class XParser {
 		return list;
 	}
 	
-	public XVarDecl makeParamDecl(){
+	public Object[] makeParamDecl(){
 		startLineBlock();
 		XModifier modifier = makeModifier();
 		XType type = makeType();
+		boolean varArgs = false;
+		if(token.kind==XTokenKind.ELEMENT){
+			varArgs = true;
+			startLineBlock();
+			nextToken();
+			if(token.kind==XTokenKind.ELEMENT && !token.space){
+				nextToken();
+				if(token.kind==XTokenKind.ELEMENT && !token.space){
+					nextToken();
+					endLineBlock();
+				}else{
+					parserMessage(XMessageLevel.ERROR, "expect.elipsis", endLineBlock());
+					unhandledUnexpected = true;
+				}
+			}else{
+				parserMessage(XMessageLevel.ERROR, "expect.elipsis", endLineBlock());
+				unhandledUnexpected = true;
+			}
+		}
+		if(varArgs){
+			type.array++;
+		}
 		String name = ident();
-		return makeVarDecl(endLineBlock(), modifier, type, name, 0);
+		return new Object[]{makeVarDecl(endLineBlock(), modifier, type, name, 0), varArgs};
 	}
 	
-	public List<XVarDecl> makeParamList(){
+	public Object[] makeParamList(){
 		expected(XTokenKind.LGROUP);
 		List<XVarDecl> list = new ArrayList<XTree.XVarDecl>();
+		boolean varargs = false;
 		if(token.kind!=XTokenKind.RGROUP){
-			list.add(makeParamDecl());
+			Object[] args = makeParamDecl();
+			list.add((XVarDecl)args[0]);
+			varargs = (Boolean) args[1];
 			while(token.kind==XTokenKind.COMMA){
 				nextToken();
-				list.add(makeParamDecl());
+				if(varargs)
+					parserMessage(XMessageLevel.ERROR, "noparam.after.varargs");
+				args = makeParamDecl();
+				list.add((XVarDecl)args[0]);
+				varargs = (Boolean) args[1];
 			}
 		}
 		expected(XTokenKind.RGROUP);
-		return list;
+		return new Object[]{list, varargs};
 	}
 	
 	public XVarDecls makeVarDeclStatement(XModifier modifier){
@@ -1143,7 +1172,10 @@ public class XParser {
 	}
 	
 	public XMethodDecl makeMethodDecl(XLineDesk line, XModifier modifier, List<XTypeParam> typeParam, XType returnType, String name, boolean isInterface, boolean isConstructor){
-		List<XVarDecl> paramTypes = makeParamList();
+		Object[] p = makeParamList();
+		@SuppressWarnings("unchecked")
+		List<XVarDecl> paramTypes = (List<XVarDecl>) p[0];
+		boolean varargs = (Boolean) p[1];
 		List<XType> throwList = null;
 		if(token.kind==XTokenKind.THROWS){
 			throwList = makeTypeList(XTokenKind.COMMA);
@@ -1170,7 +1202,7 @@ public class XParser {
 			}
 			block = makeBlock();
 		}
-		return new XMethodDecl(line, modifier, name, typeParam, returnType, paramTypes, throwList, block, superConstructors);
+		return new XMethodDecl(line, modifier, name, typeParam, returnType, paramTypes, throwList, block, superConstructors, varargs);
 	}
 	
 	public XVarDecl makeVarDecl(XLineDesk line, XModifier modifier, XType type, String name, int arrayAdd){

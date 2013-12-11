@@ -326,7 +326,9 @@ public abstract class XTree{
 		
 		public List<XStatement> superConstructors;
 		
-		public XMethodDecl(XLineDesk line, XModifier modifier, String name, List<XTypeParam> typeParam, XType returnType, List<XVarDecl> paramTypes, List<XType> throwList, XBlock block, List<XStatement> superConstructors) {
+		public boolean varargs;
+		
+		public XMethodDecl(XLineDesk line, XModifier modifier, String name, List<XTypeParam> typeParam, XType returnType, List<XVarDecl> paramTypes, List<XType> throwList, XBlock block, List<XStatement> superConstructors, boolean varargs) {
 			super(line);
 			this.modifier = modifier;
 			this.name = name;
@@ -336,6 +338,7 @@ public abstract class XTree{
 			this.throwList = throwList;
 			this.block = block;
 			this.superConstructors = superConstructors;
+			this.varargs = varargs;
 		}
 		
 		@Override
