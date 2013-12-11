@@ -13,6 +13,7 @@ import xscript.compiler.XTree.XContinue;
 import xscript.compiler.XTree.XDo;
 import xscript.compiler.XTree.XError;
 import xscript.compiler.XTree.XFor;
+import xscript.compiler.XTree.XForeach;
 import xscript.compiler.XTree.XGroup;
 import xscript.compiler.XTree.XIdent;
 import xscript.compiler.XTree.XIf;
@@ -110,5 +111,7 @@ public interface XVisitor {
 	public void visitNewArray(XNewArray xNewArray);
 
 	public void visitArrayInitialize(XArrayInitialize xArrayInitialize);
+
+	public void visitForeach(XForeach xForeach);
 
 }
