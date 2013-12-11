@@ -241,10 +241,21 @@ public class XParser {
 	public XIdent qualident(){
 		startLineBlock();
 		String name = ident();
+		XToken oldToken = token;
+		lexer.notSure();
 		while(token.kind==XTokenKind.ELEMENT){
 			nextToken();
-			name += "."+ident();
+			if(token.kind==XTokenKind.IDENT){
+				lexer.sure();
+				name += "."+ident();
+				lexer.notSure();
+				oldToken = token;
+			}else{
+				break;
+			}
 		}
+		lexer.reset();
+		token = oldToken;
 		return new XIdent(endLineBlock(), name);
 	}
 	
