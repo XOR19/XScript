@@ -59,6 +59,8 @@ public enum XOperator {
 	
 	IF("?", INFIX, 1),
 	
+	//TODO POW("**", INFIX, ?),
+	
 	;
 	
 	public final static boolean[] L2R = {false, false, true, true, true, true, true, true, true, true, true, true, true};
