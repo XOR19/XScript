@@ -1,4 +1,6 @@
-package xscript.compiler;
+package xscript.compiler.message;
+
+import xscript.compiler.token.XLineDesk;
 
 
 public interface XMessageList {

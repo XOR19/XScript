@@ -1,7 +1,10 @@
-package xscript.compiler;
+package xscript.compiler.token;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import xscript.compiler.message.XMessageLevel;
+import xscript.compiler.message.XMessageList;
 
 
 public class XTokenParser {

@@ -1,4 +1,4 @@
-package xscript.compiler;
+package xscript.compiler.token;
 
 public class XComment {
 

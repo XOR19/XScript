@@ -1,44 +1,44 @@
-package xscript.compiler;
+package xscript.compiler.tree;
 
 import java.util.List;
 
-import xscript.compiler.XTree.XAnnotation;
-import xscript.compiler.XTree.XArrayInitialize;
-import xscript.compiler.XTree.XBlock;
-import xscript.compiler.XTree.XBreak;
-import xscript.compiler.XTree.XCast;
-import xscript.compiler.XTree.XCatch;
-import xscript.compiler.XTree.XClassDecl;
-import xscript.compiler.XTree.XClassFile;
-import xscript.compiler.XTree.XConstant;
-import xscript.compiler.XTree.XContinue;
-import xscript.compiler.XTree.XDo;
-import xscript.compiler.XTree.XError;
-import xscript.compiler.XTree.XFor;
-import xscript.compiler.XTree.XForeach;
-import xscript.compiler.XTree.XGroup;
-import xscript.compiler.XTree.XIdent;
-import xscript.compiler.XTree.XIf;
-import xscript.compiler.XTree.XIfOperator;
-import xscript.compiler.XTree.XImport;
-import xscript.compiler.XTree.XIndex;
-import xscript.compiler.XTree.XLambda;
-import xscript.compiler.XTree.XMethodCall;
-import xscript.compiler.XTree.XMethodDecl;
-import xscript.compiler.XTree.XModifier;
-import xscript.compiler.XTree.XNew;
-import xscript.compiler.XTree.XNewArray;
-import xscript.compiler.XTree.XOperatorPrefixSuffix;
-import xscript.compiler.XTree.XOperatorStatement;
-import xscript.compiler.XTree.XReturn;
-import xscript.compiler.XTree.XSynchroized;
-import xscript.compiler.XTree.XThrow;
-import xscript.compiler.XTree.XTry;
-import xscript.compiler.XTree.XType;
-import xscript.compiler.XTree.XTypeParam;
-import xscript.compiler.XTree.XVarDecl;
-import xscript.compiler.XTree.XVarDecls;
-import xscript.compiler.XTree.XWhile;
+import xscript.compiler.tree.XTree.XAnnotation;
+import xscript.compiler.tree.XTree.XArrayInitialize;
+import xscript.compiler.tree.XTree.XBlock;
+import xscript.compiler.tree.XTree.XBreak;
+import xscript.compiler.tree.XTree.XCast;
+import xscript.compiler.tree.XTree.XCatch;
+import xscript.compiler.tree.XTree.XClassDecl;
+import xscript.compiler.tree.XTree.XClassFile;
+import xscript.compiler.tree.XTree.XConstant;
+import xscript.compiler.tree.XTree.XContinue;
+import xscript.compiler.tree.XTree.XDo;
+import xscript.compiler.tree.XTree.XError;
+import xscript.compiler.tree.XTree.XFor;
+import xscript.compiler.tree.XTree.XForeach;
+import xscript.compiler.tree.XTree.XGroup;
+import xscript.compiler.tree.XTree.XIdent;
+import xscript.compiler.tree.XTree.XIf;
+import xscript.compiler.tree.XTree.XIfOperator;
+import xscript.compiler.tree.XTree.XImport;
+import xscript.compiler.tree.XTree.XIndex;
+import xscript.compiler.tree.XTree.XLambda;
+import xscript.compiler.tree.XTree.XMethodCall;
+import xscript.compiler.tree.XTree.XMethodDecl;
+import xscript.compiler.tree.XTree.XModifier;
+import xscript.compiler.tree.XTree.XNew;
+import xscript.compiler.tree.XTree.XNewArray;
+import xscript.compiler.tree.XTree.XOperatorPrefixSuffix;
+import xscript.compiler.tree.XTree.XOperatorStatement;
+import xscript.compiler.tree.XTree.XReturn;
+import xscript.compiler.tree.XTree.XSynchroized;
+import xscript.compiler.tree.XTree.XThrow;
+import xscript.compiler.tree.XTree.XTry;
+import xscript.compiler.tree.XTree.XType;
+import xscript.compiler.tree.XTree.XTypeParam;
+import xscript.compiler.tree.XTree.XVarDecl;
+import xscript.compiler.tree.XTree.XVarDecls;
+import xscript.compiler.tree.XTree.XWhile;
 
 public class XTreeChanger implements XVisitor {
 
@@ -254,6 +254,7 @@ public class XTreeChanger implements XVisitor {
 	@Override
 	public void visitNewArray(XNewArray xNewArray) {
 		xNewArray.type = visitTree(xNewArray.type);
+		xNewArray.arraySizes = visitTree(xNewArray.arraySizes);
 		xNewArray.arrayInitialize = visitTree(xNewArray.arrayInitialize);
 	}
 

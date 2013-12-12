@@ -6,6 +6,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 
+import xscript.compiler.message.XMessageElement;
+import xscript.compiler.message.XMessageFormatter;
+import xscript.compiler.message.XMessageLevel;
+import xscript.compiler.message.XMessageList;
+import xscript.compiler.token.XLineDesk;
+import xscript.compiler.tree.XTree;
+import xscript.compiler.tree.XTreeMaker;
+
 public class XCompiler {
 
 	private static HashMap<String, XTreeMaker> treeMakers = new HashMap<String, XTreeMaker>();

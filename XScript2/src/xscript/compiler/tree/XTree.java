@@ -1,6 +1,9 @@
-package xscript.compiler;
+package xscript.compiler.tree;
 
 import java.util.List;
+
+import xscript.compiler.XOperator;
+import xscript.compiler.token.XLineDesk;
 
 public abstract class XTree{
 
@@ -737,11 +740,11 @@ public abstract class XTree{
 		
 		public XType type;
 		
-		public List<Integer> arraySizes;
+		public List<XStatement> arraySizes;
 		
 		public XStatement arrayInitialize;
 		
-		public XNewArray(XLineDesk line, XType type, List<Integer> arraySizes, XStatement arrayInitialize) {
+		public XNewArray(XLineDesk line, XType type, List<XStatement> arraySizes, XStatement arrayInitialize) {
 			super(line);
 			this.type = type;
 			this.arraySizes = arraySizes;

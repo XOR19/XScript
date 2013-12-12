@@ -1,4 +1,4 @@
-package xscript.compiler;
+package xscript.compiler.message;
 
 import java.util.Arrays;
 

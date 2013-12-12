@@ -1,8 +1,8 @@
 package xscript.compiler.standart;
 
-import xscript.compiler.XMessageList;
-import xscript.compiler.XTree;
-import xscript.compiler.XTreeMaker;
+import xscript.compiler.message.XMessageList;
+import xscript.compiler.tree.XTree;
+import xscript.compiler.tree.XTreeMaker;
 
 public class XStandartTreeMaker implements XTreeMaker {
 

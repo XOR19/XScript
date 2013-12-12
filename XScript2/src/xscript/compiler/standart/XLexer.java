@@ -3,9 +3,9 @@ package xscript.compiler.standart;
 import java.util.ArrayList;
 import java.util.List;
 
-import xscript.compiler.XMessageList;
-import xscript.compiler.XToken;
-import xscript.compiler.XTokenParser;
+import xscript.compiler.message.XMessageList;
+import xscript.compiler.token.XToken;
+import xscript.compiler.token.XTokenParser;
 
 public class XLexer {
 

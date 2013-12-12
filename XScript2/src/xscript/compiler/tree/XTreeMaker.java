@@ -1,4 +1,6 @@
-package xscript.compiler;
+package xscript.compiler.tree;
+
+import xscript.compiler.message.XMessageList;
 
 public interface XTreeMaker {
 	

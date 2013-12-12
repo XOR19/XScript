@@ -1,4 +1,4 @@
-package xscript.compiler;
+package xscript.compiler.token;
 
 import java.util.List;
 

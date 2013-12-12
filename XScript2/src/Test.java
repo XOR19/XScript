@@ -1,7 +1,7 @@
-import xscript.compiler.XMessagePrinter;
-import xscript.compiler.XTree;
-import xscript.compiler.XTreePrinter;
+import xscript.compiler.message.XMessagePrinter;
 import xscript.compiler.standart.XStandartTreeMaker;
+import xscript.compiler.tree.XTree;
+import xscript.compiler.tree.XTreePrinter;
 
 
 
