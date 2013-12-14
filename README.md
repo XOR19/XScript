@@ -1,4 +1,4 @@
 XScript
 =======
 
-A script language developed for the Minecraft mod PowerCraft
+A script language developed for the Minecraft Mod "PowerCraft"
