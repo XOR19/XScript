@@ -14,15 +14,11 @@ public class XVirtualMachine {
 	private XThreadProvider threadProvider;
 
 	public XVirtualMachine(XClassLoader standartClassLoader, int memSize){
-		classProvider = createClassProvider();
+		classProvider = new XClassProvider(this);
 		objectProvider = new XObjectProvider(this, memSize);
 		nativeProvider = new XNativeProvider(this);
 		threadProvider = new XThreadProvider(this);
 		classProvider.addClassLoader(standartClassLoader);
-	}
-	
-	protected XClassProvider createClassProvider(){
-		return new XClassProvider(this);
 	}
 	
 	public XClassProvider getClassProvider() {

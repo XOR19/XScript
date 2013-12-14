@@ -15,6 +15,7 @@ import xscript.compiler.tree.XTree.XAnnotation;
 import xscript.compiler.tree.XTree.XArrayInitialize;
 import xscript.compiler.tree.XTree.XBlock;
 import xscript.compiler.tree.XTree.XBreak;
+import xscript.compiler.tree.XTree.XCase;
 import xscript.compiler.tree.XTree.XCast;
 import xscript.compiler.tree.XTree.XCatch;
 import xscript.compiler.tree.XTree.XClassDecl;
@@ -30,6 +31,7 @@ import xscript.compiler.tree.XTree.XIf;
 import xscript.compiler.tree.XTree.XIfOperator;
 import xscript.compiler.tree.XTree.XImport;
 import xscript.compiler.tree.XTree.XIndex;
+import xscript.compiler.tree.XTree.XLable;
 import xscript.compiler.tree.XTree.XLambda;
 import xscript.compiler.tree.XTree.XMethodCall;
 import xscript.compiler.tree.XTree.XMethodDecl;
@@ -40,7 +42,8 @@ import xscript.compiler.tree.XTree.XOperatorPrefixSuffix;
 import xscript.compiler.tree.XTree.XOperatorStatement;
 import xscript.compiler.tree.XTree.XReturn;
 import xscript.compiler.tree.XTree.XStatement;
-import xscript.compiler.tree.XTree.XSynchroized;
+import xscript.compiler.tree.XTree.XSwitch;
+import xscript.compiler.tree.XTree.XSynchronized;
 import xscript.compiler.tree.XTree.XTag;
 import xscript.compiler.tree.XTree.XThrow;
 import xscript.compiler.tree.XTree.XTry;
@@ -327,7 +330,7 @@ public class XParser {
 	
 	public XTypeParam makeTypeParam(){
 		startLineBlock();
-		XIdent name = qualident();
+		String name = ident();
 		boolean isSuper = false;
 		List<XType> extend = null;
 		if(token.kind==XTokenKind.EXTENDS || token.kind==XTokenKind.COLON){
@@ -356,7 +359,7 @@ public class XParser {
 		return list;
 	}
 	
-	public Object[] makeParamDecl(){
+	public Object[] makeParamDecl(boolean needName){
 		startLineBlock();
 		XModifier modifier = makeModifier();
 		XType type = makeType();
@@ -382,23 +385,28 @@ public class XParser {
 		if(varArgs){
 			type.array++;
 		}
-		String name = ident();
+		String name;
+		if(needName || token.kind==XTokenKind.IDENT){
+			name = ident();
+		}else{
+			name = null;
+		}
 		return new Object[]{makeVarDecl(endLineBlock(), modifier, type, name, 0), varArgs};
 	}
 	
-	public Object[] makeParamList(){
+	public Object[] makeParamList(boolean needName){
 		expected(XTokenKind.LGROUP);
 		List<XVarDecl> list = new ArrayList<XTree.XVarDecl>();
 		boolean varargs = false;
 		if(token.kind!=XTokenKind.RGROUP){
-			Object[] args = makeParamDecl();
+			Object[] args = makeParamDecl(needName);
 			list.add((XVarDecl)args[0]);
 			varargs = (Boolean) args[1];
 			while(token.kind==XTokenKind.COMMA){
 				nextToken();
 				if(varargs)
 					parserMessage(XMessageLevel.ERROR, "noparam.after.varargs");
-				args = makeParamDecl();
+				args = makeParamDecl(needName);
 				list.add((XVarDecl)args[0]);
 				varargs = (Boolean) args[1];
 			}
@@ -763,6 +771,17 @@ public class XParser {
 		}
 		if(prefix.isEmpty())
 			prefix = null;
+		List<XType> typeParam = null;
+		if(token.kind==XTokenKind.SMALLER){
+			nextToken();
+			typeParam = new ArrayList<XTree.XType>();
+			typeParam.add(makeType());
+			while(token.kind==XTokenKind.COMMA){
+				nextToken();
+				typeParam.add(makeType());
+			}
+			expected(XTokenKind.GREATER);
+		}
 		XStatement statement = makeNumRead(true);
 		List<XOperator> suffix = new ArrayList<XOperator>();
 		while(isOperator(token.kind)){
@@ -778,12 +797,12 @@ public class XParser {
 		}else{
 			statement = new XOperatorPrefixSuffix(endLineBlock(), null, statement, suffix);
 		}
-		while(token.kind==XTokenKind.LGROUP || token.kind==XTokenKind.LINDEX){
+		while(token.kind==XTokenKind.LGROUP || token.kind==XTokenKind.LINDEX || typeParam!=null){
 			startLineBlock();
 			startLineBlock();
-			if(token.kind==XTokenKind.LGROUP){
+			if(token.kind==XTokenKind.LGROUP || typeParam!=null){
 				List<XStatement> list = makeMethodCallParamList();
-				statement = new XMethodCall(endLineBlock(), statement, list);
+				statement = new XMethodCall(endLineBlock(), statement, list, typeParam);
 			}else if(token.kind==XTokenKind.LINDEX){
 				nextToken();
 				XStatement index = makeInnerStatement();
@@ -874,6 +893,12 @@ public class XParser {
 	
 	public XStatement makeInnerStatement(){
 		XStatement statement = makeStatementWithSuffixAndPrefix();
+		XLable lable = null;
+		if(token.kind==XTokenKind.COLON && statement instanceof XIdent && ((XIdent)statement).name.indexOf('.')==-1){
+			lable = new XLable(statement.line, ((XIdent)statement).name);
+			nextToken();
+			statement = makeStatementWithSuffixAndPrefix();
+		}
 		XStatement between = null;
 		while(isOperator(token.kind)){
 			startLineBlock();
@@ -888,7 +913,10 @@ public class XParser {
 			}
 			statement = mergeStatements(endLineBlock(), statement, o, makeStatementWithSuffixAndPrefix(), between);
 		}
-		return statement;
+		if(lable==null)
+			return statement;
+		lable.statement = statement;
+		return lable;
 	}
 	
 	public XStatement makeSecoundStatement(boolean needEnding){
@@ -909,7 +937,7 @@ public class XParser {
 				nextToken();
 				statement = makeInnerStatement();
 				block = makeBlock();
-				return new XSynchroized(endLineBlock(), statement, block);
+				return new XSynchronized(endLineBlock(), statement, block);
 			}else{
 				lexer.reset();
 				token = oldtoken;
@@ -967,9 +995,12 @@ public class XParser {
 			}
 			return new XIf(endLineBlock(), statement, block, block2);
 		case SWITCH:
-			endLineBlock();
-			parserMessage(XMessageLevel.ERROR, "unexpected.keyword", token.kind.name);
-			return null;
+			nextToken();
+			expected(XTokenKind.LGROUP);
+			statement = makeInnerStatement();
+			expected(XTokenKind.RGROUP);
+			List<XCase> cases = makeSwitchBlock();
+			return new XSwitch(endLineBlock(), statement, cases);
 		case DO:
 			nextToken();
 			block = makeSecoundStatement(true);
@@ -1105,6 +1136,29 @@ public class XParser {
 		}
 	}
 	
+	public List<XCase> makeSwitchBlock() {
+		if(expected(XTokenKind.LBRAKET)){
+			List<XCase> cases = new ArrayList<XCase>();
+			List<XStatement> statements = null;
+			while(token.kind!=XTokenKind.RBRAKET && token.kind!=XTokenKind.EOF){
+				if(token.kind==XTokenKind.CASE){
+					XStatement key = makeNumRead(true);
+					expected(XTokenKind.COLON);
+					statements = new ArrayList<XTree.XStatement>();
+					cases.add(new XCase(token.lineDesk, key, statements));
+				}else{
+					statements.add(makeStatement(true));
+				}
+				if(unhandledUnexpected){
+					skip(false, true, true, true, false, true, true);
+				}
+			}
+			expected(XTokenKind.RBRAKET);
+			return cases;
+		}
+		return null;
+	}
+
 	public XStatement makeStatement(boolean needEnding){
 		XToken oldtoken;
 		switch(token.kind){
@@ -1173,7 +1227,8 @@ public class XParser {
 	}
 	
 	public XMethodDecl makeMethodDecl(XLineDesk line, XModifier modifier, List<XTypeParam> typeParam, XType returnType, String name, boolean isInterface, boolean isConstructor){
-		Object[] p = makeParamList();
+		int m = modifier==null?0:modifier.modifier;
+		Object[] p = makeParamList(!(xscript.runtime.XModifier.isAbstract(m) || xscript.runtime.XModifier.isNative(m)));
 		@SuppressWarnings("unchecked")
 		List<XVarDecl> paramTypes = (List<XVarDecl>) p[0];
 		boolean varargs = (Boolean) p[1];
@@ -1194,7 +1249,7 @@ public class XParser {
 			}
 		}
 		XBlock block = null;
-		if(((isInterface && token.kind!=XTokenKind.DEFAULT) || xscript.runtime.XModifier.isAbstract(modifier.modifier)) && !isConstructor){
+		if(((isInterface && token.kind!=XTokenKind.DEFAULT) || xscript.runtime.XModifier.isAbstract(modifier.modifier) || xscript.runtime.XModifier.isNative(modifier.modifier)) && !isConstructor){
 			if(!expected(XTokenKind.SEMICOLON) && token.kind==XTokenKind.LBRAKET){
 				block = makeBlock();
 			}
@@ -1384,8 +1439,13 @@ public class XParser {
 		startLineBlock();
 		expected(XTokenKind.ENUM);
 		modifier.modifier |= xscript.runtime.XModifier.FINAL;
+		startLineBlock();
 		String name = ident();
 		List<XType> superClasses = new ArrayList<XTree.XType>();
+		XLineDesk line = endLineBlock();
+		List<XType> list = new ArrayList<XTree.XType>();
+		list.add(new XType(line, new XIdent(line, name), null, 0));
+		superClasses.add(new XType(line, new XIdent(line, "xscript.lang.Enum"), list, 0));
 		if(token.kind==XTokenKind.COLON){
 			nextToken();
 			superClasses.addAll(makeTypeList(XTokenKind.COMMA));
@@ -1394,7 +1454,7 @@ public class XParser {
 			parserMessage(XMessageLevel.INFO, "newextends");
 			superClasses.addAll(makeTypeList(XTokenKind.COMMA));
 		}
-		XLineDesk line = endLineBlock();
+		line = endLineBlock();
 		List<XTree> body = enumBody(name);
 		return new XClassDecl(line, modifier, name, null, superClasses, body);
 	}
@@ -1406,10 +1466,13 @@ public class XParser {
 	public XClassDecl annotationDecl(XModifier modifier){
 		startLineBlock();
 		expected(XTokenKind.ANNOTATION);
+		startLineBlock();
 		String name = ident();
 		XLineDesk line = endLineBlock();
+		List<XType> superClasses = new ArrayList<XTree.XType>();
+		superClasses.add(new XType(line, new XIdent(line, "xscript.lang.Annotation"), null, 0));
 		List<XTree> body = annotationBody(name);
-		return new XClassDecl(line, modifier, name, null, new ArrayList<XTree.XType>(), body);
+		return new XClassDecl(line, modifier, name, null, superClasses, body);
 	}
 	
 	public XClassDecl makeClassDecl(XModifier modifier){

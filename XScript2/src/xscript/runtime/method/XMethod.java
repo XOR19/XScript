@@ -27,9 +27,9 @@ import xscript.runtime.threads.XMethodExecutor;
 
 public class XMethod extends XPackage {
 	
-	public static final int STATICALLOWEDMODIFIFER = XModifier.FINAL | XModifier.PRIVATE | XModifier.PROTECTED | XModifier.PUBLIC | XModifier.STATIC | XModifier.NATIVE;
-	public static final int ALLOWEDMODIFIFER = XModifier.FINAL | XModifier.PRIVATE | XModifier.PROTECTED | XModifier.PUBLIC | XModifier.ABSTRACT | XModifier.NATIVE;
-	public static final int CONSTRUCTORMODIFIER = XModifier.PRIVATE | XModifier.PROTECTED | XModifier.PUBLIC;
+	public static final int STATICALLOWEDMODIFIFER = XModifier.FINAL | XModifier.PRIVATE | XModifier.PROTECTED | XModifier.PUBLIC | XModifier.STATIC | XModifier.NATIVE | XModifier.VARARGS;
+	public static final int ALLOWEDMODIFIFER = XModifier.FINAL | XModifier.PRIVATE | XModifier.PROTECTED | XModifier.PUBLIC | XModifier.ABSTRACT | XModifier.NATIVE | XModifier.VARARGS;
+	public static final int CONSTRUCTORMODIFIER = XModifier.PRIVATE | XModifier.PROTECTED | XModifier.PUBLIC | XModifier.VARARGS;
 	public static final int STATICCONSTRUCTORMODIFIER = XModifier.STATIC | XModifier.FINAL | XModifier.PRIVATE;
 	
 	protected int modifier;
@@ -76,9 +76,24 @@ public class XMethod extends XPackage {
 		for(int i=0; i<genericInfos.length; i++){
 			genericInfos[i] = new XGenericInfo(declaringClass.getVirtualMachine(), inputStream);
 		}
+		if(XModifier.isStatic(modifier)){
+			if(name.equals("<staticInit>")){
+				modifier |= STATICCONSTRUCTORMODIFIER;
+				XChecks.checkModifier(declaringClass, modifier, STATICCONSTRUCTORMODIFIER);
+			}else{
+				XChecks.checkModifier(declaringClass, modifier, STATICALLOWEDMODIFIFER);
+			}
+		}else {
+			index = declaringClass.getMethodIndex();
+			if(name.equals("<init>")){
+				XChecks.checkModifier(declaringClass, modifier, CONSTRUCTORMODIFIER);
+			}else{
+				XChecks.checkModifier(declaringClass, modifier, ALLOWEDMODIFIFER);
+			}
+		}
 		if(XModifier.isNative(modifier)){
 			getNativeMethod();
-		}else{
+		}else if(!XModifier.isAbstract(modifier)){
 			instructions = new XInstruction[inputStream.readInt()];
 			for(int i=0; i<instructions.length; i++){
 				instructions[i] = XInstruction.load(inputStream);
@@ -98,22 +113,11 @@ public class XMethod extends XPackage {
 			maxStackSize = inputStream.readUnsignedShort();
 			maxLocalSize = inputStream.readUnsignedShort();
 		}
-		if(XModifier.isStatic(modifier)){
-			if(name.equals("<staticInit>")){
-				modifier |= STATICCONSTRUCTORMODIFIER;
-				XChecks.checkModifier(declaringClass, modifier, STATICCONSTRUCTORMODIFIER);
-			}else{
-				XChecks.checkModifier(declaringClass, modifier, STATICALLOWEDMODIFIFER);
-			}
-		}else {
-			index = declaringClass.getMethodIndex();
-			if(name.equals("<init>")){
-				XChecks.checkModifier(declaringClass, modifier, CONSTRUCTORMODIFIER);
-			}else if(name.equals("<preInit>")){
-				modifier |= XModifier.PROTECTED;
-				XChecks.checkModifier(declaringClass, modifier, XModifier.PROTECTED);
-			}else{
-				XChecks.checkModifier(declaringClass, modifier, ALLOWEDMODIFIFER);
+		if(XModifier.isVarargs(modifier)){
+			if(params.length==0){
+				throw new XRuntimeException("need array argument for varargs in %s", declaringClass);
+			}else if(!params[params.length-1].getXClass(declaringClass.getVirtualMachine()).isArray()){
+				throw new XRuntimeException("last argument need to be an array argumentfor varargs in %s", declaringClass);
 			}
 		}
 	}
@@ -133,13 +137,13 @@ public class XMethod extends XPackage {
 			getNativeMethod();
 		}
 		if(XModifier.isStatic(modifier)){
-			if(name.equals("<staticInit>")){
+			if(name.equals("<static>")){
 				modifier |= STATICCONSTRUCTORMODIFIER;
 				XChecks.checkModifier(declaringClass, modifier, STATICCONSTRUCTORMODIFIER);
 			}else{
 				XChecks.checkModifier(declaringClass, modifier, STATICALLOWEDMODIFIFER);
 			}
-		}else {
+		}else{
 			index = declaringClass.getMethodIndex();
 			if(name.equals("<init>")){
 				XChecks.checkModifier(declaringClass, modifier, CONSTRUCTORMODIFIER);
@@ -148,6 +152,13 @@ public class XMethod extends XPackage {
 				XChecks.checkModifier(declaringClass, modifier, XModifier.PROTECTED);
 			}else{
 				XChecks.checkModifier(declaringClass, modifier, ALLOWEDMODIFIFER);
+			}
+		}
+		if(XModifier.isVarargs(modifier)){
+			if(params.length==0){
+				throw new XRuntimeException("need array argument for varargs in %s", declaringClass);
+			}else if(!params[params.length-1].getXClass(declaringClass.getVirtualMachine()).isArray()){
+				throw new XRuntimeException("last argument need to be an array argumentfor varargs in %s", declaringClass);
 			}
 		}
 	}

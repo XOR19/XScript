@@ -60,13 +60,20 @@ public class XClassProvider {
 			}
 			rec--;
 		}
+		XClass xClass = null;
 		if(xPackage instanceof XClass){
-			XClass xClass = (XClass)xPackage;
-			if(xClass.getState()==XClass.STATE_RUNNABLE){
-				return xClass;
-			}
+			xClass = (XClass)xPackage;
+		}else if(xPackage instanceof XClassMaker){
+			xClass = ((XClassMaker)xPackage).makeClass();
+			xPackage.getParent().overridePackage(xPackage.getName(), xClass);
+			((XClassMaker)xPackage).onReplaced(xClass);
 		}
-		throw new XRuntimeException("Class %s not found", name);
+		if(xClass==null)
+			throw new XRuntimeException("Class %s not found", name);
+		if(xClass.getState()==XClass.STATE_ERRORED){
+			throw new XRuntimeException("Class %s errored", name);
+		}
+		return xClass;
 	}
 	
 	private void postLoad(){
@@ -128,6 +135,20 @@ public class XClassProvider {
 			xPackage = xPackage2;
 		}
 		xPackage.addChild(xClass);
+	}
+	
+	public void addClassMaker(XClassMaker maker, String name){
+		String s[] = name.split("\\.");
+		XPackage xPackage = rootPackage;
+		for(int i=0; i<s.length-1; i++){
+			XPackage xPackage2 = xPackage.getChild(s[i]);
+			if(xPackage2==null){
+				xPackage2 = new XPackage(s[i]);
+				xPackage.addChild(xPackage2);
+			}
+			xPackage = xPackage2;
+		}
+		xPackage.addChild(maker);
 	}
 	
 	public void markVisible() {

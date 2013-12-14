@@ -102,6 +102,10 @@ public class XClass extends XPackage{
 		return superClasses[0].getXClass(virtualMachine).getName().equals("xscript.lang.Enum");
 	}
 	
+	public boolean isArray() {
+		return getName().startsWith("xscript.lang.Array");
+	}
+	
 	public int getGenericID(String genericName) {
 		for(int i=0; i<genericInfos.length; i++){
 			if(genericInfos[i].getName().equals(genericName)){

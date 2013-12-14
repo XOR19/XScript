@@ -6,6 +6,7 @@ import xscript.compiler.tree.XTree.XAnnotation;
 import xscript.compiler.tree.XTree.XArrayInitialize;
 import xscript.compiler.tree.XTree.XBlock;
 import xscript.compiler.tree.XTree.XBreak;
+import xscript.compiler.tree.XTree.XCase;
 import xscript.compiler.tree.XTree.XCast;
 import xscript.compiler.tree.XTree.XCatch;
 import xscript.compiler.tree.XTree.XClassDecl;
@@ -22,6 +23,7 @@ import xscript.compiler.tree.XTree.XIf;
 import xscript.compiler.tree.XTree.XIfOperator;
 import xscript.compiler.tree.XTree.XImport;
 import xscript.compiler.tree.XTree.XIndex;
+import xscript.compiler.tree.XTree.XLable;
 import xscript.compiler.tree.XTree.XLambda;
 import xscript.compiler.tree.XTree.XMethodCall;
 import xscript.compiler.tree.XTree.XMethodDecl;
@@ -31,7 +33,8 @@ import xscript.compiler.tree.XTree.XNewArray;
 import xscript.compiler.tree.XTree.XOperatorPrefixSuffix;
 import xscript.compiler.tree.XTree.XOperatorStatement;
 import xscript.compiler.tree.XTree.XReturn;
-import xscript.compiler.tree.XTree.XSynchroized;
+import xscript.compiler.tree.XTree.XSwitch;
+import xscript.compiler.tree.XTree.XSynchronized;
 import xscript.compiler.tree.XTree.XThrow;
 import xscript.compiler.tree.XTree.XTry;
 import xscript.compiler.tree.XTree.XType;
@@ -98,7 +101,6 @@ public class XTreeChanger implements XVisitor {
 
 	@Override
 	public void visitTypeParam(XTypeParam xTypeParam) {
-		xTypeParam.name = visitTree(xTypeParam.name);
 		xTypeParam.extend = visitTree(xTypeParam.extend);
 	}
 
@@ -179,7 +181,7 @@ public class XTreeChanger implements XVisitor {
 	}
 
 	@Override
-	public void visitThrow(XSynchroized xSynchroized) {
+	public void visitSynchronized(XSynchronized xSynchroized) {
 		xSynchroized.ident = visitTree(xSynchroized.ident);
 		xSynchroized.block = visitTree(xSynchroized.block);
 	}
@@ -191,6 +193,7 @@ public class XTreeChanger implements XVisitor {
 	public void visitMethodCall(XMethodCall xMethodCall) {
 		xMethodCall.method = visitTree(xMethodCall.method);
 		xMethodCall.params = visitTree(xMethodCall.params);
+		xMethodCall.typeParam = visitTree(xMethodCall.typeParam);
 	}
 
 	@Override
@@ -268,6 +271,23 @@ public class XTreeChanger implements XVisitor {
 		xForeach.var = visitTree(xForeach.var);
 		xForeach.in = visitTree(xForeach.in);
 		xForeach.block = visitTree(xForeach.block);
+	}
+
+	@Override
+	public void visitLable(XLable xLable) {
+		xLable.statement = visitTree(xLable.statement);
+	}
+
+	@Override
+	public void visitSwitch(XSwitch xSwitch) {
+		xSwitch.statement = visitTree(xSwitch.statement);
+		xSwitch.cases = visitTree(xSwitch.cases);
+	}
+
+	@Override
+	public void visitCase(XCase xCase) {
+		xCase.key = visitTree(xCase.key);
+		xCase.block = visitTree(xCase.block);
 	}
 
 }

@@ -56,5 +56,13 @@ public class XPackage {
 			child.markVisible();
 		}
 	}
+
+	public void overridePackage(String name, XPackage xPackage) {
+		childs.put(name, xPackage);
+	}
+
+	public XPackage getParent() {
+		return parent;
+	}
 	
 }

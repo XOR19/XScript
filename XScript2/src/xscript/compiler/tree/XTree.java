@@ -14,7 +14,7 @@ public abstract class XTree{
 		DOUBLELITERAL, LONGLITERAL, INTLITERAL, CHARLITERAL, STRINGLITERAL, 
 		TRUE, FALSE, NULL, METHODCALL, NEW, OPERATOR, OPERATORSUFFIXPREFIX, 
 		INDEX, IFOPERATOR, CAST, LAMBDA, TRY, CATCH, NEWARRAY, ARRAYINITIALIZE, 
-		FOREACH;
+		FOREACH, LABLE, SWITCH, CASE;
 	}
 	
 	public static class XError extends XTree{
@@ -235,13 +235,13 @@ public abstract class XTree{
 	
 	public static class XTypeParam extends XTree{
 		
-		public XIdent name;
+		public String name;
 		
 		public List<XType> extend;
 		
 		public boolean isSuper;
 		
-		public XTypeParam(XLineDesk line, XIdent name, List<XType> extend, boolean isSuper) {
+		public XTypeParam(XLineDesk line, String name, List<XType> extend, boolean isSuper) {
 			super(line);
 			this.name = name;
 			this.extend = extend;
@@ -614,13 +614,13 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XSynchroized extends XStatement{
+	public static class XSynchronized extends XStatement{
 
 		public XStatement ident;
 		
 		public XStatement block;
 		
-		public XSynchroized(XLineDesk line, XStatement ident, XStatement block) {
+		public XSynchronized(XLineDesk line, XStatement ident, XStatement block) {
 			super(line);
 			this.ident = ident;
 			this.block = block;
@@ -633,7 +633,7 @@ public abstract class XTree{
 
 		@Override
 		public void accept(XVisitor v) {
-			v.visitThrow(this);
+			v.visitSynchronized(this);
 		}
 		
 	}
@@ -667,10 +667,13 @@ public abstract class XTree{
 		
 		public List<XStatement> params;
 		
-		public XMethodCall(XLineDesk line, XStatement method, List<XStatement> params) {
+		public List<XType> typeParam;
+		
+		public XMethodCall(XLineDesk line, XStatement method, List<XStatement> params, List<XType> typeParam) {
 			super(line);
 			this.method = method;
 			this.params = params;
+			this.typeParam = typeParam;
 		}
 
 		@Override
@@ -963,6 +966,75 @@ public abstract class XTree{
 		@Override
 		public void accept(XVisitor v) {
 			v.visitArrayInitialize(this);
+		}
+		
+	}
+	
+	public static class XLable extends XStatement{
+
+		public String name;
+		
+		public XStatement statement;
+		
+		public XLable(XLineDesk line, String name) {
+			super(line);
+			this.name = name;
+		}
+
+		@Override
+		public XTag getTag() {
+			return XTag.LABLE;
+		}
+
+		@Override
+		public void accept(XVisitor v) {
+			v.visitLable(this);
+		}
+		
+	}
+	
+	public static class XSwitch extends XStatement{
+
+		public XStatement statement;
+		
+		public List<XCase> cases;
+		
+		public XSwitch(XLineDesk line, XStatement statement, List<XCase> cases) {
+			super(line);
+			this.statement = statement;
+			this.cases = cases;
+		}
+
+		@Override
+		public XTag getTag() {
+			return XTag.SWITCH;
+		}
+
+		@Override
+		public void accept(XVisitor v) {
+			v.visitSwitch(this);
+		}
+		
+	}
+	
+	public static class XCase extends XTree{
+
+		public XStatement key;
+		
+		public List<XStatement> block;
+		
+		public XCase(XLineDesk line, XStatement key, List<XStatement> block) {
+			super(line);
+		}
+		
+		@Override
+		public XTag getTag() {
+			return XTag.CASE;
+		}
+
+		@Override
+		public void accept(XVisitor v) {
+			v.visitCase(this);
 		}
 		
 	}

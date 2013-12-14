@@ -33,13 +33,13 @@ public class XClassPtrGeneric extends XClassPtr{
 			return generic;
 		if(xClass==null){
 			xClass = virtualMachine.getClassProvider().getXClass(className);
-			if(isStatic()){
-				XGenericClass[] generics = new XGenericClass[genericPtrs.length];
-				for(int i=0; i<generics.length; i++){
-					generics[i] = genericPtrs[i].getXClass(virtualMachine, genericClass, methodExecutor);
-				}
-				return generic = new XGenericClass(xClass, generics);
+		}
+		if(isStatic()){
+			XGenericClass[] generics = new XGenericClass[genericPtrs.length];
+			for(int i=0; i<generics.length; i++){
+				generics[i] = genericPtrs[i].getXClass(virtualMachine, genericClass, methodExecutor);
 			}
+			return generic = new XGenericClass(xClass, generics);
 		}
 		XGenericClass[] generics = new XGenericClass[genericPtrs.length];
 		for(int i=0; i<generics.length; i++){

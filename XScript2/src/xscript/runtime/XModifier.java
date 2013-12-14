@@ -14,6 +14,7 @@ public class XModifier {
 	public static final String STATIC_NAME = "static"; //$NON-NLS-1$
 	public static final String NATIVE_NAME = "native"; //$NON-NLS-1$
 	public static final String SYNCHRONIZED_NAME = "synchronized"; //$NON-NLS-1$
+	public static final String VARARGS_NAME = "varargs"; //$NON-NLS-1$
 	
 	public static final int PUBLIC = 1;
 	public static final int PRIVATE = 2;
@@ -23,6 +24,7 @@ public class XModifier {
 	public static final int STATIC = 32;
 	public static final int NATIVE = 64;
 	public static final int SYNCHRONIZED = 128;
+	public static final int VARARGS = 256;
 	
 	private static final HashMap<String, Integer> map = new HashMap<String, Integer>();
 
@@ -35,6 +37,7 @@ public class XModifier {
 		map.put(STATIC_NAME, STATIC);
 		map.put(NATIVE_NAME, NATIVE);
 		map.put(SYNCHRONIZED_NAME, SYNCHRONIZED);
+		map.put(VARARGS_NAME, VARARGS);
 	}
 
 	public static boolean isPublic(int modifier) {
@@ -68,6 +71,10 @@ public class XModifier {
 	public static boolean isSynchronized(int modifier) {
 		return (modifier & SYNCHRONIZED) != 0;
 	}
+	
+	public static boolean isVarargs(int modifier) {
+		return (modifier & VARARGS) != 0;
+	}
 
 	public static String[] getModifiers(int modifier) {
 		List<String> list = new ArrayList<String>();
@@ -94,6 +101,9 @@ public class XModifier {
 		}
 		if (isSynchronized(modifier)) {
 			list.add(SYNCHRONIZED_NAME);
+		}
+		if (isVarargs(modifier)) {
+			list.add(VARARGS_NAME);
 		}
 		return list.toArray(new String[list.size()]);
 	}

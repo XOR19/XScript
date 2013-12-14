@@ -4,6 +4,7 @@ import xscript.compiler.tree.XTree.XAnnotation;
 import xscript.compiler.tree.XTree.XArrayInitialize;
 import xscript.compiler.tree.XTree.XBlock;
 import xscript.compiler.tree.XTree.XBreak;
+import xscript.compiler.tree.XTree.XCase;
 import xscript.compiler.tree.XTree.XCast;
 import xscript.compiler.tree.XTree.XCatch;
 import xscript.compiler.tree.XTree.XClassDecl;
@@ -20,6 +21,7 @@ import xscript.compiler.tree.XTree.XIf;
 import xscript.compiler.tree.XTree.XIfOperator;
 import xscript.compiler.tree.XTree.XImport;
 import xscript.compiler.tree.XTree.XIndex;
+import xscript.compiler.tree.XTree.XLable;
 import xscript.compiler.tree.XTree.XLambda;
 import xscript.compiler.tree.XTree.XMethodCall;
 import xscript.compiler.tree.XTree.XMethodDecl;
@@ -29,7 +31,8 @@ import xscript.compiler.tree.XTree.XNewArray;
 import xscript.compiler.tree.XTree.XOperatorPrefixSuffix;
 import xscript.compiler.tree.XTree.XOperatorStatement;
 import xscript.compiler.tree.XTree.XReturn;
-import xscript.compiler.tree.XTree.XSynchroized;
+import xscript.compiler.tree.XTree.XSwitch;
+import xscript.compiler.tree.XTree.XSynchronized;
 import xscript.compiler.tree.XTree.XThrow;
 import xscript.compiler.tree.XTree.XTry;
 import xscript.compiler.tree.XTree.XType;
@@ -84,7 +87,7 @@ public interface XVisitor {
 
 	public void visitGroup(XGroup xGroup);
 
-	public void visitThrow(XSynchroized xSynchroized);
+	public void visitSynchronized(XSynchronized xSynchroized);
 
 	public void visitConstant(XConstant xConstant);
 
@@ -113,5 +116,11 @@ public interface XVisitor {
 	public void visitArrayInitialize(XArrayInitialize xArrayInitialize);
 
 	public void visitForeach(XForeach xForeach);
+
+	public void visitLable(XLable xLable);
+
+	public void visitSwitch(XSwitch xSwitch);
+
+	public void visitCase(XCase xCase);
 
 }
