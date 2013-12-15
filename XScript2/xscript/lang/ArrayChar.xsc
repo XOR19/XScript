@@ -5,7 +5,11 @@ public final class ArrayChar{
 	public final int length;
 	
 	private ArrayChar(){
-		size = 0;
+		length = 0;
 	}
+
+	public native char operator[](int index);
+
+	public native char operator[](int index, char value);
 
 }

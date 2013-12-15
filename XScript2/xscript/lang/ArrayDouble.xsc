@@ -5,7 +5,11 @@ public final class ArrayDouble{
 	public final int length;
 	
 	private ArrayDouble(){
-		size = 0;
+		length = 0;
 	}
+	
+	public native double operator[](int index);
+
+	public native double operator[](int index, double value);
 
 }

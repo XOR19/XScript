@@ -44,7 +44,7 @@ public class XObject {
 	
 	public int getArrayLength(){
 		if(isArray()){
-			((XArray)xClass.getXClass()).getLengthField().get(this);
+			return (int) ((XArray)xClass.getXClass()).getLengthField().get(this);
 		}
 		return 0;
 	}

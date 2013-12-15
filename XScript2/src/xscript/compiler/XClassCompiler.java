@@ -86,7 +86,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 		state = STATE_TOGEN;
 	}
 	
-	private void compilerError(XMessageLevel level, String key, XLineDesk lineDesk, Object...args){
+	protected void compilerError(XMessageLevel level, String key, XLineDesk lineDesk, Object...args){
 		messages.postMessage(level, "compiler."+key, lineDesk, args);
 		state = STATE_ERRORED;
 	}

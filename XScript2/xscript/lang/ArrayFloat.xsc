@@ -5,7 +5,11 @@ public final class ArrayFloat{
 	public final int length;
 	
 	private ArrayFloat(){
-		size = 0;
+		length = 0;
 	}
+
+	public native float operator[](int index);
+
+	public native float operator[](int index, float value);
 
 }

@@ -5,7 +5,11 @@ public final class ArrayByte{
 	public final int length;
 	
 	private ArrayByte(){
-		size = 0;
+		length = 0;
 	}
+
+	public native byte operator[](int index);
+
+	public native byte operator[](int index, byte value);
 
 }

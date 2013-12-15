@@ -1,0 +1,15 @@
+package xscript.lang;
+
+public final class ArrayBool{
+
+	public final int length;
+	
+	private ArrayBool(){
+		length = 0;
+	}
+
+	public native bool operator[](int index);
+
+	public native bool operator[](int index, bool value);
+
+}

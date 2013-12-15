@@ -5,7 +5,11 @@ public final class ArrayInt{
 	public final int length;
 	
 	private ArrayInt(){
-		size = 0;
+		length = 0;
 	}
+	
+	public native int operator[](int index);
+
+	public native int operator[](int index, int value);
 
 }

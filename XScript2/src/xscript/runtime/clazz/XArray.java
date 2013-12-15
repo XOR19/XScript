@@ -15,6 +15,9 @@ public class XArray extends XClass {
 	}
 
 	public XField getLengthField(){
+		if(lengthField==null){
+			lengthField = getField("length");
+		}
 		return lengthField;
 	}
 

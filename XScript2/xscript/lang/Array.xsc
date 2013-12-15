@@ -5,9 +5,11 @@ public final class Array<T>{
 	public final int length;
 	
 	private Array(){
-		size = 0;
+		length = 0;
 	}
 
-	public T make(){}
+	public native T operator[](int index);
+
+	public native T operator[](int index, T value);
 
 }
