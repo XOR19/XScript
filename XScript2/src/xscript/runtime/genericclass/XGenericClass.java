@@ -11,7 +11,7 @@ public class XGenericClass {
 	
 	public XGenericClass(XClass xClass){
 		this.xClass = xClass;
-		if(xClass.getGenericParams()!=0){
+		if(xClass.getGenericParams()!=0 && xClass.getGenericParams()!=-1){
 			throw new XRuntimeException("Can't create a generic class of %s without generic params, need %s generic params", xClass, xClass.getGenericParams());
 		}
 	}
@@ -19,7 +19,7 @@ public class XGenericClass {
 	public XGenericClass(XClass xClass, XGenericClass[] generics) {
 		this.xClass = xClass;
 		this.generics = generics;
-		if(xClass.getGenericParams()!=generics.length){
+		if(xClass.getGenericParams()!=generics.length && xClass.getGenericParams()!=-1){
 			throw new XRuntimeException("Can't create a generic class of %s with %s generic params, need %s generic params", xClass, generics.length, xClass.getGenericParams());
 		}
 	}

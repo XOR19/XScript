@@ -3,12 +3,9 @@ package xscript.compiler;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlNsForm;
-
 import xscript.compiler.message.XMessageLevel;
 import xscript.compiler.tree.XTree.XImport;
 import xscript.compiler.tree.XTree.XType;
-import xscript.runtime.clazz.XClassProvider;
 import xscript.runtime.clazz.XGenericInfo;
 import xscript.runtime.genericclass.XClassPtr;
 import xscript.runtime.genericclass.XClassPtrClass;

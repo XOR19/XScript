@@ -191,7 +191,12 @@ public class XClassCompiler extends XClass implements XVisitor {
 	public void visitImport(XImport xImport) {
 		importHelper.addImport(this, xImport);
 	}
-
+	
+	@Override
+	public int getGenericParams() {
+		return genericInfos.length;
+	}
+	
 	@Override
 	public void visitClassDecl(XClassDecl xClassDef) {
 		if(innerClasses){

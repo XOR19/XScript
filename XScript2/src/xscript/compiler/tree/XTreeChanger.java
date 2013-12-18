@@ -57,7 +57,13 @@ public class XTreeChanger implements XVisitor {
 	protected <T extends XTree> List<T> visitTree(List<T> tree){
 		if(tree!=null){
 			for(int i=0; i<tree.size(); i++){
-				tree.set(i, (T)visitTree(tree.get(i)));
+				T t = (T)visitTree(tree.get(i));
+				if(t==null){
+					tree.remove(i);
+					i--;
+				}else{
+					tree.set(i, t);
+				}
 			}
 		}
 		return tree;
