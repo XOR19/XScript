@@ -11,9 +11,8 @@ public abstract class XTree{
 	public static enum XTag{
 		ERROR, TOPLEVEL, IMPORT, CLASSDEF, ANNOTATION, MODIFIER, IDENT, TYPE, 
 		TYPEPARAM, VARDECL, METHODDECL, BLOCK, BREAK, CONTINUE, DO, WHILE, 
-		FOR, IF, RETURN, THROW, VARDECLS, GROUP, SYNCHRONIZED, FLOATLITERAL,
-		DOUBLELITERAL, LONGLITERAL, INTLITERAL, CHARLITERAL, STRINGLITERAL, 
-		TRUE, FALSE, NULL, METHODCALL, NEW, OPERATOR, OPERATORSUFFIXPREFIX, 
+		FOR, IF, RETURN, THROW, VARDECLS, GROUP, SYNCHRONIZED, CONST, METHODCALL, 
+		NEW, OPERATOR, OPERATORSUFFIXPREFIX, 
 		INDEX, IFOPERATOR, CAST, LAMBDA, TRY, CATCH, NEWARRAY, ARRAYINITIALIZE, 
 		FOREACH, LABLE, SWITCH, CASE, THIS, SUPER;
 	}
@@ -677,18 +676,16 @@ public abstract class XTree{
 	
 	public static class XConstant extends XStatement{
 
-		public XTag type;
 		public XConstantValue value;
 		
-		public XConstant(XLineDesk line, XTag type, XConstantValue value) {
+		public XConstant(XLineDesk line, XConstantValue value) {
 			super(line);
-			this.type = type;
 			this.value = value;
 		}
 		
 		@Override
 		public XTag getTag() {
-			return type;
+			return XTag.CONST;
 		}
 
 		@Override

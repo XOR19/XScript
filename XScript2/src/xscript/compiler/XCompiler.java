@@ -9,8 +9,10 @@ import xscript.compiler.message.XMessageFormatter;
 import xscript.compiler.message.XMessageLevel;
 import xscript.compiler.standart.XStandartTreeMaker;
 import xscript.compiler.token.XLineDesk;
+import xscript.compiler.tree.XMessageListSetter;
 import xscript.compiler.tree.XTree;
 import xscript.compiler.tree.XTreeMaker;
+import xscript.compiler.tree.XVisitor;
 import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XClassLoader;
@@ -19,6 +21,8 @@ import xscript.runtime.clazz.XClassMaker;
 public class XCompiler extends XVirtualMachine{
 
 	private static HashMap<String, XTreeMaker> treeMakers = new HashMap<String, XTreeMaker>();
+	
+	private List<XVisitor> treeChangers = new ArrayList<XVisitor>();
 	
 	private List<XMessageElement> messageList = new ArrayList<XMessageElement>();
 	
@@ -41,12 +45,18 @@ public class XCompiler extends XVirtualMachine{
 		}
 	}
 	
+	public void addTreeChanger(XVisitor treeChanger){
+		if(!treeChangers.contains(treeChanger))
+			treeChangers.add(treeChanger);
+	}
+	
 	public void compile(){
 		while(!classes2Compile.isEmpty()){
 			String name = classes2Compile.remove(0);
 			try{
 				getClassProvider().getXClass(name);
 			}catch(Exception e){
+				e.printStackTrace();
 				postMessage(XMessageLevel.ERROR, name, "errored", new XLineDesk(0, 0, 0, 0), e.getMessage());
 			}
 			while(!classes2Compile1.isEmpty()){
@@ -67,7 +77,15 @@ public class XCompiler extends XVirtualMachine{
 			postMessage(XMessageLevel.ERROR, className, "compiler.wrong.lang", new XLineDesk(0, 0, 0, 0), lang);
 			return null;
 		}
-		return treeMaker.makeTree(source, new XMessageClass(this, className));
+		XMessageClass messageClass = new XMessageClass(this, className);
+		XTree tree = treeMaker.makeTree(source, messageClass);
+		for(XVisitor visitor:treeChangers){
+			if(visitor instanceof XMessageListSetter){
+				((XMessageListSetter) visitor).setMessageList(messageClass);
+			}
+			tree.accept(visitor);
+		}
+		return tree;
 	}
 	
 	protected void postMessage(XMessageLevel level, String className, String key, XLineDesk lineDesk, Object...args) {

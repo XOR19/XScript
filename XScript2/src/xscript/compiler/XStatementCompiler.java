@@ -411,33 +411,25 @@ public class XStatementCompiler implements XVisitor {
 	public void visitConstant(XConstant xConstant) {
 		constant = xConstant.value;
 		String name=null;
-		switch(xConstant.getTag()){
-		case CHARLITERAL:
-			name = "char";
-			break;
-		case DOUBLELITERAL:
-			name = "double";
-			break;
-		case TRUE:
-		case FALSE:
-			name = "bool";
-			break;
-		case FLOATLITERAL:
-			name = "float";
-			break;
-		case INTLITERAL:
-			name = "int";
-			break;
-		case LONGLITERAL:
-			name = "long";
-			break;
-		case NULL:
+		Class<?> c = constant.getType();
+		if(c==null){
 			setReturn(XClassPtrAny.instance, xConstant);
 			return;
-		case STRINGLITERAL:
+		}else if(c==Boolean.class){
+			name = "bool";
+		}else if(c==Character.class){
+			name = "char";
+		}else if(c==Integer.class){
+			name = "int";
+		}else if(c==Long.class){
+			name = "long";
+		}else if(c==Float.class){
+			name = "float";
+		}else if(c==Double.class){
+			name = "double";
+		}else if(c==String.class){
 			name = "xscript.lang.String";
-			break;
-		default:
+		}else{
 			shouldNeverCalled();
 		}
 		setReturn(new XClassPtrClass(name), xConstant);
@@ -457,7 +449,11 @@ public class XStatementCompiler implements XVisitor {
 
 	@Override
 	public void visitOperator(XOperatorStatement xOperatorStatement) {
-		// TODO Auto-generated method stub
+		XStatementCompiler cl = visitTree(xOperatorStatement.left, returnExpected);
+		XStatementCompiler cr = visitTree(xOperatorStatement.right, returnExpected);
+		if(cl.isConstant() && cr.isConstant()){
+			cl.constant.add(cr.constant);
+		}
 		
 	}
 

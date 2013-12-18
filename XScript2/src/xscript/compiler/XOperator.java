@@ -6,36 +6,166 @@ public enum XOperator {
 
 	NONE(null, null, -1, false),
 	
-	ADD("+", INFIX, 10),
-	SUB("-", INFIX, 10),
-	MUL("*", INFIX, 11),
-	DIV("/", INFIX, 11),
-	MOD("%", INFIX, 11),
-	POW("**", INFIX, 12),
-	SHR("<<", INFIX, 9),
-	SHL(">>", INFIX, 9),
+	ADD("+", INFIX, 10) {
+		@Override
+		public XConstantValue calc(XConstantValue left, XConstantValue right) {
+			return left.add(right);
+		}
+	},
+	SUB("-", INFIX, 10) {
+		@Override
+		public XConstantValue calc(XConstantValue left, XConstantValue right) {
+			return left.sub(right);
+		}
+	},
+	MUL("*", INFIX, 11) {
+		@Override
+		public XConstantValue calc(XConstantValue left, XConstantValue right) {
+			return left.mul(right);
+		}
+	},
+	DIV("/", INFIX, 11) {
+		@Override
+		public XConstantValue calc(XConstantValue left, XConstantValue right) {
+			return left.div(right);
+		}
+	},
+	MOD("%", INFIX, 11) {
+		@Override
+		public XConstantValue calc(XConstantValue left, XConstantValue right) {
+			return left.mod(right);
+		}
+	},
+	POW("**", INFIX, 12) {
+		@Override
+		public XConstantValue calc(XConstantValue left, XConstantValue right) {
+			return left.pow(right);
+		}
+	},
+	SHR(">>", INFIX, 9) {
+		@Override
+		public XConstantValue calc(XConstantValue left, XConstantValue right) {
+			return left.shr(right);
+		}
+	},
+	SHL("<<", INFIX, 9) {
+		@Override
+		public XConstantValue calc(XConstantValue left, XConstantValue right) {
+			return left.shl(right);
+		}
+	},
 	
-	POS("+", PREFIX, -1),
-	NEG("-", PREFIX, -1),
+	POS("+", PREFIX, -1) {
+		@Override
+		public XConstantValue calc(XConstantValue left, XConstantValue right) {
+			return left;
+		}
+	},
+	NEG("-", PREFIX, -1) {
+		@Override
+		public XConstantValue calc(XConstantValue left, XConstantValue right) {
+			return left.neg();
+		}
+	},
 	
-	BOR("|", INFIX, 4),
-	BAND("&", INFIX, 6),
-	XOR("^", INFIX, 5),
-	OR("||", INFIX, 2),
-	AND("&&", INFIX, 3),
+	BOR("|", INFIX, 4) {
+		@Override
+		public XConstantValue calc(XConstantValue left, XConstantValue right) {
+			return left.bor(right);
+		}
+	},
+	BAND("&", INFIX, 6) {
+		@Override
+		public XConstantValue calc(XConstantValue left, XConstantValue right) {
+			return left.band(right);
+		}
+	},
+	XOR("^", INFIX, 5) {
+		@Override
+		public XConstantValue calc(XConstantValue left, XConstantValue right) {
+			return left.xor(right);
+		}
+	},
+	OR("||", INFIX, 2) {
+		@Override
+		public XConstantValue calc(XConstantValue left, XConstantValue right) {
+			return left.or(right);
+		}
+	},
+	AND("&&", INFIX, 3) {
+		@Override
+		public XConstantValue calc(XConstantValue left, XConstantValue right) {
+			return left.and(right);
+		}
+	},
 	
-	NOT("!", PREFIX, -1),
-	BNOT("~", PREFIX, -1),
+	NOT("!", PREFIX, -1) {
+		@Override
+		public XConstantValue calc(XConstantValue left, XConstantValue right) {
+			return left.not();
+		}
+	},
+	BNOT("~", PREFIX, -1) {
+		@Override
+		public XConstantValue calc(XConstantValue left, XConstantValue right) {
+			return left.bnot();
+		}
+	},
 	
-	EQ("==", INFIX, 7, false),
-	REQ("===", INFIX, 7),
-	NEQ("!=", INFIX, 7, false),
-	RNEQ("!==", INFIX, 7),
-	BIG(">", INFIX, 8),
-	BEQ(">=", INFIX, 8),
-	SMA("<", INFIX, 8),
-	SEQ("<=", INFIX, 8),
-	COMP("<=>", INFIX, 7),
+	EQ("==", INFIX, 7, false) {
+		@Override
+		public XConstantValue calc(XConstantValue left, XConstantValue right) {
+			return left.eq(right);
+		}
+	},
+	REQ("===", INFIX, 7) {
+		@Override
+		public XConstantValue calc(XConstantValue left, XConstantValue right) {
+			return left.eq(right);
+		}
+	},
+	NEQ("!=", INFIX, 7, false) {
+		@Override
+		public XConstantValue calc(XConstantValue left, XConstantValue right) {
+			return left.eq(right).not();
+		}
+	},
+	RNEQ("!==", INFIX, 7) {
+		@Override
+		public XConstantValue calc(XConstantValue left, XConstantValue right) {
+			return left.eq(right).not();
+		}
+	},
+	BIG(">", INFIX, 8){
+		@Override
+		public XConstantValue calc(XConstantValue left, XConstantValue right) {
+			return left.comp(right).eq(new XConstantValue(1));
+		}
+	},
+	BEQ(">=", INFIX, 8){
+		@Override
+		public XConstantValue calc(XConstantValue left, XConstantValue right) {
+			return left.comp(right).eq(new XConstantValue(-1)).not();
+		}
+	},
+	SMA("<", INFIX, 8){
+		@Override
+		public XConstantValue calc(XConstantValue left, XConstantValue right) {
+			return left.comp(right).eq(new XConstantValue(-1));
+		}
+	},
+	SEQ("<=", INFIX, 8){
+		@Override
+		public XConstantValue calc(XConstantValue left, XConstantValue right) {
+			return left.comp(right).eq(new XConstantValue(1)).not();
+		}
+	},
+	COMP("<=>", INFIX, 7){
+		@Override
+		public XConstantValue calc(XConstantValue left, XConstantValue right) {
+			return left.comp(right);
+		}
+	},
 	
 	LET("=", INFIX, 0, false),
 	LETADD("+=", INFIX, 0),
@@ -54,7 +184,12 @@ public enum XOperator {
 	DEC("--", PREFIX, -1),
 	INCS("++", SUFFIX, -1),
 	DECS("--", SUFFIX, -1),
-	COPYS("<:", SUFFIX, -1),
+	COPYS("<:", SUFFIX, -1){
+		@Override
+		public XConstantValue calc(XConstantValue left, XConstantValue right) {
+			return left;
+		}
+	},
 	
 	ELEMENT(".", INFIX, 13, false),
 	
@@ -81,6 +216,10 @@ public enum XOperator {
 		this.type = type;
 		this.priority = priority;
 		this.canBeOverwritten = canBeOverwritten;
+	}
+	
+	public XConstantValue calc(XConstantValue left, XConstantValue right){
+		throw new UnsupportedOperationException();
 	}
 	
 	public static enum Type{

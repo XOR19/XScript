@@ -3,6 +3,7 @@ package xscript.compiler.standart;
 import java.util.ArrayList;
 import java.util.List;
 
+import xscript.compiler.XConstantValue;
 import xscript.compiler.XOperator;
 import xscript.compiler.XOperator.Type;
 import xscript.compiler.message.XMessageLevel;
@@ -45,7 +46,6 @@ import xscript.compiler.tree.XTree.XStatement;
 import xscript.compiler.tree.XTree.XSuper;
 import xscript.compiler.tree.XTree.XSwitch;
 import xscript.compiler.tree.XTree.XSynchronized;
-import xscript.compiler.tree.XTree.XTag;
 import xscript.compiler.tree.XTree.XThis;
 import xscript.compiler.tree.XTree.XThrow;
 import xscript.compiler.tree.XTree.XTry;
@@ -254,10 +254,10 @@ public class XParser {
 		String name;
 		if(token.kind==XTokenKind.IDENT){
 			name = token.param.getString();
+			nextToken();
 			if(name.equals("operator")){
 				name += readOperatorOperator();
 			}
-			nextToken();
 		}else{
 			expected(XTokenKind.IDENT);
 			name = "!error!";
@@ -719,32 +719,22 @@ public class XParser {
 			endLineBlock();
 			return ident;
 		}case FLOATLITERAL:
-			nextToken();
-			return new XConstant(oldToken.lineDesk, XTag.FLOATLITERAL, oldToken.param);
 		case DOUBLELITERAL:
-			nextToken();
-			return new XConstant(oldToken.lineDesk, XTag.DOUBLELITERAL, oldToken.param);
 		case LONGLITERAL:
-			nextToken();
-			return new XConstant(oldToken.lineDesk, XTag.LONGLITERAL, oldToken.param);
 		case INTLITERAL:
-			nextToken();
-			return new XConstant(oldToken.lineDesk, XTag.INTLITERAL, oldToken.param);
 		case CHARLITERAL:
-			nextToken();
-			return new XConstant(oldToken.lineDesk, XTag.CHARLITERAL, oldToken.param);
 		case STRINGLITERAL: 
 			nextToken();
-			return new XConstant(oldToken.lineDesk, XTag.STRINGLITERAL, oldToken.param);
+			return new XConstant(oldToken.lineDesk, oldToken.param);
 		case TRUE:
 			nextToken();
-			return new XConstant(oldToken.lineDesk, XTag.TRUE, oldToken.param);
+			return new XConstant(oldToken.lineDesk, new XConstantValue(true));
 		case FALSE:
 			nextToken();
-			return new XConstant(oldToken.lineDesk, XTag.FALSE, oldToken.param);
+			return new XConstant(oldToken.lineDesk, new XConstantValue(false));
 		case NULL:
 			nextToken();
-			return new XConstant(oldToken.lineDesk, XTag.NULL, oldToken.param);
+			return new XConstant(oldToken.lineDesk, new XConstantValue(null));
 		case LBRAKET:
 			return makeArrayInitialize();
 		case NEW:
@@ -1068,7 +1058,7 @@ public class XParser {
 			block = makeSecoundStatement(true);
 			if(token.kind==XTokenKind.ELSE){
 				nextToken();
-				block = makeSecoundStatement(true);
+				block2 = makeSecoundStatement(true);
 			}
 			return new XIf(endLineBlock(), statement, block, block2);
 		case SWITCH:
