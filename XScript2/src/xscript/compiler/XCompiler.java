@@ -43,7 +43,12 @@ public class XCompiler extends XVirtualMachine{
 	
 	public void compile(){
 		while(!classes2Compile.isEmpty()){
-			getClassProvider().getXClass(classes2Compile.remove(0));
+			String name = classes2Compile.remove(0);
+			try{
+				getClassProvider().getXClass(name);
+			}catch(Exception e){
+				postMessage(XMessageLevel.ERROR, name, "errored", new XLineDesk(0, 0, 0, 0), e.getMessage());
+			}
 			while(!classes2Compile1.isEmpty()){
 				classes2Compile1.remove(0).gen();
 			}

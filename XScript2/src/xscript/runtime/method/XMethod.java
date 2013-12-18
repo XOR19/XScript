@@ -246,7 +246,9 @@ public class XMethod extends XPackage {
 	}
 	
 	public XInstruction getInstruction(int i) {
-		return instructions[i];
+		if(i<instructions.length)
+			return instructions[i];
+		return null;
 	}
 
 	public int getExceptionHandlePoint(int programPointer, XGenericClass xClass, XGenericClass declaringClass, XMethodExecutor methodExecutor) {

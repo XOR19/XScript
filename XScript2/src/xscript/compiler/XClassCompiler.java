@@ -39,8 +39,10 @@ import xscript.compiler.tree.XTree.XOperatorPrefixSuffix;
 import xscript.compiler.tree.XTree.XOperatorStatement;
 import xscript.compiler.tree.XTree.XReturn;
 import xscript.compiler.tree.XTree.XStatement;
+import xscript.compiler.tree.XTree.XSuper;
 import xscript.compiler.tree.XTree.XSwitch;
 import xscript.compiler.tree.XTree.XSynchronized;
+import xscript.compiler.tree.XTree.XThis;
 import xscript.compiler.tree.XTree.XThrow;
 import xscript.compiler.tree.XTree.XTry;
 import xscript.compiler.tree.XTree.XType;
@@ -79,6 +81,8 @@ public class XClassCompiler extends XClass implements XVisitor {
 	
 	private XImportHelper importHelper;
 	
+	private boolean errored;
+	
 	protected XClassCompiler(XVirtualMachine virtualMachine, String name, XMessageList messages, XImportHelper importHelper) {
 		super(virtualMachine, name);
 		this.messages = messages;
@@ -88,7 +92,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 	
 	protected void compilerError(XMessageLevel level, String key, XLineDesk lineDesk, Object...args){
 		messages.postMessage(level, "compiler."+key, lineDesk, args);
-		state = STATE_ERRORED;
+		errored = true;
 	}
 	
 	protected XMessageList getMessageList(){
@@ -96,11 +100,15 @@ public class XClassCompiler extends XClass implements XVisitor {
 	}
 	
 	public void gen() {
+		if(errored)
+			state = STATE_ERRORED;
 		if(state==STATE_TOGEN){
 			for(XMethod method:methods){
 				((XMethodCompiler)method).gen();
 			}
-			if(state==STATE_TOGEN){
+			if(errored){
+				state = STATE_ERRORED;
+			}else{
 				state = STATE_RUNNABLE;
 			}
 		}
@@ -193,7 +201,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 				xClassDef.accept((XVisitor)getParent().getChild(xClassDef.name));
 			}else{
 				gotFirst = true;
-				if(xClassDef.name!=getSimpleName()){
+				if(!xClassDef.name.equals(getSimpleName())){
 					compilerError(XMessageLevel.ERROR, "wrongclassname", xClassDef.line, getSimpleName());
 				}
 				if(xClassDef.typeParam==null){
@@ -216,7 +224,9 @@ public class XClassCompiler extends XClass implements XVisitor {
 					}else{
 						superClasses = new XClassPtr[1];
 						superClasses[0] = new XClassPtrClass("xscript.lang.Object");
-						superClasses[0].getXClassNonNull(virtualMachine);
+						try{
+							superClasses[0].getXClassNonNull(virtualMachine);
+						}catch(Exception e){}
 					}
 				}else{
 					superClasses = getGenericClasses(xClassDef.superClasses, null);
@@ -522,6 +532,16 @@ public class XClassCompiler extends XClass implements XVisitor {
 		shouldNeverCalled();
 	}
 	
+	@Override
+	public void visitThis(XThis xThis) {
+		shouldNeverCalled();
+	}
+
+	@Override
+	public void visitSuper(XSuper xSuper) {
+		shouldNeverCalled();
+	}
+	
 	private void shouldNeverCalled(){
 		throw new AssertionError("Should never be happened :(");
 	}
@@ -539,5 +559,6 @@ public class XClassCompiler extends XClass implements XVisitor {
 		}
 		return ptr;
 	}
+
 	
 }

@@ -2,6 +2,7 @@ package xscript.compiler.tree;
 
 import java.util.List;
 
+import xscript.compiler.XConstantValue;
 import xscript.compiler.XOperator;
 import xscript.compiler.token.XLineDesk;
 
@@ -14,7 +15,7 @@ public abstract class XTree{
 		DOUBLELITERAL, LONGLITERAL, INTLITERAL, CHARLITERAL, STRINGLITERAL, 
 		TRUE, FALSE, NULL, METHODCALL, NEW, OPERATOR, OPERATORSUFFIXPREFIX, 
 		INDEX, IFOPERATOR, CAST, LAMBDA, TRY, CATCH, NEWARRAY, ARRAYINITIALIZE, 
-		FOREACH, LABLE, SWITCH, CASE;
+		FOREACH, LABLE, SWITCH, CASE, THIS, SUPER;
 	}
 	
 	public static class XError extends XTree{
@@ -194,6 +195,42 @@ public abstract class XTree{
 		@Override
 		public void accept(XVisitor v) {
 			v.visitIdent(this);
+		}
+		
+	}
+	
+	public static class XThis extends XStatement{
+		
+		public XThis(XLineDesk line) {
+			super(line);
+		}
+
+		@Override
+		public XTag getTag() {
+			return XTag.THIS;
+		}
+
+		@Override
+		public void accept(XVisitor v) {
+			v.visitThis(this);
+		}
+		
+	}
+	
+	public static class XSuper extends XStatement{
+		
+		public XSuper(XLineDesk line) {
+			super(line);
+		}
+
+		@Override
+		public XTag getTag() {
+			return XTag.SUPER;
+		}
+
+		@Override
+		public void accept(XVisitor v) {
+			v.visitSuper(this);
 		}
 		
 	}
@@ -641,9 +678,9 @@ public abstract class XTree{
 	public static class XConstant extends XStatement{
 
 		public XTag type;
-		public String value;
+		public XConstantValue value;
 		
-		public XConstant(XLineDesk line, XTag type, String value) {
+		public XConstant(XLineDesk line, XTag type, XConstantValue value) {
 			super(line);
 			this.type = type;
 			this.value = value;

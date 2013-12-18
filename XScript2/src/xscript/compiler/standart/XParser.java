@@ -42,9 +42,11 @@ import xscript.compiler.tree.XTree.XOperatorPrefixSuffix;
 import xscript.compiler.tree.XTree.XOperatorStatement;
 import xscript.compiler.tree.XTree.XReturn;
 import xscript.compiler.tree.XTree.XStatement;
+import xscript.compiler.tree.XTree.XSuper;
 import xscript.compiler.tree.XTree.XSwitch;
 import xscript.compiler.tree.XTree.XSynchronized;
 import xscript.compiler.tree.XTree.XTag;
+import xscript.compiler.tree.XTree.XThis;
 import xscript.compiler.tree.XTree.XThrow;
 import xscript.compiler.tree.XTree.XTry;
 import xscript.compiler.tree.XTree.XType;
@@ -228,10 +230,33 @@ public class XParser {
 		return new XModifier(endLineBlock(), modifier, annotations);
 	}
 	
+	public String readOperatorOperator(){
+		if(!isOperator(token.kind)){
+			if(token.kind==XTokenKind.LGROUP){
+				nextToken();
+				expected(XTokenKind.LGROUP);
+				return "()";
+			}else if(token.kind==XTokenKind.LINDEX){
+				nextToken();
+				expected(XTokenKind.RINDEX);
+				return "[]";
+			}
+		}
+		XOperator o = readOperator(null);
+		if(o==XOperator.NONE)
+			throw new AssertionError();
+		if(!o.canBeOverwritten)
+			parserMessage(XMessageLevel.ERROR, "cant.override.operator", o.op);
+		return o.op;
+	}
+	
 	public String ident(){
 		String name;
 		if(token.kind==XTokenKind.IDENT){
-			name = token.param;
+			name = token.param.getString();
+			if(name.equals("operator")){
+				name += readOperatorOperator();
+			}
 			nextToken();
 		}else{
 			expected(XTokenKind.IDENT);
@@ -292,8 +317,8 @@ public class XParser {
 		XIdent name;
 		List<XType> typeParam = null;
 		if(token.kind==XTokenKind.BOOL || token.kind==XTokenKind.BYTE || token.kind==XTokenKind.SHORT ||
-				token.kind==XTokenKind.CHAR || token.kind==XTokenKind.INT || token.kind==XTokenKind.FLOAT ||
-				token.kind==XTokenKind.DOUBLE || token.kind==XTokenKind.VOID){
+				token.kind==XTokenKind.CHAR || token.kind==XTokenKind.INT || token.kind==XTokenKind.LONG 
+				|| token.kind==XTokenKind.FLOAT || token.kind==XTokenKind.DOUBLE || token.kind==XTokenKind.VOID){
 			name = new XIdent(new XLineDesk(token.lineDesk), token.kind.name);
 			nextToken();
 		}else{
@@ -439,7 +464,10 @@ public class XParser {
 				|| kind==XTokenKind.BNOT || kind==XTokenKind.AND || kind==XTokenKind.OR
 				|| kind==XTokenKind.XOR || kind==XTokenKind.EQUAL || kind==XTokenKind.GREATER
 				|| kind==XTokenKind.SMALLER || kind==XTokenKind.INSTANCEOF 
-				|| kind==XTokenKind.ELEMENT || kind==XTokenKind.COLON || kind==XTokenKind.QUESTIONMARK;
+				|| kind==XTokenKind.ELEMENT || kind==XTokenKind.COLON || kind==XTokenKind.QUESTIONMARK
+				|| kind==XTokenKind.OAND || kind==XTokenKind.OOR || kind==XTokenKind.OXOR
+				|| kind==XTokenKind.OBAND || kind==XTokenKind.OBOR
+				|| kind==XTokenKind.OMOD || kind==XTokenKind.ONOT || kind==XTokenKind.OBNOT || kind==XTokenKind.OPOW;
 	}
 	
 	public List<XToken> readOperators(){
@@ -751,6 +779,12 @@ public class XParser {
 				}
 				return new XNew(endLineBlock(), type, params, classDecl);
 			}
+		case THIS:
+			nextToken();
+			return new XThis(oldToken.lineDesk);
+		case SUPER:
+			nextToken();
+			return new XSuper(oldToken.lineDesk);
 		default:
 			if(b)
 				parserMessage(XMessageLevel.ERROR, "unexpected", token.kind.name);
@@ -839,17 +873,57 @@ public class XParser {
 		if(!isOperator(token.kind)){
 			return XOperator.NONE;
 		}
+		XOperator best = XOperator.NONE;
+		switch(token.kind){
+		case OAND:
+			best = XOperator.AND;
+			break;
+		case OOR:
+			best = XOperator.OR;
+			break;
+		case OXOR:
+			best = XOperator.XOR;
+			break;
+		case OBAND:
+			best = XOperator.BAND;
+			break;
+		case OBOR:
+			best = XOperator.BOR;
+			break;
+		case OMOD:
+			best = XOperator.MOD;
+			break;
+		case ONOT:
+			best = XOperator.NOT;
+			break;
+		case OBNOT:
+			best = XOperator.BNOT;
+			break;
+		case OPOW:
+			best = XOperator.POW;
+			break;
+		default:
+			best = XOperator.NONE;
+			break;
+		}
+		if(best!=XOperator.NONE){
+			if(type!=null && best.type!=type){
+				return XOperator.NONE;
+			}
+			nextToken();
+			return best;
+		}
 		XOperator[] all = XOperator.values();
 		String s = token.kind.name;
 		XToken oldToken = token;
-		XOperator best = XOperator.NONE;
+		best = XOperator.NONE;
 		boolean hasNext;
 		lexer.notSure();
 		do{
 			nextToken();
 			hasNext = false;
 			for(XOperator o:all){
-				if(o.type==type){
+				if(o.type!=null && (type == null || o.type==type)){
 					if(o.op.equals(s)){
 						best=o;
 					}else if(o.op.startsWith(s)){
@@ -981,6 +1055,9 @@ public class XParser {
 			return new XContinue(endLineBlock(), lable);
 		case RETURN:
 			nextToken();
+			if(token.kind==XTokenKind.SEMICOLON){
+				return new XReturn(endLineBlock(), null);
+			}
 			statement = makeInnerStatement();
 			return new XReturn(endLineBlock(), statement);
 		case IF:
@@ -1498,6 +1575,7 @@ public class XParser {
 		XIdent packageName = null;
 		XModifier modifier = makeModifier();
 		if(token.kind==XTokenKind.PACKAGE){
+			nextToken();
 			annotations = modifier.annotations;
 			if(modifier.modifier!=0){
 				parserMessage(XMessageLevel.ERROR, "modifier.not_expected", xscript.runtime.XModifier.toString(modifier.modifier));

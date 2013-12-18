@@ -9,20 +9,31 @@ import xscript.runtime.genericclass.XClassPtr;
 import xscript.runtime.genericclass.XGenericClass;
 import xscript.runtime.threads.XGenericMethodProvider;
 
-public class XClassPtrAny extends XClassPtr {
+public class XClassPtrErrored extends XClassPtr {
 
-	public final static XClassPtrAny instance = new XClassPtrAny();
+	private String name;
 	
-	private XClassPtrAny(){}
+	private XGenericClass c;
+	
+	public XClassPtrErrored(String name){
+		this.name = name;
+	}
 	
 	@Override
 	public XClass getXClass(XVirtualMachine virtualMachine) {
-		return null;
+		if(c==null){
+			XClass xc = virtualMachine.getClassProvider().getXClass("xscript.lang.Object");
+			c = new XGenericClass(xc);
+		}
+		return c.getXClass();
 	}
 
 	@Override
 	public XGenericClass getXClass(XVirtualMachine virtualMachine, XGenericClass genericClass, XGenericMethodProvider methodExecutor) {
-		return null;
+		if(c==null){
+			getXClass(virtualMachine);
+		}
+		return c;
 	}
 
 	@Override
@@ -37,7 +48,7 @@ public class XClassPtrAny extends XClassPtr {
 
 	@Override
 	public String toString() {
-		return "any";
+		return "errored:"+name;
 	}
 
 }

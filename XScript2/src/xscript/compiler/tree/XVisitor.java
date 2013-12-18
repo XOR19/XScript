@@ -31,8 +31,10 @@ import xscript.compiler.tree.XTree.XNewArray;
 import xscript.compiler.tree.XTree.XOperatorPrefixSuffix;
 import xscript.compiler.tree.XTree.XOperatorStatement;
 import xscript.compiler.tree.XTree.XReturn;
+import xscript.compiler.tree.XTree.XSuper;
 import xscript.compiler.tree.XTree.XSwitch;
 import xscript.compiler.tree.XTree.XSynchronized;
+import xscript.compiler.tree.XTree.XThis;
 import xscript.compiler.tree.XTree.XThrow;
 import xscript.compiler.tree.XTree.XTry;
 import xscript.compiler.tree.XTree.XType;
@@ -122,5 +124,9 @@ public interface XVisitor {
 	public void visitSwitch(XSwitch xSwitch);
 
 	public void visitCase(XCase xCase);
+
+	public void visitThis(XThis xThis);
+
+	public void visitSuper(XSuper xSuper);
 
 }

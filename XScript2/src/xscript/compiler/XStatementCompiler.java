@@ -38,8 +38,10 @@ import xscript.compiler.tree.XTree.XNewArray;
 import xscript.compiler.tree.XTree.XOperatorPrefixSuffix;
 import xscript.compiler.tree.XTree.XOperatorStatement;
 import xscript.compiler.tree.XTree.XReturn;
+import xscript.compiler.tree.XTree.XSuper;
 import xscript.compiler.tree.XTree.XSwitch;
 import xscript.compiler.tree.XTree.XSynchronized;
+import xscript.compiler.tree.XTree.XThis;
 import xscript.compiler.tree.XTree.XThrow;
 import xscript.compiler.tree.XTree.XTry;
 import xscript.compiler.tree.XTree.XType;
@@ -48,11 +50,15 @@ import xscript.compiler.tree.XTree.XVarDecl;
 import xscript.compiler.tree.XTree.XVarDecls;
 import xscript.compiler.tree.XTree.XWhile;
 import xscript.compiler.tree.XVisitor;
+import xscript.runtime.clazz.XClass;
+import xscript.runtime.clazz.XPrimitive;
 import xscript.runtime.genericclass.XClassPtr;
 import xscript.runtime.genericclass.XClassPtrClass;
 import xscript.runtime.instruction.XInstruction;
 import xscript.runtime.instruction.XInstructionCheckCast;
 import xscript.runtime.instruction.XInstructionReadLocal;
+import xscript.runtime.instruction.XInstructionReturn;
+import xscript.runtime.instruction.XInstructionThrow;
 
 public class XStatementCompiler implements XVisitor {
 
@@ -60,7 +66,7 @@ public class XStatementCompiler implements XVisitor {
 	
 	private List<XInstruction> instructions;
 	
-	private XConstant constant;
+	private XConstantValue constant;
 	
 	private XClassPtr returnExpected;
 	
@@ -88,6 +94,9 @@ public class XStatementCompiler implements XVisitor {
 		if(tree!=null){
 			XStatementCompiler statementCompiler = new XStatementCompiler(returnExpected, this, methodCompiler);
 			tree.accept(statementCompiler);
+			if(statementCompiler.returnType==null){
+				statementCompiler.setReturn(null, tree);
+			}
 			return statementCompiler;
 		}
 		return null;
@@ -203,7 +212,7 @@ public class XStatementCompiler implements XVisitor {
 		compilerError(XMessageLevel.ERROR, "continue.nocontinuepoint", xContinue.line);
 	}
 	
-	private XInstruction makeConstLoad(XConstant constant){
+	private XInstruction makeConstLoad(XConstantValue constant){
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -230,7 +239,6 @@ public class XStatementCompiler implements XVisitor {
 		methodCompiler.addClass(classCompiler, xClassDef.line);
 		xClassDef.accept(classCompiler);
 		classCompiler.gen();
-		setReturn(null, xClassDef);
 	}
 
 	@Override
@@ -298,7 +306,6 @@ public class XStatementCompiler implements XVisitor {
 			visitTree(decl.paramTypes);
 		}
 		instructions = visitTree(xBlock.statements);
-		setReturn(null, xBlock);
 	}
 
 	@Override
@@ -306,7 +313,6 @@ public class XStatementCompiler implements XVisitor {
 		XInstructionDumyJump jump = new XInstructionDumyJump();
 		addBreak(jump, xBreak, false);
 		addInstruction(jump);
-		setReturn(null, xBreak);
 	}
 
 	@Override
@@ -314,12 +320,12 @@ public class XStatementCompiler implements XVisitor {
 		XInstructionDumyJump jump = new XInstructionDumyJump();
 		addContinue(jump, xContinue, false);
 		addInstruction(jump);
-		setReturn(null, xContinue);
 	}
 
 	@Override
 	public void visitDo(XDo xDo) {
-		// TODO Auto-generated method stub
+		XStatementCompiler c1 = visitTree(xDo.block, null);
+		XStatementCompiler c2 = visitTree(xDo.doWhile, new XClassPtrClass("bool"));
 		
 	}
 
@@ -358,25 +364,36 @@ public class XStatementCompiler implements XVisitor {
 				addInstruction(elsee.target = new XInstructionDumyDelete());
 			}
 		}
-		setReturn(null, xIf);
 	}
 
 	@Override
 	public void visitReturn(XReturn xReturn) {
-		// TODO Auto-generated method stub
-		
+		if(xReturn.statement==null){
+			System.out.println(methodCompiler);
+			System.out.println(methodCompiler.getGenericReturnType());
+			System.out.println(methodCompiler.getDeclaringClass());
+			System.out.println(methodCompiler.getDeclaringClass().getVirtualMachine());
+			XClass c= methodCompiler.getGenericReturnType().getXClassNonNull(methodCompiler.getDeclaringClass().getVirtualMachine());
+			if(XPrimitive.getPrimitiveID(c)!=XPrimitive.VOID){
+				compilerError(XMessageLevel.ERROR, "nonevoidreturn", xReturn.line);
+			}
+		}else{
+			XStatementCompiler c = visitTree(xReturn.statement, methodCompiler.getGenericReturnType());
+			addInstructions(c.getInstructions());
+		}
+		addInstruction(new XInstructionReturn());
 	}
 
 	@Override
 	public void visitThrow(XThrow xThrow) {
-		// TODO Auto-generated method stub
-		
+		XStatementCompiler c = visitTree(xThrow.statement, new XClassPtrClass("xscript.lang.Throwable"));
+		addInstructions(c.getInstructions());
+		addInstruction(new XInstructionThrow());
 	}
 
 	@Override
 	public void visitVarDecls(XVarDecls xVarDecls) {
 		visitTree(xVarDecls.varDecls);
-		setReturn(null, xVarDecls);
 	}
 
 	@Override
@@ -392,9 +409,9 @@ public class XStatementCompiler implements XVisitor {
 
 	@Override
 	public void visitConstant(XConstant xConstant) {
-		constant = xConstant;
+		constant = xConstant.value;
 		String name=null;
-		switch(constant.getTag()){
+		switch(xConstant.getTag()){
 		case CHARLITERAL:
 			name = "char";
 			break;
@@ -538,6 +555,18 @@ public class XStatementCompiler implements XVisitor {
 	@Override
 	public void visitCase(XCase xCase) {
 		shouldNeverCalled();
+	}
+	
+	@Override
+	public void visitThis(XThis xThis) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void visitSuper(XSuper xSuper) {
+		// TODO Auto-generated method stub
+		
 	}
 
 	private void setReturn(XClassPtr returnType, XTree tree){

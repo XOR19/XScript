@@ -19,12 +19,16 @@ public enum XTokenKind {
 	ADD('+'), SUB('-'), MUL('*'), DIV('/'), MOD('%'), 
 	NOT('!'), BNOT('~'), 
 	AND('&'), OR('|'), XOR('^'), 
+	OAND("and"), OOR("or"), OXOR("xor"),
+	OBAND("bitand"), OBOR("bitor"),
+	OMOD("mod"), ONOT("not"), OBNOT("bitnot"), OPOW("pow"),
 	EQUAL('='), GREATER('>'), SMALLER('<'), INSTANCEOF("instanceof"),
 	QUESTIONMARK('?'), COLON(':'),
 	ELEMENT('.'), AT('@'),
 	COMMA(','), LBRAKET('{'), RBRAKET('}'), LINDEX('['), RINDEX(']'), LGROUP('('), RGROUP(')'),
 	SEMICOLON(';'), 
 	EXTENDS("extends"), IMPLEMENTS("implements"), THROWS("throws"), NEW("new"), SYNCHRONIZED("synchronized");
+	
 	
 	public final String name;
 	

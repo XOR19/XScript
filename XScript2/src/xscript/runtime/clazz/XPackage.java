@@ -59,6 +59,7 @@ public class XPackage {
 
 	public void overridePackage(String name, XPackage xPackage) {
 		childs.put(name, xPackage);
+		xPackage.parent = this;
 	}
 
 	public XPackage getParent() {

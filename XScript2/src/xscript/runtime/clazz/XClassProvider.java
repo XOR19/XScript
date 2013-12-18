@@ -27,15 +27,21 @@ public class XClassProvider {
 	
 	public XClassProvider(XVirtualMachine virtualMachine){
 		this.virtualMachine = virtualMachine;
-		BOOL = new XPrimitive(virtualMachine, XPrimitive.BOOL);
-		BYTE = new XPrimitive(virtualMachine, XPrimitive.BYTE);
-		CHAR = new XPrimitive(virtualMachine, XPrimitive.CHAR);
-		SHORT = new XPrimitive(virtualMachine, XPrimitive.SHORT);
-		INT = new XPrimitive(virtualMachine, XPrimitive.INT);
-		LONG = new XPrimitive(virtualMachine, XPrimitive.LONG);
-		FLOAT = new XPrimitive(virtualMachine, XPrimitive.FLOAT);
-		DOUBLE = new XPrimitive(virtualMachine, XPrimitive.DOUBLE);
-		VOID = new XPrimitive(virtualMachine, XPrimitive.VOID);
+		BOOL = createPrimitive(XPrimitive.BOOL);
+		BYTE = createPrimitive(XPrimitive.BYTE);
+		CHAR = createPrimitive(XPrimitive.CHAR);
+		SHORT = createPrimitive(XPrimitive.SHORT);
+		INT = createPrimitive(XPrimitive.INT);
+		LONG = createPrimitive(XPrimitive.LONG);
+		FLOAT = createPrimitive(XPrimitive.FLOAT);
+		DOUBLE = createPrimitive(XPrimitive.DOUBLE);
+		VOID = createPrimitive(XPrimitive.VOID);
+	}
+	
+	private XPrimitive createPrimitive(int id){
+		XPrimitive p = new XPrimitive(virtualMachine, id);
+		rootPackage.addChild(p);
+		return p;
 	}
 	
 	public XClass getXClass(String name) {
@@ -65,7 +71,7 @@ public class XClassProvider {
 			xClass = (XClass)xPackage;
 		}else if(xPackage instanceof XClassMaker){
 			xClass = ((XClassMaker)xPackage).makeClass();
-			xPackage.getParent().overridePackage(xPackage.getName(), xClass);
+			xPackage.getParent().overridePackage(xPackage.getSimpleName(), xClass);
 			((XClassMaker)xPackage).onReplaced(xClass);
 		}
 		if(xClass==null)

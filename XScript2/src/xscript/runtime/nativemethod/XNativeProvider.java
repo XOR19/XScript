@@ -19,7 +19,7 @@ public class XNativeProvider {
 
 	private int TIME_OUT=-1;
 	private XVirtualMachine virtualMachine;
-	private HashMap<String, XNativeMethod> nativeMethods;
+	private HashMap<String, XNativeMethod> nativeMethods = new HashMap<String, XNativeMethod>();
 	
 	public XNativeProvider(XVirtualMachine virtualMachine) {
 		this.virtualMachine = virtualMachine;

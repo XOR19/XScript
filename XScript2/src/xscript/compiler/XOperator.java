@@ -4,7 +4,7 @@ import static xscript.compiler.XOperator.Type.*;
 
 public enum XOperator {
 
-	NONE(null, null, -1),
+	NONE(null, null, -1, false),
 	
 	ADD("+", INFIX, 10),
 	SUB("-", INFIX, 10),
@@ -27,9 +27,9 @@ public enum XOperator {
 	NOT("!", PREFIX, -1),
 	BNOT("~", PREFIX, -1),
 	
-	EQ("==", INFIX, 7),
+	EQ("==", INFIX, 7, false),
 	REQ("===", INFIX, 7),
-	NEQ("!=", INFIX, 7),
+	NEQ("!=", INFIX, 7, false),
 	RNEQ("!==", INFIX, 7),
 	BIG(">", INFIX, 8),
 	BEQ(">=", INFIX, 8),
@@ -37,7 +37,7 @@ public enum XOperator {
 	SEQ("<=", INFIX, 8),
 	COMP("<=>", INFIX, 7),
 	
-	LET("=", INFIX, 0),
+	LET("=", INFIX, 0, false),
 	LETADD("+=", INFIX, 0),
 	LETSUB("-=", INFIX, 0),
 	LETMUL("*=", INFIX, 0),
@@ -48,7 +48,7 @@ public enum XOperator {
 	LETXOR("^=", INFIX, 0),
 	LETSHR("<<=", INFIX, 0),
 	LETSHL(">>=", INFIX, 0),
-	COPY("<:", INFIX, 0),
+	COPY("<:", INFIX, 0, false),
 	
 	INC("++", PREFIX, -1),
 	DEC("--", PREFIX, -1),
@@ -56,9 +56,9 @@ public enum XOperator {
 	DECS("--", SUFFIX, -1),
 	COPYS("<:", SUFFIX, -1),
 	
-	ELEMENT(".", INFIX, 13),
+	ELEMENT(".", INFIX, 13, false),
 	
-	IF("?", INFIX, 1),
+	IF("?", INFIX, 1, false),
 	
 	;
 	
@@ -67,11 +67,20 @@ public enum XOperator {
 	public final String op;
 	public final Type type;
 	public final int priority;
+	public final boolean canBeOverwritten;
 	
 	XOperator(String op, Type type, int priority){
 		this.op = op;
 		this.type = type;
 		this.priority = priority;
+		canBeOverwritten = true;
+	}
+	
+	XOperator(String op, Type type, int priority, boolean canBeOverwritten){
+		this.op = op;
+		this.type = type;
+		this.priority = priority;
+		this.canBeOverwritten = canBeOverwritten;
 	}
 	
 	public static enum Type{

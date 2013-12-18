@@ -3,6 +3,7 @@ package xscript.compiler.token;
 import java.util.ArrayList;
 import java.util.List;
 
+import xscript.compiler.XConstantValue;
 import xscript.compiler.message.XMessageLevel;
 import xscript.compiler.message.XMessageList;
 
@@ -25,6 +26,7 @@ public class XTokenParser {
 	
 	public XTokenParser(String source, XMessageList messages){
 		this.source = source;
+		this.messages = messages;
 		scannChar();
 	}
 	
@@ -55,6 +57,7 @@ public class XTokenParser {
 	private XToken scannNumber(){
 		int radix = 10;
 		XTokenKind kind = XTokenKind.INTLITERAL;
+		String number = "";
 		if(scannChar=='0'){
 			scannChar();
 			if(scannChar=='x' || scannChar=='X'){
@@ -63,9 +66,11 @@ public class XTokenParser {
 			}else if(scannChar=='b' || scannChar=='B'){
 				scannChar();
 				radix = 2;
+			}else{
+				number = "0";
 			}
 		}
-		String number = scannDigit(radix);
+		number += scannDigit(radix);
 		if(scannChar=='.' && radix==10){
 			kind = XTokenKind.DOUBLELITERAL;
 			scannChar();
@@ -101,7 +106,21 @@ public class XTokenParser {
 		}else if(scannChar=='l' || scannChar=='L'){
 			kind = XTokenKind.LONGLITERAL;
 		}
-		return makeToken(kind, (radix==2?"0b":radix==16?"0x":"")+number);
+		try{
+			if(kind==XTokenKind.INTLITERAL){
+				return makeToken(kind, new XConstantValue(Integer.parseInt(number, radix)));
+			}else if(kind==XTokenKind.FLOATLITERAL){
+				return makeToken(kind, new XConstantValue(Float.parseFloat(number)));
+			}else if(kind==XTokenKind.DOUBLELITERAL){
+				return makeToken(kind, new XConstantValue(Double.parseDouble(number)));
+			}else if(kind==XTokenKind.LONGLITERAL){
+				return makeToken(kind, new XConstantValue(Long.parseLong(number, radix)));
+			}
+		}catch(NumberFormatException e){
+			parserMessage(XMessageLevel.ERROR, "number.format", e.getMessage());
+			return makeToken(XTokenKind.INTLITERAL, new XConstantValue(0));
+		}
+		throw new AssertionError();
 	}
 	
 	private XToken scannIdent(){
@@ -112,7 +131,7 @@ public class XTokenParser {
 		}
 		XTokenKind keyword = XTokenKind.getKeyword(ident);
 		if(keyword==null)
-			return makeToken(XTokenKind.IDENT, ident);
+			return makeToken(XTokenKind.IDENT, new XConstantValue(ident));
 		return makeToken(keyword);
 	}
 	
@@ -142,8 +161,19 @@ public class XTokenParser {
 		}
 		if(scannChar!=end){
 			parserMessage(XMessageLevel.ERROR, isChar?"char.eof":"string.eof");
+		}else{
+			scannChar();
 		}
-		return makeToken(isChar?XTokenKind.CHARLITERAL:XTokenKind.STRINGLITERAL, string);
+		if(isChar){
+			if(string.length()!=1)
+				parserMessage(XMessageLevel.ERROR, "char.no1length");
+			if(string.length()==0){
+				return makeToken(isChar?XTokenKind.CHARLITERAL:XTokenKind.STRINGLITERAL, new XConstantValue(0));
+			}
+			return makeToken(isChar?XTokenKind.CHARLITERAL:XTokenKind.STRINGLITERAL, new XConstantValue(string.charAt(0)));
+		}else{
+			return makeToken(XTokenKind.STRINGLITERAL, new XConstantValue(string));
+		}
 	}
 	
 	private void readLineComment(boolean multiline){
@@ -166,7 +196,7 @@ public class XTokenParser {
 				comment += scannChar;
 				scannChar();
 			}
-			if(scannChar!='\n'){
+			if(scannChar!='/'){
 				parserMessage(XMessageLevel.ERROR, "comment.eof");
 			}
 			comments.add(new XComment(doc?XCommentType.DOCMULTILINE:XCommentType.MULTILINE, comment));
@@ -237,7 +267,7 @@ public class XTokenParser {
 		return new XToken(kind, new XLineDesk(startline, startlinepos, prevline, prevlinepos), comments, space);
 	}
 	
-	private XToken makeToken(XTokenKind kind, String param){
+	private XToken makeToken(XTokenKind kind, XConstantValue param){
 		return new XToken(kind, new XLineDesk(startline, startlinepos, prevline, prevlinepos), comments, param, space);
 	}
 	
