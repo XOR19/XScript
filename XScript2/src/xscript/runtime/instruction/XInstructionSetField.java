@@ -42,16 +42,7 @@ public class XInstructionSetField extends XInstruction {
 		long value = methodExecutor.pop(getPrimitiveID(vm));
 		long pointer = methodExecutor.oPop();
 		XObject object = vm.getObjectProvider().getObject(pointer);
-		if(XModifier.isFinal(field.getModifier())){
-			XObject _this = vm.getObjectProvider().getObject(methodExecutor.getLocal(0));
-			if(methodExecutor.getMethod().getSimpleName().equals("<init>") && _this==object){
-				field.finalSet(object, value);
-			}else{
-				throw new XRuntimeException("Try to write final field %s", field.getName());
-			}
-		}else{
-			field.set(object, value);
-		}
+		field.set(object, value);
 	}
 
 	private int getPrimitiveID(XVirtualMachine vm){

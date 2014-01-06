@@ -47,7 +47,7 @@ public class XClassPtrGeneric extends XClassPtr{
 		}
 		return new XGenericClass(xClass, generics);
 	}
-
+	
 	@Override
 	public boolean isStatic() {
 		for(int i=0; i<genericPtrs.length; i++){
@@ -83,5 +83,9 @@ public class XClassPtrGeneric extends XClassPtr{
 			g += ">";
 		}
 		return className+g;
+	}
+	
+	public XClassPtr getGeneric(int id){
+		return genericPtrs[id];
 	}
 }

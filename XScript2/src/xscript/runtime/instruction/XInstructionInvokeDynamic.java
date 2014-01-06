@@ -29,12 +29,12 @@ public class XInstructionInvokeDynamic extends XInstruction {
 	
 	public XInstructionInvokeDynamic(XMethod method, XClassPtr[] generics){
 		className = method.getDeclaringClass().getName();
-		methodName = method.getSimpleName();
+		methodName = method.getRealName();
 		methodParams = method.getMethodParamNames();
 		methodReturn = method.getMethodReturnName();
 		this.generics = generics;
 		this.method = method;
-		if(generics==null){
+		if(generics.length==0){
 			if(method.getGenericParams()!=0)
 				throw new XRuntimeException("Can't create a generic method %s without generic params, need %s generic params", method, method.getGenericParams());
 		}else if(generics.length!=method.getGenericParams()){
@@ -119,12 +119,11 @@ public class XInstructionInvokeDynamic extends XInstruction {
 		String s = "(";
 		if(methodParams.length>0){
 			s += methodParams[0];
-			for(int i=0; i<methodParams.length; i++){
+			for(int i=1; i<methodParams.length; i++){
 				s += ", "+methodParams[i];
 			}
-			s += ")";
 		}
-		s += methodReturn;
+		s += ")"+methodReturn;
 		return "invd "+className+"."+methodName+s;
 	}
 

@@ -7,19 +7,19 @@ import xscript.runtime.clazz.XInputStream;
 import xscript.runtime.threads.XMethodExecutor;
 import xscript.runtime.threads.XThread;
 
-public class XInstructionIf extends XInstructionJump {
+public class XInstructionNIf extends XInstructionJump {
 
-	public XInstructionIf(int target) {
+	public XInstructionNIf(int target) {
 		super(target);
 	}
 	
-	public XInstructionIf(XInputStream inputStream) throws IOException {
+	public XInstructionNIf(XInputStream inputStream) throws IOException {
 		super(inputStream);
 	}
 
 	@Override
 	public void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
-		if(methodExecutor.zPop()){
+		if(!methodExecutor.zPop()){
 			super.run(vm, thread, methodExecutor);
 		}
 	}

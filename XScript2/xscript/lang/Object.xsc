@@ -11,7 +11,7 @@ public class Object{
 	public native long hashCode();
 	
 	public String toString(){
-		return getClass().getName()+"@"+Integer.toHex(hashCode());
+		return getClass().getName()+"@"+Int.toHex(hashCode());
 	}
 	
 }

@@ -40,7 +40,7 @@ public class XInstructionSetStaticField extends XInstruction {
 		resolve(vm, methodExecutor);
 		long value = methodExecutor.pop(getPrimitiveID(vm));
 		if(XModifier.isFinal(field.getModifier())){
-			if(methodExecutor.getMethod().getSimpleName().equals("<staticInit>") && methodExecutor.getMethod().getDeclaringClass()==field.getDeclaringClass()){
+			if(methodExecutor.getMethod().getRealName().equals("<staticInit>") && methodExecutor.getMethod().getDeclaringClass()==field.getDeclaringClass()){
 				field.finalSet(null, value);
 			}else{
 				throw new XRuntimeException("Try to write final field %s", field.getName());

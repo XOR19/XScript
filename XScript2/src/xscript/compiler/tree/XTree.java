@@ -242,7 +242,7 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XType extends XTree{
+	public static class XType extends XStatement{
 
 		public XIdent name;
 		

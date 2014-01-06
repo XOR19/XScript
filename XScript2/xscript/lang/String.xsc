@@ -4,8 +4,25 @@ public final class String{
 
 	private final char[] value;
 
+	private String(int size){
+		value = new char[size];
+	}
+
 	public int length(){
 		return value.length;
+	}
+
+	public String operator+(String other){
+		String out = new String(value.length+other.value.length);
+		int l1 = value.length;
+		for(int i=0; i<l1; i++){
+			out.value[i] = value[i];
+		}
+		int l2 = other.value.length;
+		for(int i=0; i<l2; i++){
+			out.value[l1+i] = value[i];
+		}
+		return out;
 	}
 
 }

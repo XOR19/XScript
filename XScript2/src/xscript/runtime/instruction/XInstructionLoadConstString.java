@@ -33,7 +33,7 @@ public class XInstructionLoadConstString extends XInstruction {
 
 	@Override
 	public String getSource() {
-		return "lcs \""+value+"\"";
+		return "lcsc \""+value+"\"";
 	}
 
 }

@@ -45,6 +45,7 @@ public class XMethod extends XPackage {
 	protected XCatchEntry[] catchEntries;
 	protected XLocalEntry[] localEntries;
 	protected int maxStackSize;
+	protected int maxObjectStackSize;
 	protected int maxLocalSize;
 	protected int index;
 	
@@ -111,6 +112,7 @@ public class XMethod extends XPackage {
 				localEntries[i] = new XLocalEntry(inputStream.readInt(), inputStream.readInt(), inputStream.readUnsignedShort(), inputStream.readUnsignedShort(), inputStream.readUTF(), XClassPtr.load(inputStream));
 			}
 			maxStackSize = inputStream.readUnsignedShort();
+			maxObjectStackSize = inputStream.readUnsignedShort();
 			maxLocalSize = inputStream.readUnsignedShort();
 		}
 		if(XModifier.isVarargs(modifier)){
@@ -178,6 +180,10 @@ public class XMethod extends XPackage {
 	
 	public XGenericClass getReturnType(XGenericClass genericClass, XGenericMethodProvider methodExecutor){
 		return returnType.getXClass(getDeclaringClass().getVirtualMachine(), genericClass, methodExecutor);
+	}
+	
+	public XClassPtr getReturnTypePtr(){
+		return returnType;
 	}
 	
 	public int getReturnTypePrimitive(){
@@ -288,6 +294,10 @@ public class XMethod extends XPackage {
 		return maxStackSize;
 	}
 	
+	public int getMaxObjectStackSize() {
+		return maxObjectStackSize;
+	}
+	
 	public int getMaxLocalSize() {
 		return maxLocalSize;
 	}
@@ -308,6 +318,15 @@ public class XMethod extends XPackage {
 		return XModifier.isStatic(modifier)?name.equals("<staticInit>"):name.equals("<init>");
 	}
 
+	public String getRealName(){
+		return name;
+	}
+	
+	public String getSimpleName(){
+		return name;
+		
+	}
+	
 	public XClass[] getExplizitSuperInvokes() {
 		int numNews = 0;
 		List<XClass> explitite = new ArrayList<XClass>();
@@ -398,6 +417,7 @@ public class XMethod extends XPackage {
 			}
 			
 			outputStream.writeShort(maxStackSize);
+			outputStream.writeShort(maxObjectStackSize);
 			outputStream.writeShort(maxLocalSize);
 		}
 	}

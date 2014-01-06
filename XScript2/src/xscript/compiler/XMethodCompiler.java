@@ -2,7 +2,6 @@ package xscript.compiler;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ListIterator;
 
 import xscript.compiler.message.XMessageLevel;
 import xscript.compiler.token.XLineDesk;
@@ -11,7 +10,8 @@ import xscript.compiler.tree.XTree.XType;
 import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XGenericInfo;
 import xscript.runtime.genericclass.XClassPtr;
-import xscript.runtime.instruction.XInstruction;
+import xscript.runtime.genericclass.XClassPtrClassGeneric;
+import xscript.runtime.genericclass.XClassPtrGeneric;
 import xscript.runtime.method.XMethod;
 
 public class XMethodCompiler extends XMethod {
@@ -40,31 +40,20 @@ public class XMethodCompiler extends XMethod {
 		XStatementCompiler statementCompiler = new XStatementCompiler(null, null, this);
 		xMethodDecl.block.accept(statementCompiler);
 		classes = null;
-		List<XInstruction> lInstructions = statementCompiler.getInstructions();
-		ListIterator<XInstruction> i = lInstructions.listIterator();
-		while(i.hasNext()){
-			XInstruction inst = i.next();
-			if(inst instanceof XInstructionDumyDelete){
-				for(XInstruction inst2:lInstructions){
-					if(inst2 instanceof XInstructionDumy){
-						((XInstructionDumy) inst2).deleteInstruction(this, lInstructions, inst);
-					}
-				}
-				i.remove();
-			}
-		}
-		i = lInstructions.listIterator();
-		while(i.hasNext()){
-			XInstruction inst = i.next();
-			if(inst instanceof XInstructionDumy){
-				i.set(((XInstructionDumy) inst).replaceWith(this, lInstructions));
-			}
-		}
-		instructions = lInstructions.toArray(new XInstruction[lInstructions.size()]);
+		XCodeGen codeGen = statementCompiler.getCodeGen();
+		System.out.println(getName());
+		codeGen.generateFinalCode();
+		instructions = codeGen.getInstructions();
+		lineEntries = codeGen.getLineEntries();
+		catchEntries = codeGen.getCatchEntries();
+		localEntries = codeGen.getLocalEntries();
 	}
 	
 	protected void compilerError(XMessageLevel level, String key, XLineDesk lineDesk, Object...args){
-		((XClassCompiler)getDeclaringClass()).compilerError(level, "method."+key, lineDesk, this, args);
+		Object[] o = new Object[args.length+1];
+		o[0] = this;
+		System.arraycopy(args, 0, o, 1, args.length);
+		((XClassCompiler)getDeclaringClass()).compilerError(level, "method."+key, lineDesk, o);
 	} 
 	
 	public void addClass(XClass c, XLineDesk line){
@@ -76,8 +65,8 @@ public class XMethodCompiler extends XMethod {
 		}
 	}
 	
-	public XClassPtr getGenericClass(XType type){
-		return importHelper.getGenericClass((XClassCompiler)getDeclaringClass(), type, genericInfos);
+	public XClassPtr getGenericClass(XType type, boolean doError){
+		return importHelper.getGenericClass((XClassCompiler)getDeclaringClass(), type, genericInfos, doError);
 	}
 
 	public XImportHelper getImportHelper() {
@@ -90,6 +79,16 @@ public class XMethodCompiler extends XMethod {
 
 	public XMethodDecl getMethodDecl() {
 		return xMethodDecl;
+	}
+
+	public XClassPtr getDeclaringClassGen() {
+		XClass c = getDeclaringClass();
+		String name = c.getName();
+		XClassPtr generics[] = new XClassPtr[c.getGenericParams()];
+		for(int i=0; i<generics.length; i++){
+			generics[i] = new XClassPtrClassGeneric(name, c.getGenericName(i));
+		}
+		return new XClassPtrGeneric(name, generics);
 	}
 	
 }

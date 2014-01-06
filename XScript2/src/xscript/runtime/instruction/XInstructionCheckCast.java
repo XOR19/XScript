@@ -6,9 +6,9 @@ import xscript.runtime.XChecks;
 import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XInputStream;
 import xscript.runtime.clazz.XOutputStream;
-import xscript.runtime.clazz.XPrimitive;
 import xscript.runtime.genericclass.XClassPtr;
 import xscript.runtime.genericclass.XGenericClass;
+import xscript.runtime.object.XObject;
 import xscript.runtime.threads.XMethodExecutor;
 import xscript.runtime.threads.XThread;
 
@@ -26,11 +26,13 @@ public class XInstructionCheckCast extends XInstruction {
 	
 	@Override
 	public void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
-		long[] value = methodExecutor.pop();
-		methodExecutor.push(value[0], (int) value[1]);
-		XGenericClass genericClass = XPrimitive.getXClass(vm, value[0], (int) value[1]);
-		if(genericClass!=null)
+		long value = methodExecutor.oPop();
+		methodExecutor.oPush(value);
+		XObject obj = vm.getObjectProvider().getObject(value);
+		if(obj!=null){
+			XGenericClass genericClass = obj.getXClass();
 			XChecks.checkCast(genericClass, xClass.getXClass(vm, methodExecutor.getDeclaringClass(), methodExecutor));
+		}
 	}
 
 	@Override

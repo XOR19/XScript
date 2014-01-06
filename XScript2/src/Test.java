@@ -5,6 +5,7 @@ import xscript.compiler.XCompiler;
 import xscript.compiler.XFileSourceProvider;
 import xscript.compiler.message.XMessageFormatter;
 import xscript.compiler.tree.XTreeMakeEasy;
+import xscript.compiler.tree.XTreePrinter;
 import xscript.runtime.clazz.XClassLoader;
 
 
@@ -16,6 +17,7 @@ public class Test {
 		XCompiler compiler = new XCompiler(new XClassLoader(new File(".")));
 		compiler.registerSourceProvider(new XFileSourceProvider(new File("."), "xsc", "xscript"));
 		compiler.addTreeChanger(new XTreeMakeEasy());
+		//compiler.addTreeChanger(new XTreePrinter());
 		compiler.compile();
 		compiler.printMessages(new XMessageFormatter());
 		

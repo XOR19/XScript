@@ -1,5 +1,8 @@
 package xscript.compiler.tree;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import xscript.compiler.XConstantValue;
 import xscript.compiler.XOperator;
 import xscript.compiler.message.XMessageLevel;
@@ -52,11 +55,23 @@ public class XTreeMakeEasy extends XTreeChanger implements XMessageListSetter {
 		if(xOperatorStatement.left instanceof XConstant && xOperatorStatement.right instanceof XConstant){
 			XConstantValue left = ((XConstant)xOperatorStatement.left).value;
 			XConstantValue right = ((XConstant)xOperatorStatement.right).value;
-			XConstantValue value = xOperatorStatement.operator.calc(left, right);
-			if((xOperatorStatement.operator==XOperator.OR && left.getBool())||(xOperatorStatement.operator==XOperator.AND && !left.getBool())){
-				message(XMessageLevel.WARNING, "deadcode", xOperatorStatement.right.line);
+			try{
+				XConstantValue value = xOperatorStatement.operator.calc(left, right);
+				if((xOperatorStatement.operator==XOperator.OR && left.getBool())||(xOperatorStatement.operator==XOperator.AND && !left.getBool())){
+					message(XMessageLevel.WARNING, "deadcode", xOperatorStatement.right.line);
+				}
+				replaceWith(xOperatorStatement, value);
+			}catch(UnsupportedOperationException e){
+				
 			}
-			replaceWith(xOperatorStatement, value);
+		}
+		if(xOperatorStatement.operator==XOperator.COPY){
+			List<XOperator> op = new ArrayList<XOperator>();
+			op.add(XOperator.COPYS);
+			if(!(xOperatorStatement.right instanceof XConstant)){
+				xOperatorStatement.right = new XOperatorPrefixSuffix(xOperatorStatement.line, op, xOperatorStatement.right, null);
+			}
+			xOperatorStatement.operator=XOperator.LET;
 		}
 	}
 

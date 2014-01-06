@@ -15,8 +15,9 @@ public class XMethodExecutor implements XGenericMethodProvider {
 	private XMethod method;
 	private XGenericClass[] generics;
 	private int stackPointer;
-	private long[] stack;
-	private byte[] stackType;
+	private int[] stack;
+	private int objectStackPointer;
+	private long[] objectStack;
 	private long[] local;
 	private long ret;
 	private int programPointer;
@@ -34,17 +35,18 @@ public class XMethodExecutor implements XGenericMethodProvider {
 			throw new XRuntimeException("Can't create a generic method %s with %s generic params, need %s generic params", method, generics.length, method.getGenericParams());
 		}
 		int pl = params.length;
+		stack = new int[method.getMaxStackSize()];
+		objectStack = new long[method.getMaxObjectStackSize()];
+		local = new long[method.getMaxLocalSize()];
 		if(!XModifier.isStatic(method.getModifier())){
-			XObject _this = method.getDeclaringClass().getVirtualMachine().getObjectProvider().getObject(params[0]);
-			declaringClass = _this.getXClass();
+			local[0] = params[0];
+			if(method.getDeclaringClass().getVirtualMachine().getObjectProvider().getObject(local[0])==null)
+				throw new XRuntimeException("Null Pointer");
 			pl--;
 		}
 		if(pl!=method.getParamCount()){
 			throw new XRuntimeException("Wrong number of arguments got %s but need %s", method.getParamCount(), pl);
 		}
-		stack = new long[method.getMaxStackSize()];
-		stackType = new byte[method.getMaxStackSize()];
-		local = new long[method.getMaxLocalSize()];
 	}
 
 	@Override
@@ -56,6 +58,12 @@ public class XMethodExecutor implements XGenericMethodProvider {
 		return declaringClass;
 	}
 	
+	public long getThis(){
+		if(XModifier.isStatic(method.getModifier()))
+			return 0;
+		return local[0];
+	}
+	
 	public long[] getReturn(){
 		long[] l = new long[2];
 		l[0] = ret;
@@ -63,100 +71,129 @@ public class XMethodExecutor implements XGenericMethodProvider {
 		return l;
 	}
 	
-	public long[] pop(){
+	public int iPop(){
 		if(stackPointer==0)
 			throw new XRuntimeException("Stack underflow");
-		long[] l = new long[2];
-		l[0] = stack[--stackPointer];
-		l[1] = stackType[stackPointer];
-		return l;
-	}
-	
-	public long pop(int primitiveID) {
-		long[] l = pop();
-		if(l[1]!=primitiveID)
-			throw new XRuntimeException("Can't cast %s to %s", XPrimitive.getName((int) l[1]), XPrimitive.getName(primitiveID));
-		return l[0];
+		return stack[--stackPointer];
 	}
 	
 	public long oPop(){
-		 return pop(XPrimitive.OBJECT);
+		if(objectStackPointer==0)
+			throw new XRuntimeException("Stack underflow");
+		return objectStack[--objectStackPointer];
 	}
 	
+	public long pop(int primitiveID) {
+		if(primitiveID==XPrimitive.OBJECT){
+			return oPop();
+		}else if(primitiveID==XPrimitive.DOUBLE || primitiveID==XPrimitive.LONG){
+			return lPop();
+		}
+		return iPop();
+	}
 	
 	public long lPop(){
-		 return pop(XPrimitive.LONG);
-	}
-	
-	public int iPop() {
-		 return (int) pop(XPrimitive.INT);
-	}
-	
-	public short sPop() {
-		 return (short) pop(XPrimitive.SHORT);
-	}
-	
-	public byte bPop() {
-		 return (byte) pop(XPrimitive.BYTE);
+		long l = iPop();
+		long l2 = iPop();
+		return l2<<32 | l;
 	}
 	
 	public boolean zPop() {
-		 return pop(XPrimitive.BOOL)!=0;
-	}
-	
-	public char cPop() {
-		 return (char) pop(XPrimitive.CHAR);
+		 return iPop()!=0;
 	}
 	
 	public float fPop() {
-		return Float.intBitsToFloat((int)pop(XPrimitive.FLOAT));
+		return Float.intBitsToFloat(iPop());
 	}
 	
 	public double dPop() {
-		return Double.longBitsToDouble(pop(XPrimitive.DOUBLE));
+		return Double.longBitsToDouble(lPop());
 	}
-
-	public void push(long value, int type) {
+	
+	public int iRead(int pos){
+		pos = stackPointer-pos-1;
+		if(pos<0)
+			throw new XRuntimeException("Stack underflow");
+		if(pos>=stackPointer)
+			throw new XRuntimeException("Stack overflow");
+		return stack[pos];
+	}
+	
+	public long oRead(int pos){
+		pos = objectStackPointer-pos-1;
+		if(pos<0)
+			throw new XRuntimeException("Stack underflow");
+		if(pos>=objectStackPointer)
+			throw new XRuntimeException("Stack overflow");
+		return objectStack[pos];
+	}
+	
+	public long read(int primitiveID, int pos) {
+		if(primitiveID==XPrimitive.OBJECT){
+			return oRead(pos);
+		}else if(primitiveID==XPrimitive.DOUBLE || primitiveID==XPrimitive.LONG){
+			return lRead(pos);
+		}
+		return iRead(pos);
+	}
+	
+	public long lRead(int pos){
+		long l = iRead(pos+1);
+		long l2 = iRead(pos);
+		return l2<<32 | l;
+	}
+	
+	public boolean zRead(int pos) {
+		 return iRead(pos)!=0;
+	}
+	
+	public float fRead(int pos) {
+		return Float.intBitsToFloat(iRead(pos));
+	}
+	
+	public double dRead(int pos) {
+		return Double.longBitsToDouble(lRead(pos));
+	}
+	
+	public void iPush(int value) {
 		if(stackPointer==stack.length)
 			throw new XRuntimeException("Stack overflow");
-		stackType[stackPointer] = (byte) type;
 		stack[stackPointer++] = value;
 	}
 	
 	public void oPush(long value) {
-		push(value, XPrimitive.OBJECT);
+		if(objectStackPointer==objectStack.length)
+			throw new XRuntimeException("Stack overflow");
+		objectStack[objectStackPointer++] = value;
+	}
+
+	public void push(long value, int primitiveID) {
+		if(primitiveID==XPrimitive.OBJECT){
+			oPush(value);
+		}else if(primitiveID==XPrimitive.DOUBLE || primitiveID==XPrimitive.LONG){
+			lPush(value);
+		}else{
+			iPush((int)value);
+		}
 	}
 	
 	public void lPush(long value) {
-		push(value, XPrimitive.LONG);
-	}
-	
-	public void iPush(int value) {
-		push(value, XPrimitive.INT);
-	}
-	
-	public void sPush(short value) {
-		push(value, XPrimitive.SHORT);
-	}
-	
-	public void bPush(byte value) {
-		push(value, XPrimitive.BYTE);
+		long l = value&0xFFFFFFFF;
+		long l2 = value>>32;
+		iPush((int) l2);
+		iPush((int) l);
 	}
 	
 	public void zPush(boolean value) {
-		push(value?-1:0, XPrimitive.BOOL);
-	}
-	
-	public void cPush(char value) {
-		push(value, XPrimitive.CHAR);
+		iPush(value?-1:0);
 	}
 	
 	public void fPush(float value) {
-		push(Float.floatToIntBits(value), XPrimitive.FLOAT);
+		iPush(Float.floatToIntBits(value));
 	}
 	
 	public void dPush(double value) {
-		push(Double.doubleToLongBits(value), XPrimitive.DOUBLE);
+		lPush(Double.doubleToLongBits(value));
 	}
 
 	public long getLocal(int local) {
@@ -192,12 +229,10 @@ public class XMethodExecutor implements XGenericMethodProvider {
 			if(obj!=null)
 				obj.markVisible();
 		}
-		for(int i=0; i<stackPointer; i++){
-			if(stackType[i] == XPrimitive.OBJECT){
-				XObject obj = method.getDeclaringClass().getVirtualMachine().getObjectProvider().getObject(stack[i]);
-				if(obj!=null)
-					obj.markVisible();
-			}
+		for(int i=0; i<objectStackPointer; i++){
+			XObject obj = method.getDeclaringClass().getVirtualMachine().getObjectProvider().getObject(objectStack[i]);
+			if(obj!=null)
+				obj.markVisible();
 		}
 	}
 
@@ -215,9 +250,9 @@ public class XMethodExecutor implements XGenericMethodProvider {
 		if(programPointer==-1){
 			return false;
 		}
-		stack[0] = exception;
-		stackType[0] = XPrimitive.OBJECT;
-		stackPointer = 1;
+		stackPointer = 0;
+		objectStack[0] = exception;
+		objectStackPointer = 1;
 		return true;
 	}
 

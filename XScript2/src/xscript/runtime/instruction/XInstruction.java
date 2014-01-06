@@ -26,6 +26,11 @@ public abstract class XInstruction {
 
 	public abstract String getSource();
 
+	@Override
+	public String toString(){
+		return getSource();
+	}
+	
 	public static XInstruction load(XInputStream inputStream) throws IOException {
 		int instruction = inputStream.readUnsignedByte();
 		Class<? extends XInstruction> c = instructions[instruction];

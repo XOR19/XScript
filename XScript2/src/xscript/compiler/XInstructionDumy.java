@@ -11,9 +11,9 @@ import xscript.runtime.threads.XThread;
 
 public abstract class XInstructionDumy extends XInstruction {
 
-	public abstract XInstruction replaceWith(XMethodCompiler compiler, List<XInstruction> instructions);
+	public abstract XInstruction replaceWith(XCodeGen compiler, List<XInstruction> instructions);
 	
-	public abstract void deleteInstruction(XMethodCompiler compiler, List<XInstruction> instructions, XInstruction instruction);
+	public abstract void deleteInstruction(XCodeGen compiler, List<XInstruction> instructions, XInstruction instruction);
 	
 	@Override
 	public final void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {

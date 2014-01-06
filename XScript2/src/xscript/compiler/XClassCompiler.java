@@ -193,15 +193,11 @@ public class XClassCompiler extends XClass implements XVisitor {
 	}
 	
 	@Override
-	public int getGenericParams() {
-		return genericInfos.length;
-	}
-	
-	@Override
 	public void visitClassDecl(XClassDecl xClassDef) {
 		if(innerClasses){
 			xClassDef.accept((XVisitor)getChild(xClassDef.name));
 		}else{
+			innerClasses=true;
 			if(gotFirst){
 				xClassDef.accept((XVisitor)getParent().getChild(xClassDef.name));
 			}else{
@@ -243,6 +239,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 				methods = methodList.toArray(new XMethod[methodList.size()]);
 				fields = fieldList.toArray(new XField[fieldList.size()]);
 			}
+			innerClasses=false;
 		}
 	}
 
@@ -291,7 +288,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 			if(childs.containsKey(field.getSimpleName())){
 				compilerError(XMessageLevel.ERROR, "duplicatedfield", xVarDecl.line, xVarDecl.name);
 			}else{
-				childs.put(field.getSimpleName(), field);
+				addChild(field);
 			}
 			fieldList.add(field);
 			if(xVarDecl.init!=null){
@@ -372,7 +369,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 		try{
 			XMethodCompiler method = new XMethodCompiler(this, modifier, xMethodDecl.name, returnType, 
 					annotations, paramTypes, paramAnnotations, throwTypes, genericInfos, xMethodDecl, importHelper);
-			childs.put(method.getSimpleName(), method);
+			addChild(method);
 			methodList.add(method);
 		}catch(XRuntimeException e){
 			compilerError(XMessageLevel.ERROR, "intern", xMethodDecl.line, e.getMessage());
@@ -552,7 +549,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 	}
 
 	public XClassPtr getGenericClass(XType type, XGenericInfo[] extra) {
-		return importHelper.getGenericClass(this, type, extra);
+		return importHelper.getGenericClass(this, type, extra, true);
 	}
 	
 	public XClassPtr[] getGenericClasses(List<XType> types, XGenericInfo[] extra) {

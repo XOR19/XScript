@@ -184,7 +184,7 @@ public enum XOperator {
 	DEC("--", PREFIX, -1),
 	INCS("++", SUFFIX, -1),
 	DECS("--", SUFFIX, -1),
-	COPYS("<:", SUFFIX, -1){
+	COPYS("<:", PREFIX, -1){
 		@Override
 		public XConstantValue calc(XConstantValue left, XConstantValue right) {
 			return left;

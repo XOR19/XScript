@@ -59,11 +59,34 @@ public class XClass extends XPackage{
 		super(name);
 		state = STATE_CREATED;
 		this.virtualMachine = virtualMachine;
+		isArray = name.startsWith("xscript.lang.Array");
+		if(isArray()){
+			int primitiveID = XPrimitive.OBJECT;
+			for(int i=0; i<9; i++){
+				if(getSimpleName().equals("Array"+XPrimitive.getWrapper(i))){
+					primitiveID = i;
+					break;
+				}
+			}
+			primitive = primitiveID;
+			objectArray = primitiveID==XPrimitive.OBJECT;
+			elementSize = XPrimitive.getSize(primitiveID);
+		}else{
+			objectArray = false;
+			elementSize = 0;
+			primitive = 0;
+		}
 	}
 	
 	@Override
 	public void addChild(XPackage child) {
-		throw new UnsupportedOperationException();
+		if(getClass()==XClass.class)
+			throw new UnsupportedOperationException();
+		super.addChild(child);
+	}
+	
+	public XClassPtr[] getSuperClasses(){
+		return superClasses;
 	}
 	
 	public XVirtualMachine getVirtualMachine(){
@@ -102,10 +125,6 @@ public class XClass extends XPackage{
 		return superClasses[0].getXClass(virtualMachine).getName().equals("xscript.lang.Enum");
 	}
 	
-	public boolean isArray() {
-		return getName().startsWith("xscript.lang.Array");
-	}
-	
 	public int getGenericID(String genericName) {
 		for(int i=0; i<genericInfos.length; i++){
 			if(genericInfos[i].getName().equals(genericName)){
@@ -115,6 +134,10 @@ public class XClass extends XPackage{
 		throw new XRuntimeException("Can't find generic class %s", genericName);
 	}
 
+	public String getGenericName(int id) {
+		return genericInfos[id].getName();
+	}
+	
 	public int getGenericParams() {
 		return genericInfos.length;
 	}
@@ -159,6 +182,14 @@ public class XClass extends XPackage{
 					if(obj!=null)
 						obj.markVisible();
 				}
+			}
+		}
+		if(objectArray){
+			for(int i=0; i<object.getArrayLength(); i++){
+				long pointer = object.getArrayElement(i);
+				XObject obj = virtualMachine.getObjectProvider().getObject(pointer);
+				if(obj!=null)
+					obj.markVisible();
 			}
 		}
 		for(int i=0; i<superClasses.length; i++){
@@ -214,7 +245,7 @@ public class XClass extends XPackage{
 	
 	public XMethod getMethod(String methodName, String[] paramNames, String retName) {
 		for(int i=0; i<methods.length; i++){
-			if(methods[i].getSimpleName().equals(name)){
+			if(methods[i].getRealName().equals(name)){
 				return methods[i];
 			}
 		}
@@ -223,7 +254,7 @@ public class XClass extends XPackage{
 	
 	public XMethod getMethod(String name) {
 		for(int i=0; i<methods.length; i++){
-			if(methods[i].getSimpleName().equals(name)){
+			if(methods[i].getRealName().equals(name)){
 				return methods[i];
 			}
 		}
@@ -284,6 +315,9 @@ public class XClass extends XPackage{
 							}
 						}
 					}
+				}
+				if(isArray()){
+					lengthField = getField("length");
 				}
 				state = STATE_LOADED;
 				virtualMachine.getClassProvider().addClassForLoading(this);
@@ -414,6 +448,34 @@ public class XClass extends XPackage{
 			methods[i].save(outputStream);
 		}
 		
+	}
+
+	public XMethod[] getMethods() {
+		return methods;
+	}
+
+	//Array things
+	
+	private XField lengthField;
+	private final boolean objectArray;
+	private final int elementSize;
+	private final boolean isArray;
+	private final int primitive;
+	
+	public XField getLengthField() {
+		return lengthField;
+	}
+	
+	public boolean isArray() {
+		return isArray;
+	}
+
+	public int getArrayElementSize() {
+		return elementSize;
+	}
+	
+	public int getArrayPrimitive() {
+		return primitive;
 	}
 	
 }

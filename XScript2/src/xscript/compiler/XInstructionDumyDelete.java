@@ -7,12 +7,12 @@ import xscript.runtime.instruction.XInstruction;
 public class XInstructionDumyDelete extends XInstructionDumy {
 
 	@Override
-	public XInstruction replaceWith(XMethodCompiler compiler, List<XInstruction> instructions) {
+	public XInstruction replaceWith(XCodeGen compiler, List<XInstruction> instructions) {
 		return null;
 	}
 
 	@Override
-	public void deleteInstruction(XMethodCompiler compiler, List<XInstruction> instructions, XInstruction instruction) {
+	public void deleteInstruction(XCodeGen compiler, List<XInstruction> instructions, XInstruction instruction) {
 		
 	}
 

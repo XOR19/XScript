@@ -4,4 +4,8 @@ public class Int{
 
 	private final int value;
 
+	public static String toHex(int i){
+		return "Haha";
+	}
+
 }

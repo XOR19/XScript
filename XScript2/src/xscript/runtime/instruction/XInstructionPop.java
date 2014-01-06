@@ -9,14 +9,14 @@ import xscript.runtime.threads.XMethodExecutor;
 import xscript.runtime.threads.XThread;
 
 public class XInstructionPop extends XInstruction {
-
+	
 	public XInstructionPop(){}
 	
 	public XInstructionPop(XInputStream inputStream){}
 	
 	@Override
 	public void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
-		methodExecutor.pop();
+		methodExecutor.iPop();
 	}
 
 	@Override

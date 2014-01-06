@@ -76,9 +76,9 @@ public class XClassProvider {
 		}
 		if(xClass==null)
 			throw new XRuntimeException("Class %s not found", name);
-		if(xClass.getState()==XClass.STATE_ERRORED){
-			throw new XRuntimeException("Class %s errored", name);
-		}
+		//if(xClass.getState()==XClass.STATE_ERRORED){
+		//	throw new XRuntimeException("Class %s errored", name);
+		//}
 		return xClass;
 	}
 	
@@ -94,15 +94,7 @@ public class XClassProvider {
 		if(inputStream!=null){
 			String fileName = inputStream.getFileName();
 			String s[] = fileName.split("\\.");
-			XClass xClass = null;
-			for(int i=0; i<9; i++){
-				if(fileName.equals("xscript.lang.Array"+XPrimitive.getWrapper(i))){
-					xClass = new XArray(virtualMachine, s[s.length-1], i);
-					break;
-				}
-			}
-			if(xClass==null)
-				xClass = new XClass(virtualMachine, s[s.length-1]);
+			XClass xClass = new XClass(virtualMachine, s[s.length-1]);
 			addClassToPackage(xClass, s);
 			try{
 				xClass.load(inputStream);

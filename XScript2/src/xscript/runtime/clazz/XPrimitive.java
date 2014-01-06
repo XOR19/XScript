@@ -5,6 +5,7 @@ import java.io.IOException;
 import xscript.runtime.XRuntimeException;
 import xscript.runtime.XVirtualMachine;
 import xscript.runtime.genericclass.XGenericClass;
+import xscript.runtime.method.XMethod;
 import xscript.runtime.object.XObject;
 
 
@@ -37,6 +38,41 @@ public class XPrimitive extends XClass {
 	@Override
 	public void save(XOutputStream outputStream) throws IOException {
 		throw new XRuntimeException("Can't save Primitive Classes");
+	}
+	
+	@Override
+	public int getGenericParams() {
+		return 0;
+	}
+	
+	@Override
+	public void addChild(XPackage child) {
+		throw new UnsupportedOperationException();
+	}
+	
+	@Override
+	public XClassTable getClassTable(XClass xClass) {
+		return null;
+	}
+
+	@Override
+	public XField getField(String name) {
+		return null;
+	}
+
+	@Override
+	public XField getFieldAndParents(String name) {
+		return null;
+	}
+
+	@Override
+	public XMethod getMethod(String methodName, String[] paramNames, String retName) {
+		return null;
+	}
+
+	@Override
+	public XMethod getMethod(String name) {
+		return null;
 	}
 
 	public static int getPrimitiveID(XClass xClass){

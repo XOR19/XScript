@@ -10,7 +10,7 @@ public class XInstructionDumyJump extends XInstructionDumy {
 	public XInstruction target;
 
 	@Override
-	public XInstruction replaceWith(XMethodCompiler compiler, List<XInstruction> instructions) {
+	public XInstruction replaceWith(XCodeGen compiler, List<XInstruction> instructions) {
 		int t;
 		if(target==null){
 			t = instructions.size();
@@ -27,7 +27,7 @@ public class XInstructionDumyJump extends XInstructionDumy {
 	}
 	
 	@Override
-	public void deleteInstruction(XMethodCompiler compiler, List<XInstruction> instructions, XInstruction instruction) {
+	public void deleteInstruction(XCodeGen compiler, List<XInstruction> instructions, XInstruction instruction) {
 		if(instruction==target){
 			int pos = instructions.indexOf(instruction);
 			if(pos==-1)

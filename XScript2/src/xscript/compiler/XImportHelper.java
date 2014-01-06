@@ -6,7 +6,9 @@ import java.util.List;
 import xscript.compiler.message.XMessageLevel;
 import xscript.compiler.tree.XTree.XImport;
 import xscript.compiler.tree.XTree.XType;
+import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XGenericInfo;
+import xscript.runtime.clazz.XPrimitive;
 import xscript.runtime.genericclass.XClassPtr;
 import xscript.runtime.genericclass.XClassPtrClass;
 import xscript.runtime.genericclass.XClassPtrClassGeneric;
@@ -51,7 +53,7 @@ public class XImportHelper {
 		}
 	}
 
-	public XClassPtr getGenericClass(XClassCompiler xClassCompiler, XType type, XGenericInfo[] extra) {
+	private XClassPtr getGenericClass1(XClassCompiler xClassCompiler, XType type, XGenericInfo[] extra, boolean doError) {
 		try{
 			xClassCompiler.getGenericID(type.name.name);
 			return new XClassPtrClassGeneric(xClassCompiler.getName(), type.name.name);
@@ -80,8 +82,11 @@ public class XImportHelper {
 				xClassCompiler.getVirtualMachine().getClassProvider().getXClass(type.name.name);
 				name = type.name.name;
 			}catch(Exception e){
-				xClassCompiler.compilerError(XMessageLevel.ERROR, "classnotfound", type.line, type.name.name);
-				return new XClassPtrErrored(type.name.name);
+				if(doError){
+					xClassCompiler.compilerError(XMessageLevel.ERROR, "classnotfound", type.line, type.name.name);
+					return new XClassPtrErrored(type.name.name);
+				}
+				return null;
 			}
 		}
 		if(type.typeParam==null){
@@ -89,10 +94,28 @@ public class XImportHelper {
 		}else{
 			XClassPtr[] genericPtrs = new XClassPtr[type.typeParam.size()];
 			for(int i=0; i<genericPtrs.length; i++){
-				genericPtrs[i] = getGenericClass(xClassCompiler, type.typeParam.get(i), extra);
+				genericPtrs[i] = getGenericClass(xClassCompiler, type.typeParam.get(i), extra, true);
 			}
 			return new XClassPtrGeneric(name, genericPtrs);
 		}
+	}
+	
+	public XClassPtr getGenericClass(XClassCompiler xClassCompiler, XType type, XGenericInfo[] extra, boolean doError) {
+		XClassPtr classPtr = getGenericClass1(xClassCompiler, type, extra, doError);
+		if(classPtr==null)
+			return null;
+		if(type.array>0){
+			XClass c = classPtr.getXClass(xClassCompiler.getVirtualMachine());
+			if(c==null || XPrimitive.getPrimitiveID(c)==XPrimitive.OBJECT){
+				classPtr = new XClassPtrGeneric("xscript.lang.Array", new XClassPtr[]{classPtr});
+			}else{
+				classPtr = new XClassPtrClass("xscript.lang.Array"+XPrimitive.getWrapper(XPrimitive.getPrimitiveID(c)));
+			}
+			for(int i=1; i<type.array; i++){
+				classPtr = new XClassPtrGeneric("xscript.lang.Array", new XClassPtr[]{classPtr});
+			}
+		}
+		return classPtr;
 	}
 	
 }

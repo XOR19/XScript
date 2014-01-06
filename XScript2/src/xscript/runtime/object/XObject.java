@@ -2,8 +2,6 @@ package xscript.runtime.object;
 
 import xscript.runtime.XModifier;
 import xscript.runtime.XRuntimeException;
-import xscript.runtime.clazz.XArray;
-import xscript.runtime.clazz.XPrimitive;
 import xscript.runtime.genericclass.XGenericClass;
 
 public class XObject {
@@ -16,6 +14,8 @@ public class XObject {
 	protected XObject(XGenericClass xClass){
 		if(XModifier.isAbstract(xClass.getXClass().getModifier()))
 			throw new XRuntimeException("Can't create Object form abstract class %s", xClass);
+		if(xClass.getXClass().isArray())
+			throw new XRuntimeException("%s is an array", xClass);
 		this.xClass = xClass;
 		data = new byte[xClass.getXClass().getObjectSize()];
 	}
@@ -23,11 +23,11 @@ public class XObject {
 	protected XObject(XGenericClass xClass, int size) {
 		if(XModifier.isAbstract(xClass.getXClass().getModifier()))
 			throw new XRuntimeException("Can't create Object form abstract class %s", xClass);
-		if(!(xClass.getXClass() instanceof XArray))
+		if(!(xClass.getXClass().isArray()))
 			throw new XRuntimeException("%s isn't an array", xClass);
 		this.xClass = xClass;
 		data = new byte[xClass.getXClass().getObjectSize()+size];
-		((XArray)xClass.getXClass()).getLengthField().set(this, size);
+		xClass.getXClass().getLengthField().set(this, size);
 	}
 	
 	public XGenericClass getXClass(){
@@ -39,19 +39,19 @@ public class XObject {
 	}
 	
 	public boolean isArray(){
-		return xClass.getXClass() instanceof XArray;
+		return xClass.getXClass().isArray();
 	}
 	
 	public int getArrayLength(){
 		if(isArray()){
-			return (int) ((XArray)xClass.getXClass()).getLengthField().get(this);
+			return (int) xClass.getXClass().getLengthField().get(this);
 		}
 		return 0;
 	}
 	
 	public long getArrayElement(int index){
 		if(isArray()){
-			int size = XPrimitive.getSize(((XArray)xClass.getXClass()).getPrimitiveID());
+			int size = xClass.getXClass().getArrayElementSize();
 			int i = xClass.getXClass().getObjectSize()+size*index;
 			long l = 0;
 			for(int j=0; j<size; j++){
@@ -65,7 +65,7 @@ public class XObject {
 	
 	public void setArrayElement(int index, long value){
 		if(isArray()){
-			int size = XPrimitive.getSize(((XArray)xClass.getXClass()).getPrimitiveID());
+			int size = xClass.getXClass().getArrayElementSize();
 			int i = xClass.getXClass().getObjectSize()+size*index;
 			for(int j=size-1; j>=0; j--){
 				data[i+j] = (byte) (value & 255);

@@ -166,7 +166,7 @@ public class XParser {
 			nextToken();
 			return true;
 		}else{
-			syntaxError("expected", kind);
+			syntaxError("expected", kind, token.kind, token.param);
 			unhandledUnexpected = true;
 			return false;
 		}
@@ -265,6 +265,10 @@ public class XParser {
 		return name;
 	}
 	
+	public XIdent makeIdent(){
+		return new XIdent(token.lineDesk, ident());
+	}
+	
 	public XIdent qualident(){
 		startLineBlock();
 		String name = ident();
@@ -313,6 +317,10 @@ public class XParser {
 	}
 	
 	public XType makeType(){
+		return makeType(true);
+	}
+	
+	public XType makeType(boolean beArray){
 		startLineBlock();
 		XIdent name;
 		List<XType> typeParam = null;
@@ -335,10 +343,12 @@ public class XParser {
 			}
 		}
 		int array = 0;
-		while(token.kind==XTokenKind.LINDEX){
-			nextToken();
-			expected(XTokenKind.RINDEX);
-			array++;
+		if(beArray){
+			while(token.kind==XTokenKind.LINDEX){
+				nextToken();
+				expected(XTokenKind.RINDEX);
+				array++;
+			}
 		}
 		return new XType(endLineBlock(), name, typeParam, array);
 	}
@@ -440,21 +450,22 @@ public class XParser {
 		return new Object[]{list, varargs};
 	}
 	
-	public XVarDecls makeVarDeclStatement(XModifier modifier){
+	public XVarDecls makeVarDeclStatement(XModifier modifier, boolean needEnding){
 		XType type = makeType();
 		XLineDesk line = new XLineDesk(token.lineDesk);
 		String name = ident();
 		XVarDecls varDecl = makeVarDecls(line, modifier, type, name);
-		expected(XTokenKind.SEMICOLON);
+		if(needEnding)
+			expected(XTokenKind.SEMICOLON);
 		return varDecl;
 	}
 	
-	public XStatement makeDeclStatement(){
+	public XStatement makeDeclStatement(boolean needEnding){
 		XModifier modifier = makeModifier();
 		if(token.kind==XTokenKind.CLASS || token.kind==XTokenKind.INTERFACE || token.kind==XTokenKind.ENUM || token.kind==XTokenKind.ANNOTATION){
 			return makeClassDecl(modifier);
 		}else{
-			return makeVarDeclStatement(modifier);
+			return makeVarDeclStatement(modifier, needEnding);
 		}
 	}
 	
@@ -699,8 +710,38 @@ public class XParser {
 			}
 		}case IDENT:{
 			startLineBlock();
-			XIdent ident = qualident();
-			if(token.kind==XTokenKind.SUB && ident.name.indexOf('.')==-1){
+			lexer.notSure();
+			startMessageBuffer();
+			boolean error = unhandledUnexpected;
+			unhandledUnexpected = false;
+			XType type = makeType();
+			if(unhandledUnexpected){
+				token = oldToken;
+				endMessageBuffer(false);
+				unhandledUnexpected = error;
+				lexer.reset();
+				XIdent ident = makeIdent();
+				if(token.kind==XTokenKind.SUB){
+					XToken oldT = token;
+					lexer.notSure();
+					nextToken();
+					if(token.kind==XTokenKind.GREATER && !token.space){
+						lexer.sure();
+						nextToken();
+						XStatement s = makeSecoundStatement(false);
+						List<XVarDecl> l = new ArrayList<XVarDecl>();
+						l.add(new XVarDecl(ident.line, null, ident.name, null, null));
+						return new XLambda(endLineBlock(), l, s);
+					}else{
+						lexer.reset();
+						token = oldT;
+					}
+				}
+				endLineBlock();
+				return ident;
+			}
+			boolean rtype = type.typeParam!=null || type.array>0;
+			if(!rtype && token.kind==XTokenKind.SUB && type.name.name.indexOf('.')==-1){
 				XToken oldT = token;
 				lexer.notSure();
 				nextToken();
@@ -709,7 +750,7 @@ public class XParser {
 					nextToken();
 					XStatement s = makeSecoundStatement(false);
 					List<XVarDecl> l = new ArrayList<XVarDecl>();
-					l.add(new XVarDecl(ident.line, null, ident.name, null, null));
+					l.add(new XVarDecl(type.name.line, null, type.name.name, null, null));
 					return new XLambda(endLineBlock(), l, s);
 				}else{
 					lexer.reset();
@@ -717,7 +758,7 @@ public class XParser {
 				}
 			}
 			endLineBlock();
-			return ident;
+			return type;
 		}case FLOATLITERAL:
 		case DOUBLELITERAL:
 		case LONGLITERAL:
@@ -740,18 +781,19 @@ public class XParser {
 		case NEW:
 			startLineBlock();
 			nextToken();
-			XType type = makeType();
+			XType type = makeType(false);
 			if(token.kind==XTokenKind.LINDEX){
 				List<XStatement> l = new ArrayList<XStatement>();
 				while(token.kind==XTokenKind.LINDEX){
 					nextToken();
-					if(token.kind==XTokenKind.INTLITERAL){
-						l.add(makeStatementWithSuffixAndPrefix());
+					if(token.kind!=XTokenKind.RINDEX){
+						l.add(makeInnerStatement());
 					}else{
 						l.add(null);
 					}
 					expected(XTokenKind.RINDEX);
 				}
+				type.array = l.size();
 				XStatement arrayInitialize = null;
 				if(token.kind==XTokenKind.LBRAKET){
 					arrayInitialize = makeArrayInitialize();
@@ -821,7 +863,7 @@ public class XParser {
 		}else{
 			statement = new XOperatorPrefixSuffix(endLineBlock(), null, statement, suffix);
 		}
-		while(token.kind==XTokenKind.LGROUP || token.kind==XTokenKind.LINDEX || typeParam!=null){
+		while(token.kind==XTokenKind.LGROUP || token.kind==XTokenKind.LINDEX || token.kind==XTokenKind.ELEMENT || typeParam!=null){
 			startLineBlock();
 			startLineBlock();
 			if(token.kind==XTokenKind.LGROUP || typeParam!=null){
@@ -832,6 +874,10 @@ public class XParser {
 				XStatement index = makeInnerStatement();
 				expected(XTokenKind.RINDEX);
 				statement = new XIndex(endLineBlock(), statement, index);
+			}else if(token.kind==XTokenKind.ELEMENT){
+				XToken t = token;
+				nextToken();
+				statement = new XOperatorStatement(t.lineDesk, statement, XOperator.ELEMENT, makeIdent());
 			}
 			suffix = new ArrayList<XOperator>();
 			while(isOperator(token.kind)){
@@ -846,6 +892,17 @@ public class XParser {
 				endLineBlock();
 			}else{
 				statement = new XOperatorPrefixSuffix(endLineBlock(), null, statement, suffix);
+			}
+			typeParam = null;
+			if(token.kind==XTokenKind.SMALLER){
+				nextToken();
+				typeParam = new ArrayList<XTree.XType>();
+				typeParam.add(makeType());
+				while(token.kind==XTokenKind.COMMA){
+					nextToken();
+					typeParam.add(makeType());
+				}
+				expected(XTokenKind.GREATER);
 			}
 		}
 		if(prefix == null){
@@ -1028,7 +1085,7 @@ public class XParser {
 		case INTERFACE:
 		case ANNOTATION:
 			endLineBlock();
-			return makeDeclStatement();
+			return makeDeclStatement(needEnding);
 		case BREAK:
 			nextToken();
 			if(token.kind==XTokenKind.IDENT){
@@ -1099,14 +1156,11 @@ public class XParser {
 				block = makeStatement(needEnding);
 				return new XForeach(endLineBlock(), statement, statement2, block);
 			}else{
-				if(token.kind==XTokenKind.SEMICOLON){
-					nextToken();
-				}else{
+				if(token.kind!=XTokenKind.SEMICOLON){
 					statement2 = makeInnerStatement();
 				}
-				if(token.kind==XTokenKind.SEMICOLON){
-					nextToken();
-				}else{
+				expected(XTokenKind.SEMICOLON);
+				if(token.kind!=XTokenKind.RGROUP){
 					statement3 = makeInnerStatement();
 				}
 				expected(XTokenKind.RGROUP);
@@ -1236,18 +1290,23 @@ public class XParser {
 			boolean bv = unhandledUnexpected;
 			unhandledUnexpected = false;
 			XType type = makeType();
-			boolean knowRealy = type.array!=0;
+			boolean knowRealy = false;
 			XVarDecls decl = null;
-			if(token.kind==XTokenKind.IDENT || knowRealy){
-				knowRealy |= type.typeParam==null || type.typeParam.size()!=1;
-				XLineDesk line = new XLineDesk(token.lineDesk);
-				String name = ident();
-				if(token.kind==XTokenKind.LINDEX){
-					nextToken();
-					expected(XTokenKind.RINDEX);
-					decl = makeVarDecls(line, new XModifier(line, 0), type, name, 1);
-				}else if(token.kind==XTokenKind.EQUAL || token.kind==XTokenKind.SEMICOLON){
-					decl = makeVarDecls(line, new XModifier(line, 0), type, name);
+			if(!unhandledUnexpected){
+				knowRealy = type.array!=0;
+				if(token.kind==XTokenKind.IDENT || knowRealy){
+					knowRealy |= type.typeParam==null || type.typeParam.size()!=1;
+					XLineDesk line = new XLineDesk(token.lineDesk);
+					String name = ident();
+					if(token.kind==XTokenKind.LINDEX){
+						nextToken();
+						if(token.kind==XTokenKind.RINDEX){
+							nextToken();
+							decl = makeVarDecls(line, new XModifier(line, 0), type, name, 1);
+						}
+					}else if(token.kind==XTokenKind.EQUAL || token.kind==XTokenKind.SEMICOLON){
+						decl = makeVarDecls(line, new XModifier(line, 0), type, name);
+					}
 				}
 			}
 			if(knowRealy || decl!=null){
@@ -1382,6 +1441,9 @@ public class XParser {
 		List<XTypeParam> typeParam = makeTypeParamList();
 		XType type = makeType();
 		boolean isConstructor = token.kind==XTokenKind.LGROUP && className!=null && type.name.name.equals(className);
+		if(isConstructor){
+			type = new XType(type.line, new XIdent(type.line, "void"), null, 0);
+		}
 		XLineDesk line = new XLineDesk(token.lineDesk);
 		String name = isConstructor?"<init>":ident();
 		if(isConstructor || token.kind==XTokenKind.LGROUP){

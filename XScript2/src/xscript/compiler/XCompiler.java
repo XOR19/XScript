@@ -71,23 +71,6 @@ public class XCompiler extends XVirtualMachine{
 		}
 	}
 	
-	protected XTree makeTreeFor(String lang, String className, String source){
-		XTreeMaker treeMaker = treeMakers.get(lang);
-		if(treeMaker==null){
-			postMessage(XMessageLevel.ERROR, className, "compiler.wrong.lang", new XLineDesk(0, 0, 0, 0), lang);
-			return null;
-		}
-		XMessageClass messageClass = new XMessageClass(this, className);
-		XTree tree = treeMaker.makeTree(source, messageClass);
-		for(XVisitor visitor:treeChangers){
-			if(visitor instanceof XMessageListSetter){
-				((XMessageListSetter) visitor).setMessageList(messageClass);
-			}
-			tree.accept(visitor);
-		}
-		return tree;
-	}
-	
 	protected void postMessage(XMessageLevel level, String className, String key, XLineDesk lineDesk, Object...args) {
 		messageList.add(new XMessageElement(level, className, lineDesk, key, args));
 	}
@@ -128,6 +111,12 @@ public class XCompiler extends XVirtualMachine{
 			String name = classCompiler.getName();
 			XTreeMaker treeMaker = treeMakers.get(provider.getClassCompiler(name));
 			XTree tree = treeMaker.makeTree(provider.getClassSource(name), classCompiler.getMessageList());
+			for(XVisitor visitor:compiler.treeChangers){
+				if(visitor instanceof XMessageListSetter){
+					((XMessageListSetter) visitor).setMessageList(classCompiler.getMessageList());
+				}
+				tree.accept(visitor);
+			}
 			tree.accept(classCompiler);
 			compiler.classes2Compile1.add(classCompiler);
 		}

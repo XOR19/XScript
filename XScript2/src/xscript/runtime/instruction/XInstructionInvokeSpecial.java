@@ -29,7 +29,7 @@ public class XInstructionInvokeSpecial extends XInstruction {
 	
 	public XInstructionInvokeSpecial(XMethod method, XClassPtr[] generics){
 		className = method.getDeclaringClass().getName();
-		methodName = method.getSimpleName();
+		methodName = method.getRealName();
 		methodParams = method.getMethodParamNames();
 		methodReturn = method.getMethodReturnName();
 		this.generics = generics;
@@ -127,13 +127,12 @@ public class XInstructionInvokeSpecial extends XInstruction {
 		String s = "(";
 		if(methodParams.length>0){
 			s += methodParams[0];
-			for(int i=0; i<methodParams.length; i++){
+			for(int i=1; i<methodParams.length; i++){
 				s += ", "+methodParams[i];
 			}
-			s += ")";
 		}
-		s += methodReturn;
-		return "invd "+className+"."+methodName+s;
+		s += ")"+methodReturn;
+		return "invp "+className+"."+methodName+s;
 	}
 
 }
