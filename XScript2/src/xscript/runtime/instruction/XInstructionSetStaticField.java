@@ -48,6 +48,7 @@ public class XInstructionSetStaticField extends XInstruction {
 		}else{
 			field.set(null, value);
 		}
+		methodExecutor.push(value, getPrimitiveID(vm));
 	}
 
 	private int getPrimitiveID(XVirtualMachine vm){

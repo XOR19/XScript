@@ -40,5 +40,13 @@ public class XGenericInfo {
 		}
 		outputStream.writeBoolean(isSuper);
 	}
+
+	public boolean isSuper() {
+		return isSuper;
+	}
+	
+	public XClassPtr[] getTypeParams() {
+		return typeParams;
+	}
 	
 }

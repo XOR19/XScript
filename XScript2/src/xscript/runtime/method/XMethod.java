@@ -385,7 +385,7 @@ public class XMethod extends XPackage {
 			genericInfos[i].save(outputStream);
 		}
 		
-		if(!XModifier.isNative(modifier)){
+		if(!XModifier.isNative(modifier) && !XModifier.isAbstract(modifier)){
 			
 			outputStream.writeInt(instructions.length);
 			for(int i=0; i<instructions.length; i++){
@@ -420,6 +420,10 @@ public class XMethod extends XPackage {
 			outputStream.writeShort(maxObjectStackSize);
 			outputStream.writeShort(maxLocalSize);
 		}
+	}
+
+	public XGenericInfo getGenericInfo(int genericID) {
+		return genericInfos[genericID];
 	}
 	
 }

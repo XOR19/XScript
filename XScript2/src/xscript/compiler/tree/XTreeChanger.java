@@ -23,6 +23,7 @@ import xscript.compiler.tree.XTree.XIf;
 import xscript.compiler.tree.XTree.XIfOperator;
 import xscript.compiler.tree.XTree.XImport;
 import xscript.compiler.tree.XTree.XIndex;
+import xscript.compiler.tree.XTree.XInstanceof;
 import xscript.compiler.tree.XTree.XLable;
 import xscript.compiler.tree.XTree.XLambda;
 import xscript.compiler.tree.XTree.XMethodCall;
@@ -306,6 +307,12 @@ public class XTreeChanger implements XVisitor {
 	@Override
 	public void visitSuper(XSuper xSuper) {
 		
+	}
+
+	@Override
+	public void visitInstanceof(XInstanceof xInstanceof) {
+		xInstanceof.statement = visitTree(xInstanceof.statement);
+		xInstanceof.type = visitTree(xInstanceof.type);
 	}
 
 }

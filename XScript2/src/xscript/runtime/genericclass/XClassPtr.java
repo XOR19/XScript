@@ -13,6 +13,10 @@ public abstract class XClassPtr {
 	
 	public abstract XClass getXClass(XVirtualMachine virtualMachine);
 	
+	public XClassPtr[] getPossibleClasses(XVirtualMachine virtualMachine){
+		return null;
+	}
+	
 	public XClass getXClassNonNull(XVirtualMachine virtualMachine){
 		XClass xClass = getXClass(virtualMachine);
 		if(xClass==null)

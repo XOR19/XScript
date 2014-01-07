@@ -29,6 +29,7 @@ public class XInstructionWriteLocal extends XInstruction {
 			XChecks.checkCast(vm.getObjectProvider().getObject(value).getXClass(), methodExecutor.getLocalType(local));
 		}
 		methodExecutor.setLocal(local, value);
+		methodExecutor.push(value, XPrimitive.getPrimitiveID(methodExecutor.getLocalType(local).getXClass()));
 	}
 
 	@Override

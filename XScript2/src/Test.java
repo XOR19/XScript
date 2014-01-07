@@ -5,7 +5,6 @@ import xscript.compiler.XCompiler;
 import xscript.compiler.XFileSourceProvider;
 import xscript.compiler.message.XMessageFormatter;
 import xscript.compiler.tree.XTreeMakeEasy;
-import xscript.compiler.tree.XTreePrinter;
 import xscript.runtime.clazz.XClassLoader;
 
 

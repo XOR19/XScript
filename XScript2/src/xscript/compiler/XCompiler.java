@@ -3,6 +3,7 @@ package xscript.compiler;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 
 import xscript.compiler.message.XMessageElement;
 import xscript.compiler.message.XMessageFormatter;
@@ -17,6 +18,7 @@ import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XClassLoader;
 import xscript.runtime.clazz.XClassMaker;
+import xscript.runtime.clazz.XOutputStream;
 
 public class XCompiler extends XVirtualMachine{
 
@@ -29,6 +31,8 @@ public class XCompiler extends XVirtualMachine{
 	private List<String> classes2Compile = new ArrayList<String>();
 	
 	private List<XClassCompiler> classes2Compile1 = new ArrayList<XClassCompiler>();
+	
+	private HashMap<XClassCompiler, XSourceProvider> classes2Save = new HashMap<XClassCompiler, XSourceProvider>();
 	
 	static{
 		treeMakers.put("xscript", new XStandartTreeMaker());
@@ -55,12 +59,23 @@ public class XCompiler extends XVirtualMachine{
 			String name = classes2Compile.remove(0);
 			try{
 				getClassProvider().getXClass(name);
-			}catch(Exception e){
+			}catch(Throwable e){
 				e.printStackTrace();
 				postMessage(XMessageLevel.ERROR, name, "errored", new XLineDesk(0, 0, 0, 0), e.getMessage());
 			}
 			while(!classes2Compile1.isEmpty()){
 				classes2Compile1.remove(0).gen();
+			}
+		}
+		for(Entry<XClassCompiler, XSourceProvider> e:classes2Save.entrySet()){
+			String name = e.getKey().getName();
+			try{
+				XOutputStream outputStream = new XOutputStream();
+				e.getKey().save(outputStream);
+				e.getValue().saveClass(name, outputStream.toByteArray());
+			}catch(Throwable t){
+				t.printStackTrace();
+				postMessage(XMessageLevel.ERROR, name, "errored", new XLineDesk(0, 0, 0, 0), t.getMessage());
 			}
 		}
 	}
@@ -102,7 +117,9 @@ public class XCompiler extends XVirtualMachine{
 		public XClass makeClass() {
 			String name = getName();
 			XMessageClass messageClass = new XMessageClass(compiler, name);
-			return new XClassCompiler(compiler, getSimpleName(), messageClass, null);
+			XClassCompiler cc = new XClassCompiler(compiler, getSimpleName(), messageClass, null);
+			compiler.classes2Save.put(cc, provider);
+			return cc;
 		}
 
 		@Override

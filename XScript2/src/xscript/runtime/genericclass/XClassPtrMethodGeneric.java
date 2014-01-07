@@ -5,6 +5,7 @@ import java.io.IOException;
 import xscript.runtime.XRuntimeException;
 import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XClass;
+import xscript.runtime.clazz.XGenericInfo;
 import xscript.runtime.clazz.XOutputStream;
 import xscript.runtime.method.XMethod;
 import xscript.runtime.threads.XGenericMethodProvider;
@@ -30,6 +31,20 @@ public class XClassPtrMethodGeneric extends XClassPtr{
 	@Override
 	public XClass getXClass(XVirtualMachine virtualMachine) {
 		return null;
+	}
+	
+	@Override
+	public XClassPtr[] getPossibleClasses(XVirtualMachine virtualMachine){
+		if(method==null){
+			XClass xClass = virtualMachine.getClassProvider().getXClass(className);
+			method = xClass.getMethod(methodName, paramNames, retName);
+			genericID = method.getGenericID(genericName);
+		}
+		XGenericInfo info = method.getGenericInfo(genericID);
+		if(info.isSuper()){
+			return new XClassPtr[]{new XClassPtrClass("xstript.lang.Object")};
+		}
+		return info.getTypeParams();
 	}
 	
 	@Override

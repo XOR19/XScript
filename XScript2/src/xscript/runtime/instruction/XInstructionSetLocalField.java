@@ -55,6 +55,7 @@ public class XInstructionSetLocalField extends XInstruction {
 		}else{
 			field.set(object, value);
 		}
+		methodExecutor.push(value, getPrimitiveID(vm));
 	}
 
 	private int getPrimitiveID(XVirtualMachine vm){

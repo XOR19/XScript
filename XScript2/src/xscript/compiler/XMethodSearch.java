@@ -11,17 +11,17 @@ import xscript.runtime.method.XMethod;
 
 public class XMethodSearch {
 
-	private XClass declaringClass;
+	private XClass[] declaringClass;
 	private boolean shouldBeStatic;
 	private boolean specialInvoke;
 	private String name;
-	private XClassPtr[] types;
+	private XVarType[] types;
 	private XClassPtr[] generics;
-	private XClassPtr expectedReturn;
+	private XVarType expectedReturn;
 	private List<XMethod> posibleMethods = new ArrayList<XMethod>();
 	
 	public XMethodSearch(XClass declaringClass, boolean shouldBeStatic, String name, boolean specialInvoke, boolean lookIntoParents) {
-		this.declaringClass = declaringClass;
+		this.declaringClass = new XClass[]{declaringClass};
 		this.shouldBeStatic = shouldBeStatic;
 		this.name = name;
 		this.specialInvoke = specialInvoke;
@@ -30,6 +30,19 @@ public class XMethodSearch {
 			search();
 		}
 	}
+
+	public XMethodSearch(XClass[] declaringClass, boolean shouldBeStatic, String name, boolean specialInvoke, boolean lookIntoParents) {
+		this.declaringClass = declaringClass;
+		this.shouldBeStatic = shouldBeStatic;
+		this.name = name;
+		this.specialInvoke = specialInvoke;
+		if(declaringClass!=null){
+			for(int i=0; i<declaringClass.length; i++)
+				addClassMethods(declaringClass[i], new ArrayList<XClass>(), lookIntoParents);
+			search();
+		}
+	}
+	
 	
 	private void addClassMethods(XClass c, List<XClass> classesAlreadyDone, boolean lookIntoParents){
 		if(!classesAlreadyDone.contains(c)){
@@ -56,14 +69,14 @@ public class XMethodSearch {
 		search();
 	}
 
-	public void applyTypes(XClassPtr... types) {
+	public void applyTypes(XVarType... types) {
 		if(this.types!=null)
 			throw new IllegalArgumentException();
 		this.types = types;
 		search();
 	}
 
-	public void applyReturn(XClassPtr expectedReturn) {
+	public void applyReturn(XVarType expectedReturn) {
 		if(this.expectedReturn!=null)
 			throw new IllegalArgumentException();
 		this.expectedReturn = expectedReturn;
@@ -157,7 +170,7 @@ public class XMethodSearch {
 		return generics;
 	}
 
-	public XClass getDeclaringClass() {
+	public XClass[] getDeclaringClass() {
 		return declaringClass;
 	}
 
@@ -180,7 +193,7 @@ public class XMethodSearch {
 		}else{
 			s += expectedReturn;
 		}
-		return declaringClass.getName()+"."+name+s;
+		return declaringClass[0].getName()+"."+name+s;
 	}
 	
 }

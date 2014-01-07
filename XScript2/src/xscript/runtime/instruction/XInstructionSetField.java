@@ -43,6 +43,7 @@ public class XInstructionSetField extends XInstruction {
 		long pointer = methodExecutor.oPop();
 		XObject object = vm.getObjectProvider().getObject(pointer);
 		field.set(object, value);
+		methodExecutor.push(value, getPrimitiveID(vm));
 	}
 
 	private int getPrimitiveID(XVirtualMachine vm){

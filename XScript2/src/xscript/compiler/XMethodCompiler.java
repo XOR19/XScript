@@ -86,7 +86,7 @@ public class XMethodCompiler extends XMethod {
 		String name = c.getName();
 		XClassPtr generics[] = new XClassPtr[c.getGenericParams()];
 		for(int i=0; i<generics.length; i++){
-			generics[i] = new XClassPtrClassGeneric(name, c.getGenericName(i));
+			generics[i] = new XClassPtrClassGeneric(name, c.getGenericInfo(i).getName());
 		}
 		return new XClassPtrGeneric(name, generics);
 	}

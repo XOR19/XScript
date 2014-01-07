@@ -69,12 +69,12 @@ public class XCodeGen {
 
 	public XCatchEntry[] getCatchEntries() {
 		// TODO Auto-generated method stub
-		return null;
+		return new XCatchEntry[0];
 	}
 
 	public XLocalEntry[] getLocalEntries() {
 		// TODO Auto-generated method stub
-		return null;
+		return new XLocalEntry[0];
 	}
 
 	public boolean isEmpty() {

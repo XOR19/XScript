@@ -28,6 +28,7 @@ import xscript.compiler.tree.XTree.XIf;
 import xscript.compiler.tree.XTree.XIfOperator;
 import xscript.compiler.tree.XTree.XImport;
 import xscript.compiler.tree.XTree.XIndex;
+import xscript.compiler.tree.XTree.XInstanceof;
 import xscript.compiler.tree.XTree.XLable;
 import xscript.compiler.tree.XTree.XLambda;
 import xscript.compiler.tree.XTree.XMethodCall;
@@ -236,6 +237,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 				methodList = new ArrayList<XMethod>();
 				fieldList = new ArrayList<XField>();
 				visitTree(xClassDef.defs);
+				annotations = new xscript.runtime.XAnnotation[0];
 				methods = methodList.toArray(new XMethod[methodList.size()]);
 				fields = fieldList.toArray(new XField[fieldList.size()]);
 			}
@@ -282,7 +284,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 			modifier = xVarDecl.modifier.modifier;
 		}
 		XClassPtr type = getGenericClass(xVarDecl.type, null);
-		xscript.runtime.XAnnotation[] annotations = null;
+		xscript.runtime.XAnnotation[] annotations = new xscript.runtime.XAnnotation[0];
 		try{
 			XField field = new XField(this, modifier, xVarDecl.name, type, annotations);
 			if(childs.containsKey(field.getSimpleName())){
@@ -354,7 +356,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 			}
 		}
 		XClassPtr returnType = getGenericClass(xMethodDecl.returnType, genericInfos);
-		xscript.runtime.XAnnotation[] annotations = null;
+		xscript.runtime.XAnnotation[] annotations = new xscript.runtime.XAnnotation[0];
 		XClassPtr[] paramTypes;
 		if(xMethodDecl.paramTypes==null){
 			paramTypes = new XClassPtr[0];
@@ -541,6 +543,11 @@ public class XClassCompiler extends XClass implements XVisitor {
 
 	@Override
 	public void visitSuper(XSuper xSuper) {
+		shouldNeverCalled();
+	}
+	
+	@Override
+	public void visitInstanceof(XInstanceof xInstanceof) {
 		shouldNeverCalled();
 	}
 	

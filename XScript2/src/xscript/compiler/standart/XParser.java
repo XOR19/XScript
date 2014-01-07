@@ -32,6 +32,7 @@ import xscript.compiler.tree.XTree.XIf;
 import xscript.compiler.tree.XTree.XIfOperator;
 import xscript.compiler.tree.XTree.XImport;
 import xscript.compiler.tree.XTree.XIndex;
+import xscript.compiler.tree.XTree.XInstanceof;
 import xscript.compiler.tree.XTree.XLable;
 import xscript.compiler.tree.XTree.XLambda;
 import xscript.compiler.tree.XTree.XMethodCall;
@@ -474,7 +475,7 @@ public class XParser {
 				|| kind==XTokenKind.DIV || kind==XTokenKind.MOD || kind==XTokenKind.NOT
 				|| kind==XTokenKind.BNOT || kind==XTokenKind.AND || kind==XTokenKind.OR
 				|| kind==XTokenKind.XOR || kind==XTokenKind.EQUAL || kind==XTokenKind.GREATER
-				|| kind==XTokenKind.SMALLER || kind==XTokenKind.INSTANCEOF 
+				|| kind==XTokenKind.SMALLER
 				|| kind==XTokenKind.ELEMENT || kind==XTokenKind.COLON || kind==XTokenKind.QUESTIONMARK
 				|| kind==XTokenKind.OAND || kind==XTokenKind.OOR || kind==XTokenKind.OXOR
 				|| kind==XTokenKind.OBAND || kind==XTokenKind.OBOR
@@ -863,7 +864,7 @@ public class XParser {
 		}else{
 			statement = new XOperatorPrefixSuffix(endLineBlock(), null, statement, suffix);
 		}
-		while(token.kind==XTokenKind.LGROUP || token.kind==XTokenKind.LINDEX || token.kind==XTokenKind.ELEMENT || typeParam!=null){
+		while(token.kind==XTokenKind.LGROUP || token.kind==XTokenKind.LINDEX || token.kind==XTokenKind.ELEMENT || token.kind==XTokenKind.INSTANCEOF || typeParam!=null){
 			startLineBlock();
 			startLineBlock();
 			if(token.kind==XTokenKind.LGROUP || typeParam!=null){
@@ -878,6 +879,11 @@ public class XParser {
 				XToken t = token;
 				nextToken();
 				statement = new XOperatorStatement(t.lineDesk, statement, XOperator.ELEMENT, makeIdent());
+			}else if(token.kind==XTokenKind.INSTANCEOF){
+				XToken t = token;
+				nextToken();
+				XType type = makeType();
+				statement = new XInstanceof(t.lineDesk, statement, type);
 			}
 			suffix = new ArrayList<XOperator>();
 			while(isOperator(token.kind)){
@@ -1263,10 +1269,16 @@ public class XParser {
 			List<XStatement> statements = null;
 			while(token.kind!=XTokenKind.RBRAKET && token.kind!=XTokenKind.EOF){
 				if(token.kind==XTokenKind.CASE){
+					nextToken();
 					XStatement key = makeNumRead(true);
 					expected(XTokenKind.COLON);
 					statements = new ArrayList<XTree.XStatement>();
 					cases.add(new XCase(token.lineDesk, key, statements));
+				}else if(token.kind==XTokenKind.DEFAULT){
+					nextToken();
+					expected(XTokenKind.COLON);
+					statements = new ArrayList<XTree.XStatement>();
+					cases.add(new XCase(token.lineDesk, null, statements));
 				}else{
 					statements.add(makeStatement(true));
 				}

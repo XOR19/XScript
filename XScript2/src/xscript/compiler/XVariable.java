@@ -1,7 +1,6 @@
 package xscript.compiler;
 
 import xscript.compiler.tree.XTree.XVarDecl;
-import xscript.runtime.genericclass.XClassPtr;
 
 
 public class XVariable {
@@ -10,7 +9,7 @@ public class XVariable {
 	
 	public int modifier;
 	
-	public XClassPtr type;
+	public XVarType type;
 	
 	public String name;
 

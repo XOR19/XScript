@@ -14,7 +14,7 @@ public abstract class XTree{
 		FOR, IF, RETURN, THROW, VARDECLS, GROUP, SYNCHRONIZED, CONST, METHODCALL, 
 		NEW, OPERATOR, OPERATORSUFFIXPREFIX, 
 		INDEX, IFOPERATOR, CAST, LAMBDA, TRY, CATCH, NEWARRAY, ARRAYINITIALIZE, 
-		FOREACH, LABLE, SWITCH, CASE, THIS, SUPER;
+		FOREACH, LABLE, SWITCH, CASE, THIS, SUPER, INSTANCEOF;
 	}
 	
 	public static class XError extends XTree{
@@ -827,6 +827,30 @@ public abstract class XTree{
 		
 	}
 	
+	public static class XInstanceof extends XStatement{
+
+		public XStatement statement;
+		
+		public XType type;
+		
+		public XInstanceof(XLineDesk line, XStatement statement, XType type) {
+			super(line);
+			this.statement = statement;
+			this.type = type;
+		}
+
+		@Override
+		public XTag getTag() {
+			return XTag.INSTANCEOF;
+		}
+
+		@Override
+		public void accept(XVisitor v) {
+			v.visitInstanceof(this);
+		}
+		
+	}
+	
 	public static class XOperatorPrefixSuffix extends XStatement{
 
 		public List<XOperator> prefix;
@@ -1059,6 +1083,8 @@ public abstract class XTree{
 		
 		public XCase(XLineDesk line, XStatement key, List<XStatement> block) {
 			super(line);
+			this.key = key;
+			this.block = block;
 		}
 		
 		@Override

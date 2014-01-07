@@ -23,6 +23,7 @@ import xscript.compiler.tree.XTree.XIf;
 import xscript.compiler.tree.XTree.XIfOperator;
 import xscript.compiler.tree.XTree.XImport;
 import xscript.compiler.tree.XTree.XIndex;
+import xscript.compiler.tree.XTree.XInstanceof;
 import xscript.compiler.tree.XTree.XLable;
 import xscript.compiler.tree.XTree.XLambda;
 import xscript.compiler.tree.XTree.XMethodCall;
@@ -359,5 +360,11 @@ public class XTreePrinter implements XVisitor {
 
 	@Override
 	public void visitSuper(XSuper xSuper) {}
+
+	@Override
+	public void visitInstanceof(XInstanceof xInstanceof) {
+		accept("statement", xInstanceof.statement);
+		accept("type", xInstanceof.type);
+	}
 
 }

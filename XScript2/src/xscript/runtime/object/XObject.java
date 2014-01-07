@@ -1,8 +1,12 @@
 package xscript.runtime.object;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import xscript.runtime.XModifier;
 import xscript.runtime.XRuntimeException;
 import xscript.runtime.genericclass.XGenericClass;
+import xscript.runtime.threads.XThread;
 
 public class XObject {
 
@@ -10,6 +14,9 @@ public class XObject {
 	private byte[] data;
 	private byte[] userData;
 	private boolean isVisible;
+	private int monitor;
+	private XThread thread;
+	private List<XThread> waiting;
 	
 	protected XObject(XGenericClass xClass){
 		if(XModifier.isAbstract(xClass.getXClass().getModifier()))
@@ -95,6 +102,35 @@ public class XObject {
 	
 	public boolean isVisible(){
 		return isVisible;
+	}
+
+	public void exitMonitor(XThread thread) {
+		if(this.thread==thread){
+			monitor--;
+			if(monitor<=0){
+				if(waiting.isEmpty()){
+					this.thread = null;
+					waiting = null;
+				}else{
+					this.thread = waiting.remove(0);
+					monitor = 1;
+					this.thread.setWaiting(false);
+				}
+			}
+		}
+	}
+
+	public void wantMonitor(XThread thread) {
+		if(this.thread==null){
+			this.thread = thread;
+			monitor = 1;
+			waiting = new ArrayList<XThread>();
+		}else if(this.thread==thread){
+			monitor++;
+		}else{
+			waiting.add(thread);
+			thread.setWaiting(true);
+		}
 	}
 	
 }

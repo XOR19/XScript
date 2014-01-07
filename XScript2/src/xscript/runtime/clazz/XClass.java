@@ -134,8 +134,8 @@ public class XClass extends XPackage{
 		throw new XRuntimeException("Can't find generic class %s", genericName);
 	}
 
-	public String getGenericName(int id) {
-		return genericInfos[id].getName();
+	public XGenericInfo getGenericInfo(int id) {
+		return genericInfos[id];
 	}
 	
 	public int getGenericParams() {

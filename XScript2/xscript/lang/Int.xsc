@@ -5,6 +5,14 @@ public class Int{
 	private final int value;
 
 	public static String toHex(int i){
+		switch(i){
+		case 0:
+			return "Hallo";
+		case 1:
+			return "Toll";
+		case 3:
+			return "Was";
+		}
 		return "Haha";
 	}
 
