@@ -29,17 +29,21 @@ public class XClassLoader {
 	public XInputStream getInputStream(String name) {
 		String[] s = name.split("\\.");
 		File file = rootFile;
-		File oldFile = rootFile;
 		String n = "";
 		for(int i=0; i<s.length; i++){
-			oldFile = file;
-			file = new File(file, s[i]);
-			n += s[i];
-			if(!(file.isDirectory() && file.exists())){
-				oldFile = new File(oldFile, s[i]+".xcbc");
-				if(oldFile.isFile() && oldFile.exists()){
-					return loadClassBytes(oldFile, n);
+			File[] files = file.listFiles();
+			file = null;
+			for(File f:files){
+				if(f.getName().equals(s[i]) || f.getName().equals(s[i]+".xcbc")){
+					file = f;
+					break;
 				}
+			}
+			if(file==null)
+				return null;
+			n += s[i];
+			if(file.isFile()){
+				return loadClassBytes(file, n);
 			}
 			n += ".";
 		}

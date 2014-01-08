@@ -370,7 +370,8 @@ public class XClass extends XPackage{
 				
 				state = STATE_RUNNABLE;
 				XMethod xMethod = getMethod("<staticInit>", new String[0], "void");
-				virtualMachine.getThreadProvider().importantInterrupt("Static "+getName(), xMethod, new XGenericClass[0], new long[0]);
+				if(xMethod!=null)
+					virtualMachine.getThreadProvider().importantInterrupt("Static "+getName(), xMethod, new XGenericClass[0], new long[0]);
 			}catch(Throwable e){
 				state = STATE_ERRORED;
 				if(!(e instanceof XRuntimeException)){
@@ -410,7 +411,7 @@ public class XClass extends XPackage{
 	public void save(XOutputStream outputStream) throws IOException{
 		outputStream.writeUTF(getName());
 		outputStream.writeShort(modifier);
-		outputStream.writeShort(annotations.length);
+		outputStream.writeByte(annotations.length);
 		for(int i=0; i<annotations.length; i++){
 			annotations[i].save(outputStream);
 		}

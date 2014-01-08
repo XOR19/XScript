@@ -73,6 +73,12 @@ public class XClassProvider {
 			xClass = ((XClassMaker)xPackage).makeClass();
 			xPackage.getParent().overridePackage(xPackage.getSimpleName(), xClass);
 			((XClassMaker)xPackage).onReplaced(xClass);
+			xPackage = rootPackage.getChild(name);
+			if(xPackage instanceof XClass){
+				xClass = (XClass)xPackage;
+			}else{
+				xClass = null;
+			}
 		}
 		if(xClass==null)
 			throw new XRuntimeException("Class %s not found", name);

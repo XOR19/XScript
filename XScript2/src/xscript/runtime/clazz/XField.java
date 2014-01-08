@@ -145,6 +145,7 @@ public class XField extends XPackage {
 	}
 
 	public void save(XOutputStream outputStream) throws IOException {
+		outputStream.writeUTF(getSimpleName());
 		outputStream.writeShort(modifier);
 		outputStream.writeByte(annotations.length);
 		for(int i=0; i<annotations.length; i++){

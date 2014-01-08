@@ -54,6 +54,11 @@ public class XImportHelper {
 	}
 
 	private XClassPtr getGenericClass1(XClassCompiler xClassCompiler, XType type, XGenericInfo[] extra, boolean doError) {
+		for(int i=1; i<9; i++){
+			if(XPrimitive.getName(i).equals(type.name.name)){
+				return new XClassPtrClass(type.name.name);
+			}
+		}
 		try{
 			xClassCompiler.getGenericID(type.name.name);
 			return new XClassPtrClassGeneric(xClassCompiler.getName(), type.name.name);

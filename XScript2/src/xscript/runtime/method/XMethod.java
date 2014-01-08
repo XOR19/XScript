@@ -356,6 +356,7 @@ public class XMethod extends XPackage {
 	}
 
 	public void save(XOutputStream outputStream) throws IOException {
+		outputStream.writeUTF(getSimpleName());
 		outputStream.writeShort(modifier);
 		
 		outputStream.writeByte(annotations.length);
