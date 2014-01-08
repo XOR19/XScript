@@ -29,7 +29,7 @@ public class XInstructionDumySwitch extends XInstructionDumy {
 		}
 		int size = table.size();
 		int diff = max-min+1;
-		if(size+100<diff){
+		if(size*2+30<diff){
 			int[] binSwitch = new int[size-1];
 			int[] locArray = new int[size-1];
 			int n = 0;

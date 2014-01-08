@@ -105,7 +105,7 @@ public class XMethod extends XPackage {
 			}
 			catchEntries = new XCatchEntry[inputStream.readUnsignedShort()];
 			for(int i=0; i<catchEntries.length; i++){
-				catchEntries[i] = new XCatchEntry(inputStream.readInt(), inputStream.readInt(), inputStream.readInt(), XClassPtr.load(inputStream));
+				catchEntries[i] = new XCatchEntry(inputStream.readInt(), inputStream.readInt(), inputStream.readInt(), XClassPtr.load(inputStream), inputStream.readUnsignedShort(), inputStream.readUnsignedShort());
 			}
 			localEntries = new XLocalEntry[inputStream.readUnsignedShort()];
 			for(int i=0; i<localEntries.length; i++){
@@ -257,15 +257,15 @@ public class XMethod extends XPackage {
 		return null;
 	}
 
-	public int getExceptionHandlePoint(int programPointer, XGenericClass xClass, XGenericClass declaringClass, XMethodExecutor methodExecutor) {
+	public XCatchEntry getExceptionHandlePoint(int programPointer, XGenericClass xClass, XGenericClass declaringClass, XMethodExecutor methodExecutor) {
 		for(int i=0; i<catchEntries.length; i++){
 			if(catchEntries[i].isIn(programPointer)){
 				if(xClass.canCastTo(catchEntries[i].getType().getXClass(getDeclaringClass().getVirtualMachine(), declaringClass, methodExecutor))){
-					return catchEntries[i].getJumpPos();
+					return catchEntries[i];
 				}
 			}
 		}
-		return -1;
+		return null;
 	}
 
 	public XClassPtr getLocalType(int programPointer, int local){
@@ -404,6 +404,8 @@ public class XMethod extends XPackage {
 				outputStream.writeInt(catchEntries[i].getTo());
 				outputStream.writeInt(catchEntries[i].getJumpPos());
 				catchEntries[i].getType().save(outputStream);
+				outputStream.writeShort(catchEntries[i].getStackPointer());
+				outputStream.writeShort(catchEntries[i].getObjectStackPointer());
 			}
 			
 			outputStream.writeShort(localEntries.length);

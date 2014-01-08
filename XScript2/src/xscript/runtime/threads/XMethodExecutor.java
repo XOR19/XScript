@@ -5,6 +5,7 @@ import xscript.runtime.XRuntimeException;
 import xscript.runtime.clazz.XPrimitive;
 import xscript.runtime.genericclass.XGenericClass;
 import xscript.runtime.instruction.XInstruction;
+import xscript.runtime.method.XCatchEntry;
 import xscript.runtime.method.XMethod;
 import xscript.runtime.object.XObject;
 
@@ -246,13 +247,14 @@ public class XMethodExecutor implements XGenericMethodProvider {
 	}
 
 	public boolean jumpToExceptionHandlePoint(XGenericClass xClass, long exception) {
-		programPointer = method.getExceptionHandlePoint(programPointer, xClass, declaringClass, this);
-		if(programPointer==-1){
+		XCatchEntry ce = method.getExceptionHandlePoint(programPointer, xClass, declaringClass, this);
+		if(ce==null){
 			return false;
 		}
-		stackPointer = 0;
-		objectStack[0] = exception;
-		objectStackPointer = 1;
+		programPointer = ce.getJumpPos();
+		stackPointer = ce.getStackPointer();
+		objectStackPointer = ce.getObjectStackPointer();
+		objectStack[objectStackPointer++] = exception;
 		return true;
 	}
 
