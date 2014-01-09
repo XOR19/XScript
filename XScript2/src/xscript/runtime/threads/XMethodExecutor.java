@@ -5,7 +5,7 @@ import xscript.runtime.XRuntimeException;
 import xscript.runtime.clazz.XPrimitive;
 import xscript.runtime.genericclass.XGenericClass;
 import xscript.runtime.instruction.XInstruction;
-import xscript.runtime.method.XCatchEntry;
+import xscript.runtime.method.XCatchInfo;
 import xscript.runtime.method.XMethod;
 import xscript.runtime.object.XObject;
 
@@ -22,6 +22,8 @@ public class XMethodExecutor implements XGenericMethodProvider {
 	private long[] local;
 	private long ret;
 	private int programPointer;
+	private int[] catchStackPointer;
+	private int[] catchObjectStackPointer;
 	
 	public XMethodExecutor(XMethodExecutor parent, XMethod method, XGenericClass[] generics, long[] params) {
 		this.parent = parent;
@@ -247,13 +249,13 @@ public class XMethodExecutor implements XGenericMethodProvider {
 	}
 
 	public boolean jumpToExceptionHandlePoint(XGenericClass xClass, long exception) {
-		XCatchEntry ce = method.getExceptionHandlePoint(programPointer, xClass, declaringClass, this);
-		if(ce==null){
+		XCatchInfo ci = method.getExceptionHandlePoint(programPointer, xClass, declaringClass, this);
+		if(ci==null){
 			return false;
 		}
-		programPointer = ce.getJumpPos();
-		stackPointer = ce.getStackPointer();
-		objectStackPointer = ce.getObjectStackPointer();
+		programPointer = ci.jumpPos;
+		stackPointer = catchStackPointer[ci.index];
+		objectStackPointer = catchObjectStackPointer[ci.index];
 		objectStack[objectStackPointer++] = exception;
 		return true;
 	}
@@ -265,6 +267,11 @@ public class XMethodExecutor implements XGenericMethodProvider {
 	public void ret(long value) {
 		ret = value;
 		programPointer = Integer.MAX_VALUE;
+	}
+
+	public void saveStackSize(int index) {
+		catchStackPointer[index] = stackPointer;
+		catchObjectStackPointer[index] = objectStackPointer;
 	}
 	
 }

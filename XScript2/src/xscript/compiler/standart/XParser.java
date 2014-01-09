@@ -1061,7 +1061,6 @@ public class XParser {
 			nextToken();
 			if(token.kind==XTokenKind.LGROUP){
 				lexer.sure();
-				nextToken();
 				statement = makeInnerStatement();
 				block = makeBlock();
 				return new XSynchronized(endLineBlock(), statement, block);
@@ -1211,6 +1210,9 @@ public class XParser {
 				statement2 = makeBlock();
 			}else if(catchs.isEmpty()){
 				expected(XTokenKind.FINALLY);
+			}
+			if(catchs.isEmpty()){
+				catchs = null;
 			}
 			return new XTry(endLineBlock(), statement, block, catchs, statement2);
 		case LBRAKET:

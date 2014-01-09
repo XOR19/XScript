@@ -147,6 +147,10 @@ public abstract class XInstruction {
 		instructions[127] = XInstructionWriteLocal.class;
 		instructions[128] = XInstructionXorInt.class;
 		instructions[129] = XInstructionXorLong.class;
+		instructions[130] = XInstructionSetReturn.class;
+		instructions[131] = XInstructionSwap.class;
+		instructions[132] = XInstructionOSwap.class;
+		instructions[133] = XInstructionStackSizeSave.class;
 	}
 	
 	public abstract void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor);

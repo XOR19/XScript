@@ -9,17 +9,13 @@ public class XInstructionDumyJump extends XInstructionDumy {
 
 	public XInstruction target;
 
+	public int targetID;
+	
 	@Override
 	public XInstruction replaceWith(XCodeGen compiler, List<XInstruction> instructions) {
-		int t;
-		if(target==null){
-			t = instructions.size();
-		}else{
-			t = instructions.indexOf(target);
-		}
-		if(t==-1)
+		if(targetID==-1)
 			throw new AssertionError();
-		return makeReplaceInstruction(t);
+		return makeReplaceInstruction(targetID);
 	}
 
 	protected XInstruction makeReplaceInstruction(int target){
@@ -39,6 +35,20 @@ public class XInstructionDumyJump extends XInstructionDumy {
 				target = null;
 			}
 		}
+	}
+
+	@Override
+	public void resolve(XCodeGen xCodeGen, List<XInstruction> instructions) {
+		if(target==null){
+			targetID = instructions.size();
+		}else{
+			targetID = instructions.indexOf(target);
+		}
+	}
+
+	@Override
+	public boolean pointingTo(XInstruction inst) {
+		return inst==target;
 	}
 
 }

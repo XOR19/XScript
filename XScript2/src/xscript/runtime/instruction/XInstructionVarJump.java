@@ -16,7 +16,13 @@ public class XInstructionVarJump extends XInstruction {
 	
 	@Override
 	public void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
-		methodExecutor.setProgramPointer(methodExecutor.iPop());
+		int jumpTo = methodExecutor.iPop();
+		long thrown = methodExecutor.oPop();
+		if(thrown!=0){
+			thread.setException(thrown);
+		}else{
+			methodExecutor.setProgramPointer(jumpTo);
+		}
 	}
 
 	@Override

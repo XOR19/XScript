@@ -76,18 +76,23 @@ import xscript.runtime.instruction.XInstructionLoadConstInt;
 import xscript.runtime.instruction.XInstructionLoadConstLong;
 import xscript.runtime.instruction.XInstructionLoadConstNull;
 import xscript.runtime.instruction.XInstructionLoadConstString;
+import xscript.runtime.instruction.XInstructionMonitorEnter;
+import xscript.runtime.instruction.XInstructionMonitorExit;
 import xscript.runtime.instruction.XInstructionNEqObject;
 import xscript.runtime.instruction.XInstructionNew;
 import xscript.runtime.instruction.XInstructionNewArray;
 import xscript.runtime.instruction.XInstructionODup;
 import xscript.runtime.instruction.XInstructionOPop;
+import xscript.runtime.instruction.XInstructionOSwap;
 import xscript.runtime.instruction.XInstructionPop;
 import xscript.runtime.instruction.XInstructionReadLocal;
 import xscript.runtime.instruction.XInstructionReturn;
 import xscript.runtime.instruction.XInstructionSetField;
 import xscript.runtime.instruction.XInstructionSetLocalField;
+import xscript.runtime.instruction.XInstructionSetReturn;
 import xscript.runtime.instruction.XInstructionSetStaticField;
 import xscript.runtime.instruction.XInstructionThrow;
+import xscript.runtime.instruction.XInstructionVarJump;
 import xscript.runtime.instruction.XInstructionWriteLocal;
 import xscript.runtime.method.XMethod;
 
@@ -114,6 +119,12 @@ public class XStatementCompiler implements XVisitor {
 	private XCodeGen codeGen;
 	
 	private XVarAccess varAccess;
+	
+	private XInstructionDumyDelete blockFinally;
+	
+	private XTryHandle finallyTryHandle;
+	
+	private XInstructionDumyJump blockFinallyEndJump;
 	
 	public XStatementCompiler(XVarType returnExpected, XStatementCompiler parent, XMethodCompiler methodCompiler){
 		this.returnExpected = returnExpected;
@@ -259,18 +270,21 @@ public class XStatementCompiler implements XVisitor {
 			this.codeGen.addInstructions(codeGen);
 	}
 	
-	private void addBreak(XInstructionDumyJump instruction, XBreak xBreak, boolean any){
+	private void addBreak(XJump jump, XBreak xBreak, boolean any){
+		if(blockFinally!=null){
+			jump.addJump().target = blockFinally;
+		}
 		if(breaks!=null){
 			any |= true;
 			if(xBreak.lable==null || (lable!=null && lable.equals(xBreak.lable))){
 				if(xBreak.lable!=null)
 					lableUsed = true;
-				breaks.add(instruction);
+				breaks.add(jump.addJump());
 				return;
 			}
 		}
 		if(parent!=null){
-			addBreak(instruction, xBreak, any);
+			addBreak(jump, xBreak, any);
 			return;
 		}
 		if(any)
@@ -278,18 +292,21 @@ public class XStatementCompiler implements XVisitor {
 		compilerError(XMessageLevel.ERROR, "break.nobreakpoint", xBreak.line);
 	}
 	
-	private void addContinue(XInstructionDumyJump instruction, XContinue xContinue, boolean any){
+	private void addContinue(XJump jump, XContinue xContinue, boolean any){
+		if(blockFinally!=null){
+			jump.addJump().target = blockFinally;
+		}
 		if(continues!=null){
 			any |= true;
 			if(xContinue.lable==null || (lable!=null && lable.equals(xContinue.lable))){
 				if(xContinue.lable!=null)
 					lableUsed = true;
-				continues.add(instruction);
+				continues.add(jump.addJump());
 				return;
 			}
 		}
 		if(parent!=null){
-			addContinue(instruction, xContinue, any);
+			addContinue(jump, xContinue, any);
 			return;
 		}
 		if(any)
@@ -446,6 +463,7 @@ public class XStatementCompiler implements XVisitor {
 		}else{
 			addVariable(var);
 		}
+		addInstruction(var.start = new XInstructionDumyDelete(), xVarDecl);
 		if(xVarDecl.init!=null){
 			XStatementCompiler sc = visitTree(xVarDecl.init, var.type);
 			addInstructions(sc);
@@ -463,6 +481,18 @@ public class XStatementCompiler implements XVisitor {
 		shouldNeverCalled();
 	}
 
+	private void finalizeVars(XTree tree){
+		if(vars!=null){
+			XInstructionDumyDelete end = new XInstructionDumyDelete();
+			addInstruction(end, tree);
+			for(XVariable var:vars.values()){
+				var.end = end;
+				codeGen.addVariable(var);
+			}
+			vars = null;
+		}
+	}
+	
 	@Override
 	public void visitBlock(XBlock xBlock) {
 		vars = new HashMap<String, XVariable>();
@@ -473,25 +503,29 @@ public class XStatementCompiler implements XVisitor {
 				variable.modifier = xscript.runtime.XModifier.FINAL;
 				variable.type = getVarTypeFor(methodCompiler.getDeclaringClassGen());
 				variable.name = "this";
+				addInstruction(variable.start = new XInstructionDumyDelete(), xBlock);
 				addVariable(variable);
 			}
-			visitTree(decl.paramTypes);
+			addInstructions(visitTree(decl.paramTypes));
 		}
-		codeGen = visitTree(xBlock.statements);
+		addInstructions(visitTree(xBlock.statements));
+		finalizeVars(xBlock);
 	}
 
 	@Override
 	public void visitBreak(XBreak xBreak) {
 		XInstructionDumyJump jump = new XInstructionDumyJump();
-		addBreak(jump, xBreak, false);
-		addInstruction(jump, xBreak);
+		XJump j = new XJump(jump);
+		addBreak(j, xBreak, false);
+		j.addInstructions(codeGen, xBreak);
 	}
 
 	@Override
 	public void visitContinue(XContinue xContinue) {
 		XInstructionDumyJump jump = new XInstructionDumyJump();
-		addContinue(jump, xContinue, false);
-		addInstruction(jump, xContinue);
+		XJump j = new XJump(jump);
+		addContinue(j, xContinue, false);
+		j.addInstructions(codeGen, xContinue);
 	}
 
 	private XPrimitiveType getPrimitiveType(int primitiveID){
@@ -573,6 +607,7 @@ public class XStatementCompiler implements XVisitor {
 		for(XInstructionDumyJump bbreak:breaks){
 			bbreak.target = breakTarget;
 		}
+		finalizeVars(xFor);
 	}
 
 	@Override
@@ -594,6 +629,24 @@ public class XStatementCompiler implements XVisitor {
 		}
 	}
 
+	private boolean anyFinallyBlocks(){
+		if(blockFinally==null){
+			return parent==null?false:parent.anyFinallyBlocks();
+		}
+		return true;
+	}
+	
+	private void addReturn(XJump jump){
+		if(blockFinally!=null){
+			jump.addJump().target = blockFinally;
+		}
+		if(parent!=null){
+			parent.addReturn(jump);
+			return;
+		}
+		jump.addJump().target = null;
+	}
+	
 	@Override
 	public void visitReturn(XReturn xReturn) {
 		if(xReturn.statement==null){
@@ -605,7 +658,15 @@ public class XStatementCompiler implements XVisitor {
 			XStatementCompiler c = visitTree(xReturn.statement, getVarTypeFor(methodCompiler.getGenericReturnType()));
 			addInstructions(c);
 		}
-		addInstruction(new XInstructionReturn(), xReturn);
+		if(anyFinallyBlocks()){
+			if(methodCompiler.getReturnTypePrimitive()!=XPrimitive.VOID)
+				addInstruction(new XInstructionSetReturn(), xReturn);
+			XJump jump = new XJump(new XInstructionDumyJump());
+			addReturn(jump);
+			jump.addInstructions(codeGen, xReturn);
+		}else{
+			addInstruction(new XInstructionReturn(), xReturn);
+		}
 	}
 
 	@Override
@@ -627,10 +688,47 @@ public class XStatementCompiler implements XVisitor {
 
 	@Override
 	public void visitSynchronized(XSynchronized xSynchroized) {
-		// TODO Auto-generated method stub
-		
+		XStatementCompiler sc = visitTree(xSynchroized.ident, getVarTypeFor(new XClassPtrClass("xscript.lang.Object")));
+		addInstructions(sc);
+		addInstruction(new XInstructionMonitorEnter(), xSynchroized);
+		startFinallyBlock(xSynchroized);
+		sc = visitTree(xSynchroized.block, null);
+		addInstructions(sc);
+		addInstruction(new XInstructionMonitorExit(), xSynchroized);
+		blockFinallyEndJump = new XInstructionDumyJump();
+		startFinally(xSynchroized);
+		addInstruction(new XInstructionOSwap(), xSynchroized);
+		addInstruction(new XInstructionMonitorExit(), xSynchroized);
+		endFinally(xSynchroized);
 	}
-
+	
+	private void startFinallyBlock(XTree tree){
+		blockFinally = new XInstructionDumyDelete();
+		finallyTryHandle = new XTryHandle();
+		codeGen.addTryHandler(finallyTryHandle);
+		XInstructionDumyTryStart ts = new XInstructionDumyTryStart();
+		ts.handle = finallyTryHandle;
+		addInstruction(finallyTryHandle.startInstruction = ts, tree);
+	}
+	
+	private void startFinally(XTree tree){
+		if(blockFinallyEndJump==null)
+			blockFinallyEndJump = new XInstructionDumyJumpTargetResolver();
+		finallyTryHandle.endInstruction = new XInstructionDumyDelete();
+		addInstruction(finallyTryHandle.endInstruction, tree);
+		addInstruction(blockFinallyEndJump, tree);
+		addInstruction(blockFinally, tree);
+		addInstruction(new XInstructionLoadConstNull(), tree);
+		XInstructionDumyDelete dd = new XInstructionDumyDelete();
+		finallyTryHandle.jumpTargets.put(new XClassPtrClass("xscript.lang.Throwable"), dd);
+		addInstruction(dd, tree);
+	}
+	
+	private void endFinally(XTree tree){
+		addInstruction(new XInstructionVarJump(), tree);
+		addInstruction(blockFinallyEndJump.target = new XInstructionDumyDelete(), tree);
+	}
+	
 	@Override
 	public void visitConstant(XConstant xConstant) {
 		int primitiveID;
@@ -1408,8 +1506,71 @@ public class XStatementCompiler implements XVisitor {
 
 	@Override
 	public void visitTry(XTry xTry) {
-		// TODO Auto-generated method stub
+		if(xTry.finallyBlock!=null){
+			startFinallyBlock(xTry);
+		}
 		
+		XTryHandle tryHandle = null;
+		if(xTry.catchs!=null){
+			tryHandle = new XTryHandle();
+			codeGen.addTryHandler(tryHandle);
+			XInstructionDumyTryStart ts = new XInstructionDumyTryStart();
+			ts.handle = tryHandle;
+			addInstruction(tryHandle.startInstruction = ts, xTry);
+		}
+		
+		XStatementCompiler sc = visitTree(xTry.block, null);
+		addInstructions(sc);
+		
+		if(xTry.catchs!=null){
+			
+			addInstruction(tryHandle.endInstruction = new XInstructionDumyDelete(), xTry);
+			
+			XInstructionDumyDelete end = new XInstructionDumyDelete();
+			
+			for(XCatch c:xTry.catchs){
+				vars = new HashMap<String, XVariable>();
+				XVariable var = new XVariable();
+				var.modifier = c.modifier.modifier;
+				var.name = c.varName;
+				XClassPtr[] ptrs;
+				if(c.types.size()==1){
+					ptrs = new XClassPtr[1];
+					var.type = getVarTypeFor(ptrs[0] = methodCompiler.getGenericClass(c.types.get(0), true));
+				}else{
+					ptrs = new XClassPtr[c.types.size()];
+					XSingleType types[] = new XSingleType[c.types.size()];
+					for(int i=0; i<types.length; i++){
+						types[i] = (XSingleType) getVarTypeFor(ptrs[i] = methodCompiler.getGenericClass(c.types.get(i), true));
+					}
+					var.type = new XMultibleType(null, types);
+				}
+				addVariable(var);
+				addInstruction(var.start = new XInstructionDumyDelete(), c);
+				sc = visitTree(c, null);
+				XInstructionDumyDelete target = new XInstructionDumyDelete();
+				for(XClassPtr ptr:ptrs){
+					tryHandle.jumpTargets.put(ptr, target);
+				}
+				addInstruction(target, c);
+				addInstruction(new XInstructionWriteLocal(var.id), c);
+				addInstructions(sc);
+				XInstructionDumyJump jump = new XInstructionDumyJump();
+				addInstruction(jump, c);
+				jump.target = end;
+				finalizeVars(c);
+			}
+			
+			addInstruction(end, xTry);
+			
+		}
+		
+		if(xTry.finallyBlock!=null){
+			startFinally(xTry);
+			sc = visitTree(xTry.finallyBlock, null);
+			addInstructions(sc);
+			endFinally(xTry);
+		}
 	}
 
 	@Override

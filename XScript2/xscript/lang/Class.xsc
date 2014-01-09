@@ -5,6 +5,6 @@ public final class Class{
 	private Class(){
 	}
 
-	public String getName(){}
+	public native String getName();
 
 }

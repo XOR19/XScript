@@ -13,6 +13,8 @@ public class XInstructionDumySwitch extends XInstructionDumy {
 
 	public HashMap<Integer, XInstruction> table = new HashMap<Integer, XInstruction>();
 
+	public HashMap<Integer, Integer> resolved = new HashMap<Integer, Integer>();
+	
 	@Override
 	public XInstruction replaceWith(XCodeGen compiler, List<XInstruction> instructions) {
 		int max=Integer.MIN_VALUE;
@@ -27,30 +29,30 @@ public class XInstructionDumySwitch extends XInstructionDumy {
 				}
 			}
 		}
-		int size = table.size();
+		int size = resolved.size();
 		int diff = max-min+1;
 		if(size*2+30<diff){
 			int[] binSwitch = new int[size-1];
 			int[] locArray = new int[size-1];
 			int n = 0;
-			for(Integer i:table.keySet()){
+			for(Integer i:resolved.keySet()){
 				if(i!=null){
 					binSwitch[n++] = i;
 				}
 			}
 			Arrays.sort(binSwitch);
 			for(int i=0; i<binSwitch.length; i++){
-				locArray[i] = getLoc(table.get(binSwitch[i]), instructions);
+				locArray[i] = resolved.get(binSwitch[i]);
 			}
-			int def = getLoc(table.get(null), instructions);
+			int def = resolved.get(null);
 			return new XInstructionBinSwitch(def, locArray, binSwitch);
 		}else{
 			int[] locArray = new int[diff];
-			int def = getLoc(table.get(null), instructions);
+			int def = resolved.get(null);
 			for(int i=0; i<diff; i++){
 				int key = i+min;
-				if(table.containsKey(key)){
-					locArray[i] = getLoc(table.get(key), instructions);
+				if(resolved.containsKey(key)){
+					locArray[i] = resolved.get(key);
 				}else{
 					locArray[i] = def;
 				}
@@ -85,9 +87,21 @@ public class XInstructionDumySwitch extends XInstructionDumy {
 				}else{
 					target = null;
 				}
-				table.put(e.getKey(), target);
+				e.setValue(target);
 			}
 		}
+	}
+
+	@Override
+	public void resolve(XCodeGen xCodeGen, List<XInstruction> instructions) {
+		for(Entry<Integer, XInstruction> e:table.entrySet()){
+			resolved.put(e.getKey(), getLoc(e.getValue(), instructions));
+		}
+	}
+
+	@Override
+	public boolean pointingTo(XInstruction inst) {
+		return table.containsValue(inst);
 	}
 
 }

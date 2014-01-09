@@ -20,6 +20,7 @@ import xscript.runtime.genericclass.XGenericClass;
 import xscript.runtime.instruction.XInstruction;
 import xscript.runtime.instruction.XInstructionInvokeSpecial;
 import xscript.runtime.instruction.XInstructionNew;
+import xscript.runtime.method.XCatchEntry.XCatchType;
 import xscript.runtime.nativemethod.XNativeMethod;
 import xscript.runtime.object.XObject;
 import xscript.runtime.threads.XGenericMethodProvider;
@@ -105,7 +106,11 @@ public class XMethod extends XPackage {
 			}
 			catchEntries = new XCatchEntry[inputStream.readUnsignedShort()];
 			for(int i=0; i<catchEntries.length; i++){
-				catchEntries[i] = new XCatchEntry(inputStream.readInt(), inputStream.readInt(), inputStream.readInt(), XClassPtr.load(inputStream), inputStream.readUnsignedShort(), inputStream.readUnsignedShort());
+				XCatchType types[] = new XCatchType[inputStream.readUnsignedByte()];
+				for(int j=0; j<types.length; j++){
+					types[j] = new XCatchType(inputStream.readInt(), XClassPtr.load(inputStream));
+				}
+				catchEntries[i] = new XCatchEntry(inputStream.readInt(), inputStream.readInt(), types);
 			}
 			localEntries = new XLocalEntry[inputStream.readUnsignedShort()];
 			for(int i=0; i<localEntries.length; i++){
@@ -257,11 +262,13 @@ public class XMethod extends XPackage {
 		return null;
 	}
 
-	public XCatchEntry getExceptionHandlePoint(int programPointer, XGenericClass xClass, XGenericClass declaringClass, XMethodExecutor methodExecutor) {
-		for(int i=0; i<catchEntries.length; i++){
+	public XCatchInfo getExceptionHandlePoint(int programPointer, XGenericClass xClass, XGenericClass declaringClass, XMethodExecutor methodExecutor) {
+		for(int i=catchEntries.length-1; i>=0; i--){
 			if(catchEntries[i].isIn(programPointer)){
-				if(xClass.canCastTo(catchEntries[i].getType().getXClass(getDeclaringClass().getVirtualMachine(), declaringClass, methodExecutor))){
-					return catchEntries[i];
+				XCatchInfo info = catchEntries[i].getCatchInfoFor(xClass, getDeclaringClass().getVirtualMachine(), declaringClass, methodExecutor);
+				if(info!=null){
+					info.index = i;
+					return info;
 				}
 			}
 		}
@@ -401,12 +408,14 @@ public class XMethod extends XPackage {
 			
 			outputStream.writeShort(catchEntries.length);
 			for(int i=0; i<catchEntries.length; i++){
+				XCatchType types[] = catchEntries[i].getTypes();
+				outputStream.writeByte(types.length);
+				for(int j=0; j<types.length; j++){
+					outputStream.writeInt(types[j].getJumpPos());
+					types[j].getType().save(outputStream);
+				}
 				outputStream.writeInt(catchEntries[i].getFrom());
 				outputStream.writeInt(catchEntries[i].getTo());
-				outputStream.writeInt(catchEntries[i].getJumpPos());
-				catchEntries[i].getType().save(outputStream);
-				outputStream.writeShort(catchEntries[i].getStackPointer());
-				outputStream.writeShort(catchEntries[i].getObjectStackPointer());
 			}
 			
 			outputStream.writeShort(localEntries.length);
@@ -427,6 +436,31 @@ public class XMethod extends XPackage {
 
 	public XGenericInfo getGenericInfo(int genericID) {
 		return genericInfos[genericID];
+	}
+
+	public String dump() {
+		String out = XModifier.getSource(modifier);
+		out += returnType;
+		out += " "+name+"(";
+		if(params.length>0){
+			out += params[0];
+			for(int i=1; i<params.length; i++){
+				out += ", "+params[i];
+			}
+		}
+		out += ")";
+		if(!(XModifier.isNative(modifier) || XModifier.isAbstract(modifier))){
+			for(int i=0; i<instructions.length; i++){
+				out += "\n"+i + ":" + instructions[i];
+			}
+			for(int i=0; i<catchEntries.length; i++){
+				out += "\n"+catchEntries[i].dump();
+			}
+			for(int i=0; i<localEntries.length; i++){
+				out += "\n"+localEntries[i].dump();
+			}
+		}
+		return out;
 	}
 	
 }

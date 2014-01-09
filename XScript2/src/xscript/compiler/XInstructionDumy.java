@@ -15,6 +15,10 @@ public abstract class XInstructionDumy extends XInstruction {
 	
 	public abstract void deleteInstruction(XCodeGen compiler, List<XInstruction> instructions, XInstruction instruction);
 	
+	public abstract void resolve(XCodeGen xCodeGen, List<XInstruction> instructions);
+	
+	public abstract boolean pointingTo(XInstruction inst);
+	
 	@Override
 	public final void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
 		shouldNeverCalled();
@@ -27,8 +31,7 @@ public abstract class XInstructionDumy extends XInstruction {
 
 	@Override
 	public String getSource() {
-		shouldNeverCalled();
-		return null;
+		return getClass()+"@"+Integer.toHexString(hashCode());
 	}
 
 	private void shouldNeverCalled(){

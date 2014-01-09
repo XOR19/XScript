@@ -1,5 +1,6 @@
 package xscript.runtime.method;
 
+import xscript.runtime.XModifier;
 import xscript.runtime.genericclass.XClassPtr;
 
 public class XLocalEntry {
@@ -46,6 +47,10 @@ public class XLocalEntry {
 
 	public XClassPtr getType() {
 		return type;
+	}
+
+	public String dump() {
+		return from+"=>"+to+":"+index+" "+XModifier.getSource(modifier)+name;
 	}
 	
 }

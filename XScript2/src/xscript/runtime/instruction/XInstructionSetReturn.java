@@ -5,22 +5,21 @@ import java.io.IOException;
 import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XInputStream;
 import xscript.runtime.clazz.XOutputStream;
-import xscript.runtime.object.XObject;
+import xscript.runtime.clazz.XPrimitive;
 import xscript.runtime.threads.XMethodExecutor;
 import xscript.runtime.threads.XThread;
 
-public class XInstructionMonitorEnter extends XInstruction {
+public class XInstructionSetReturn extends XInstruction {
 
-	public XInstructionMonitorEnter(){}
+	public XInstructionSetReturn(){}
 	
-	public XInstructionMonitorEnter(XInputStream inputStream) throws IOException{}
+	public XInstructionSetReturn(XInputStream inputStream){}
 	
 	@Override
 	public void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
-		long obj = methodExecutor.oPop();
-		methodExecutor.oPush(obj);
-		XObject o = vm.getObjectProvider().getObject(obj);
-		o.wantMonitor(thread);
+		int primitive = methodExecutor.getMethod().getReturnTypePrimitive();
+		if(primitive != XPrimitive.VOID)
+			methodExecutor.setReturn(methodExecutor.pop(methodExecutor.getMethod().getReturnTypePrimitive()));
 	}
 
 	@Override
@@ -28,7 +27,7 @@ public class XInstructionMonitorEnter extends XInstruction {
 
 	@Override
 	public String getSource() {
-		return "ment";
+		return "sret";
 	}
 
 }

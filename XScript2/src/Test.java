@@ -7,7 +7,6 @@ import xscript.compiler.message.XMessageFormatter;
 import xscript.compiler.tree.XTreeMakeEasy;
 import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XClassLoader;
-import xscript.runtime.instruction.XInstruction;
 import xscript.runtime.method.XMethod;
 
 
@@ -25,11 +24,7 @@ public class Test {
 		
 		XVirtualMachine vm = new XVirtualMachine(new XClassLoader(new File(".")), 1024);
 		XMethod m = vm.getClassProvider().getXClass("xscript.lang.Int").getMethod("toHex");
-		int i=0;
-		XInstruction inst;
-		while((inst=m.getInstruction(i++))!=null){
-			System.out.println((i-1)+":"+inst);
-		}
+		System.out.println(m.dump());
 		/*XStandartTreeMaker maker = new XStandartTreeMaker();
 		XTree tree = maker.makeTree("public class A {public void A(A.c...b){a=1<4?a:b;}}", new XMessagePrinter());
 		XTreePrinter treePrinter = new XTreePrinter();
@@ -42,6 +37,7 @@ public class Test {
 		System.out.flush();
 		System.err.flush();
 		tree.accept(treePrinter);*/
+		
 	}
 	
 }
