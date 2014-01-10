@@ -949,7 +949,7 @@ public abstract class XTree{
 	
 	public static class XTry extends XStatement{
 		
-		public XStatement resource;
+		public List<XVarDecls> resource;
 		
 		public XStatement block;
 		
@@ -957,9 +957,9 @@ public abstract class XTree{
 		
 		public XStatement finallyBlock;
 		
-		public XTry(XLineDesk line, XStatement resource, XStatement block, List<XCatch> catchs, XStatement finallyBlock) {
+		public XTry(XLineDesk line, List<XVarDecls> varDecls, XStatement block, List<XCatch> catchs, XStatement finallyBlock) {
 			super(line);
-			this.resource = resource;
+			this.resource = varDecls;
 			this.block = block;
 			this.catchs = catchs;
 			this.finallyBlock = finallyBlock;

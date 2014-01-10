@@ -34,6 +34,8 @@ public class XCompiler extends XVirtualMachine{
 	
 	private HashMap<XClassCompiler, XSourceProvider> classes2Save = new HashMap<XClassCompiler, XSourceProvider>();
 	
+	private List<XSourceProvider> sourceProviders = new ArrayList<XSourceProvider>();
+	
 	static{
 		treeMakers.put("xscript", new XStandartTreeMaker());
 	}
@@ -43,9 +45,12 @@ public class XCompiler extends XVirtualMachine{
 	}
 
 	public void registerSourceProvider(XSourceProvider sourceProvider) {
-		for(String c:sourceProvider.getProvidedClasses()){
-			classes2Compile.add(c);
-			getClassProvider().addClassMaker(new XCompilerClassMaker(c.substring(c.lastIndexOf('.')+1), this, sourceProvider), c);
+		if(!sourceProviders.contains(sourceProvider)){
+			sourceProviders.add(sourceProvider);
+			for(String c:sourceProvider.getProvidedClasses()){
+				classes2Compile.add(c);
+				getClassProvider().addClassMaker(new XCompilerClassMaker(c.substring(c.lastIndexOf('.')+1), this, sourceProvider), c);
+			}
 		}
 	}
 	
@@ -67,6 +72,9 @@ public class XCompiler extends XVirtualMachine{
 				classes2Compile1.remove(0).gen();
 			}
 		}
+		for(XSourceProvider sp:sourceProviders){
+			sp.startSave();
+		}
 		for(Entry<XClassCompiler, XSourceProvider> e:classes2Save.entrySet()){
 			String name = e.getKey().getName();
 			try{
@@ -77,6 +85,9 @@ public class XCompiler extends XVirtualMachine{
 				t.printStackTrace();
 				postMessage(XMessageLevel.ERROR, name, "errored", new XLineDesk(0, 0, 0, 0), t.getMessage());
 			}
+		}
+		for(XSourceProvider sp:sourceProviders){
+			sp.endSave();
 		}
 	}
 	

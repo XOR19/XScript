@@ -1185,8 +1185,15 @@ public class XParser {
 			return new XThrow(endLineBlock(), statement);
 		case TRY:
 			nextToken();
+			List<XVarDecls> varDecls = null;
 			if(token.kind==XTokenKind.LGROUP){
-				statement = makeStatement(false);
+				nextToken();
+				varDecls = new ArrayList<XTree.XVarDecls>();
+				varDecls.add(makeVarDeclStatement(makeModifier(), false));
+				while(token.kind==XTokenKind.SEMICOLON){
+					nextToken();
+					varDecls.add(makeVarDeclStatement(makeModifier(), false));
+				}
 				expected(XTokenKind.RGROUP);
 			}
 			block = makeBlock();
@@ -1194,6 +1201,7 @@ public class XParser {
 			while(token.kind==XTokenKind.CATCH){
 				startLineBlock();
 				nextToken();
+				expected(XTokenKind.LGROUP);
 				XModifier modifier = makeModifier();
 				List<XType> types = new ArrayList<XType>();
 				types.add(makeType());
@@ -1202,6 +1210,7 @@ public class XParser {
 					types.add(makeType());
 				}
 				String name = ident();
+				expected(XTokenKind.RGROUP);
 				block2 = makeBlock();
 				catchs.add(new XCatch(endLineBlock(), modifier, types, name, block2));
 			}
@@ -1214,7 +1223,7 @@ public class XParser {
 			if(catchs.isEmpty()){
 				catchs = null;
 			}
-			return new XTry(endLineBlock(), statement, block, catchs, statement2);
+			return new XTry(endLineBlock(), varDecls, block, catchs, statement2);
 		case LBRAKET:
 			endLineBlock();
 			return makeBlock();
@@ -1374,6 +1383,7 @@ public class XParser {
 		boolean varargs = (Boolean) p[1];
 		List<XType> throwList = null;
 		if(token.kind==XTokenKind.THROWS){
+			nextToken();
 			throwList = makeTypeList(XTokenKind.COMMA);
 		}
 		List<XStatement> superConstructors = null;
@@ -1421,7 +1431,6 @@ public class XParser {
 	
 	public XVarDecls makeVarDecls(XLineDesk line, XModifier modifier, XType type, String name, int arrayAdd){
 		List<XVarDecl> list = new ArrayList<XVarDecl>();
-		startLineBlock();
 		list.add(makeVarDecl(line, modifier, type, name, arrayAdd));
 		while(token.kind==XTokenKind.COMMA){
 			nextToken();

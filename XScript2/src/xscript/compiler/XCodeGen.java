@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.ListIterator;
 
 import xscript.runtime.instruction.XInstruction;
+import xscript.runtime.instruction.XInstructionVarJump;
 import xscript.runtime.method.XCatchEntry;
 import xscript.runtime.method.XLineEntry;
 import xscript.runtime.method.XLocalEntry;
@@ -96,7 +97,7 @@ public class XCodeGen {
 						i2.remove();
 					}
 				}else{
-					if(inst instanceof XInstructionDumyJump && !(inst instanceof XInstructionDumyJumpTargetResolver)){
+					if(inst.getClass() == XInstructionDumyJump.class || inst.getClass() == XInstructionVarJump.class){
 						wasJump = true;
 						XInstruction next = null;
 						if(i.hasNext()){
@@ -105,7 +106,7 @@ public class XCodeGen {
 							i.previous();
 							i.next();
 						}
-						if(((XInstructionDumy) inst).pointingTo(next)){
+						if(inst instanceof XInstructionDumy && ((XInstructionDumy) inst).pointingTo(next)){
 							deleted = true;
 							for(XInstruction inst2:instructions){
 								if(inst2 instanceof XInstructionDumy){

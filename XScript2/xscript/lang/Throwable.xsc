@@ -1,0 +1,36 @@
+package xscript.lang;
+
+public class Throwable{
+	
+	private final String message;
+	private final Throwable cause;
+	
+	public Throwable(){
+		message = null;
+		cause = null;
+	}
+	
+	public Throwable(String message){
+		this.message = message;
+		cause = null;
+	}
+	
+	public Throwable(Throwable cause){
+		message = null;
+		this.cause = cause;
+	}
+	
+	public Throwable(String message, Throwable cause){
+		this.message = message;
+		this.cause = cause;
+	}
+	
+	public String getMessage(){
+		return message;
+	}
+	
+	public String getCause(){
+		return cause;
+	}
+	
+}

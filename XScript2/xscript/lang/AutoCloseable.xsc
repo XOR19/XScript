@@ -1,0 +1,7 @@
+package xscript.lang;
+
+public abstract class AutoCloseable{
+
+	public abstract void close() throws Exception;
+
+}

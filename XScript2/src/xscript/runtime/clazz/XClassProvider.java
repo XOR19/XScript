@@ -104,9 +104,12 @@ public class XClassProvider {
 			addClassToPackage(xClass, s);
 			try{
 				xClass.load(inputStream);
-				inputStream.close();
 			}catch(IOException e){
 				e.printStackTrace();
+			}finally{
+				try {
+					inputStream.close();
+				} catch (IOException e) {}
 			}
 		}
 	}

@@ -7,7 +7,7 @@ import java.io.InputStream;
 
 public class XClassLoader {
 
-	private File rootFile;
+	protected final File rootFile;
 	
 	public XClassLoader(File rootFile) throws IOException{
 		this.rootFile = rootFile;

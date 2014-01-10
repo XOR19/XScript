@@ -1506,9 +1506,33 @@ public class XStatementCompiler implements XVisitor {
 
 	@Override
 	public void visitTry(XTry xTry) {
-		if(xTry.finallyBlock!=null){
+		if(xTry.finallyBlock!=null || xTry.resource!=null){
+			System.out.println(xTry.line);
 			startFinallyBlock(xTry);
 		}
+		
+		if(xTry.resource!=null){
+			vars = new HashMap<String, XVariable>();
+			for(XVarDecls varDecls:xTry.resource){
+				for(XVarDecl varDecl:varDecls.varDecls){
+					XVariable var = new XVariable();
+					var.varDecl = varDecl;
+					var.modifier = varDecl.modifier==null?0:varDecl.modifier.modifier;
+					var.type = getVarTypeFor(methodCompiler.getGenericClass(varDecl.type, true));
+					var.name = varDecl.name;
+					if(getVariable(var.name)!=null){
+						compilerError(XMessageLevel.ERROR, "variable.duplicated", varDecl.line, var.name);
+					}else{
+						addVariable(var);
+					}
+					addInstruction(var.start = new XInstructionDumyDelete(), varDecl);
+					addInstruction(new XInstructionLoadConstNull(), varDecl);
+					addInstruction(new XInstructionWriteLocal(var.id), varDecl);
+					addInstruction(new XInstructionOPop(), varDecl);
+				}
+			}
+		}
+		
 		
 		XTryHandle tryHandle = null;
 		if(xTry.catchs!=null){
@@ -1519,17 +1543,38 @@ public class XStatementCompiler implements XVisitor {
 			addInstruction(tryHandle.startInstruction = ts, xTry);
 		}
 		
+		if(xTry.resource!=null){
+			for(XVarDecls varDecls:xTry.resource){
+				for(XVarDecl varDecl:varDecls.varDecls){
+					XVariable var = vars.get(varDecl.name);
+					if(varDecl.init!=null && var!=null){
+						XStatementCompiler sc = visitTree(varDecl.init, var.type);
+						addInstructions(sc);
+						addInstruction(new XInstructionWriteLocal(var.id), varDecl);
+						addInstruction(new XInstructionOPop(), varDecl);
+					}
+				}
+			}
+		}
+		
 		XStatementCompiler sc = visitTree(xTry.block, null);
-		addInstructions(sc);
+		if(sc!=null){
+			addInstructions(sc);
+		}
 		
 		if(xTry.catchs!=null){
 			
 			addInstruction(tryHandle.endInstruction = new XInstructionDumyDelete(), xTry);
 			
 			XInstructionDumyDelete end = new XInstructionDumyDelete();
+			XInstructionDumyJump toEnd = new XInstructionDumyJump();
+			toEnd.target = end;
+			addInstruction(toEnd, xTry);
 			
 			for(XCatch c:xTry.catchs){
-				vars = new HashMap<String, XVariable>();
+				boolean b = vars==null;
+				if(b)
+					vars = new HashMap<String, XVariable>();
 				XVariable var = new XVariable();
 				var.modifier = c.modifier.modifier;
 				var.name = c.varName;
@@ -1547,28 +1592,65 @@ public class XStatementCompiler implements XVisitor {
 				}
 				addVariable(var);
 				addInstruction(var.start = new XInstructionDumyDelete(), c);
-				sc = visitTree(c, null);
+				sc = visitTree(c.block, null);
 				XInstructionDumyDelete target = new XInstructionDumyDelete();
 				for(XClassPtr ptr:ptrs){
 					tryHandle.jumpTargets.put(ptr, target);
 				}
 				addInstruction(target, c);
 				addInstruction(new XInstructionWriteLocal(var.id), c);
-				addInstructions(sc);
+				if(sc!=null){
+					addInstructions(sc);
+				}
 				XInstructionDumyJump jump = new XInstructionDumyJump();
 				addInstruction(jump, c);
 				jump.target = end;
-				finalizeVars(c);
+				if(b){
+					finalizeVars(c);
+				}else{
+					XInstructionDumyDelete endd = new XInstructionDumyDelete();
+					var.end = endd;
+					addInstruction(endd, c);
+					codeGen.addVariable(var);
+					vars.remove(var.name);
+				}
 			}
 			
 			addInstruction(end, xTry);
 			
 		}
 		
-		if(xTry.finallyBlock!=null){
+		if(xTry.finallyBlock!=null || xTry.resource!=null){
 			startFinally(xTry);
 			sc = visitTree(xTry.finallyBlock, null);
-			addInstructions(sc);
+			if(sc!=null){
+				addInstructions(sc);
+			}
+			if(xTry.resource!=null){
+				XMethod m = methodCompiler.getDeclaringClass().getVirtualMachine().getClassProvider().getXClass("xscript.lang.AutoCloseable").getMethod("close");
+				for(XVariable var:vars.values()){
+					addInstruction(new XInstructionReadLocal(var.id), xTry);
+					addInstruction(new XInstructionODup(), xTry);
+					addInstruction(new XInstructionLoadConstNull(), xTry);
+					addInstruction(new XInstructionEqObject(), xTry);
+					XInstructionDumyNIf iif = new XInstructionDumyNIf();
+					addInstruction(iif, xTry);
+					XTryHandle closeTry = new XTryHandle();
+					codeGen.addTryHandler(closeTry);
+					XInstructionDumyTryStart ts = new XInstructionDumyTryStart();
+					ts.handle = closeTry;
+					addInstruction(closeTry.startInstruction = ts, xTry);
+					addInstruction(new XInstructionInvokeDynamic(m, new XClassPtr[0]), xTry);
+					addInstruction(closeTry.endInstruction = new XInstructionDumyDelete(), xTry);
+					XInstructionDumyJump endJump = new XInstructionDumyJump();
+					addInstruction(endJump, xTry);
+					addInstruction(iif.target = new XInstructionDumyDelete(), xTry);
+					closeTry.jumpTargets.put(new XClassPtrClass("xscript.lang.Exception"), iif.target);
+					addInstruction(new XInstructionOPop(), xTry);
+					addInstruction(endJump.target = new XInstructionDumyDelete(), xTry);
+				}
+				finalizeVars(xTry);
+			}
 			endFinally(xTry);
 		}
 	}

@@ -3,7 +3,6 @@ package xscript.compiler;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -11,20 +10,25 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import xscript.runtime.XRuntimeException;
+
 public class XFileSourceProvider implements XSourceProvider {
 
-	private File file;
+	protected final File file;
 	
-	private String ending;
+	protected final File file2Save;
 	
-	private String compiler;
+	protected final String ending;
 	
-	private String compiledEnding;
+	protected final String compiler;
 	
-	private List<String> providedClasses;
+	protected final String compiledEnding;
 	
-	public XFileSourceProvider(File file, String ending, String compiledEnding, String compiler){
+	protected final List<String> providedClasses;
+	
+	public XFileSourceProvider(File file, File file2Save, String ending, String compiledEnding, String compiler){
 		this.file = file;
+		this.file2Save = file2Save;
 		this.ending = ending;
 		this.compiler = compiler;
 		this.compiledEnding = compiledEnding;
@@ -68,9 +72,8 @@ public class XFileSourceProvider implements XSourceProvider {
 			buffer.close();
 			return source;
 		} catch (IOException e) {
-			e.printStackTrace();
+			throw new XRuntimeException(e, "error on class loading");
 		}
-		return null;
 	}
 
 	@Override
@@ -79,15 +82,24 @@ public class XFileSourceProvider implements XSourceProvider {
 	}
 
 	@Override
+	public void startSave() {}
+	
+	@Override
 	public void saveClass(String name, byte[] save) {
-		File file = new File(this.file, name.replace('.', '/')+"."+compiledEnding);
+		File file = new File(this.file2Save, name.replace('.', '/')+"."+compiledEnding);
+		if(!file.getParentFile().exists()){
+			file.getParentFile().mkdirs();
+		}
 		try {
 			OutputStream outputStream = new FileOutputStream(file);
 			outputStream.write(save);
 			outputStream.close();
 		} catch (IOException e) {
-			e.printStackTrace();
+			throw new XRuntimeException(e, "error on class saving");
 		}
 	}
+
+	@Override
+	public void endSave() {}
 
 }

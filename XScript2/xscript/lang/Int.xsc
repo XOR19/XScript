@@ -4,7 +4,9 @@ public class Int{
 
 	private final int value;
 
-	public static String toHex(int i){
+	public static native String toHex(int i);
+
+	public static String test(int i){
 		switch(i){
 		case 0:
 			return "Hallo";

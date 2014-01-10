@@ -1,0 +1,4 @@
+package xscript.lang;
+
+public class Exception:Throwable{
+}

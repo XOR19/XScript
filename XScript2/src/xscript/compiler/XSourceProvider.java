@@ -10,6 +10,10 @@ public interface XSourceProvider {
 
 	public String getClassCompiler(String name);
 
+	public void startSave();
+	
 	public void saveClass(String name, byte[] save);
+	
+	public void endSave();
 	
 }
