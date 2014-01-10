@@ -50,6 +50,8 @@ public class XMethodExecutor implements XGenericMethodProvider {
 		if(pl!=method.getParamCount()){
 			throw new XRuntimeException("Wrong number of arguments got %s but need %s", method.getParamCount(), pl);
 		}
+		catchStackPointer = new int[method.getExceptionHanles()];
+		catchObjectStackPointer = new int[method.getExceptionHanles()];
 	}
 
 	@Override
