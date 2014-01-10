@@ -1,7 +1,6 @@
 package xscript.compiler;
 
 import xscript.runtime.clazz.XClass;
-import xscript.runtime.clazz.XField;
 import xscript.runtime.genericclass.XClassPtr;
 
 

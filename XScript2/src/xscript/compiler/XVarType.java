@@ -2,7 +2,6 @@ package xscript.compiler;
 
 import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XClass;
-import xscript.runtime.clazz.XField;
 import xscript.runtime.clazz.XPrimitive;
 import xscript.runtime.genericclass.XClassPtr;
 
