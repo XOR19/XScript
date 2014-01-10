@@ -9,8 +9,6 @@ import xscript.runtime.genericclass.XClassPtr;
 
 public abstract class XVarType {
 	
-	public abstract XField getField(String name);
-	
 	public static XVarType getVarTypeFor(XClassPtr classPtr, XVirtualMachine vm){
 		if(classPtr instanceof XClassPtrErrored){
 			return new XErroredType();

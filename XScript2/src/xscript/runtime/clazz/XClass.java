@@ -269,9 +269,9 @@ public class XClass extends XPackage{
 				if(!getName().equals(className))
 					throw new XRuntimeException("Wrong class name %s expect %s", getName(), className);
 				modifier = inputStream.readUnsignedShort();
-				if(getPackage() instanceof XClass){
+				if(parent instanceof XClass){
 					XChecks.checkModifier(this, modifier, INNERMODIFIER);
-				}else if(getPackage() instanceof XMethod){
+				}else if(parent instanceof XMethod){
 					XChecks.checkModifier(this, modifier, INNERMODIFIER);
 				}else{
 					XChecks.checkModifier(this, modifier, OUTERMODIFIER);
@@ -280,22 +280,26 @@ public class XClass extends XPackage{
 				for(int i=0; i<annotations.length; i++){
 					annotations[i] = new XAnnotation(inputStream);
 				}
-				int childCount = inputStream.readUnsignedByte();
-				for(int i=0; i<childCount; i++){
-					XClass xClass = new XClass(virtualMachine, inputStream.readUTF());
-					super.addChild(xClass);
-					xClass.load(inputStream);
-				}
+				
 				superClasses = new XClassPtr[inputStream.readUnsignedByte()];
 				canBeDiamondExtender = new boolean[superClasses.length];
 				for(int i=0; i<superClasses.length; i++){
-					(superClasses[i] = XClassPtr.load(inputStream)).getXClassNonNull(virtualMachine);
+					superClasses[i] = XClassPtr.load(inputStream);
 					canBeDiamondExtender[i] = true;
 				}
 				checkDiamonds(new HashMap<XClass, XClass>());
 				genericInfos = new XGenericInfo[inputStream.readUnsignedByte()];
 				for(int i=0; i<genericInfos.length; i++){
 					genericInfos[i] = new XGenericInfo(virtualMachine, inputStream);
+				}
+				int childCount = inputStream.readUnsignedByte();
+				for(int i=0; i<childCount; i++){
+					XClass xClass = new XClass(virtualMachine, inputStream.readUTF());
+					super.addChild(xClass);
+					xClass.load(inputStream);
+				}
+				for(int i=0; i<superClasses.length; i++){
+					superClasses[i].getXClassNonNull(virtualMachine);
 				}
 				fields = new XField[inputStream.readUnsignedShort()];
 				for(int i=0; i<fields.length; i++){
@@ -424,11 +428,6 @@ public class XClass extends XPackage{
 			}
 		}
 		
-		outputStream.writeByte(classChilds.size());
-		for(XClass classChild:classChilds){
-			classChild.save(outputStream);
-		}
-		
 		outputStream.writeByte(superClasses.length);
 		for(int i=0; i<superClasses.length; i++){
 			superClasses[i].save(outputStream);
@@ -439,6 +438,12 @@ public class XClass extends XPackage{
 			genericInfos[i].save(outputStream);
 		}
 
+		outputStream.writeByte(classChilds.size());
+		for(XClass classChild:classChilds){
+			outputStream.writeUTF(classChild.getSimpleName());
+			classChild.save(outputStream);
+		}
+		
 		outputStream.writeShort(fields.length);
 		for(int i=0; i<fields.length; i++){
 			fields[i].save(outputStream);
@@ -477,6 +482,32 @@ public class XClass extends XPackage{
 	
 	public int getArrayPrimitive() {
 		return primitive;
+	}
+
+	public String dump() {
+		String out;
+		if(parent.getClass() == XPackage.class){
+			out = "package "+getParent().getName()+";\n";
+		}else{
+			out = "in "+getParent().getName()+";\n";
+		}
+		out += XModifier.getSource(modifier);
+		if(isEnum()){
+			out += "enum ";
+		}else if(isAnnotation()){
+			out += "@annotation ";
+		}else{
+			out += "class ";
+		}
+		out += getSimpleName()+"{\n";
+		for(XField field:fields){
+			out += field.dump()+"\n";
+		}
+		for(XMethod method:methods){
+			out += method.dump()+"\n";
+		}
+		out += "}";
+		return out;
 	}
 	
 }

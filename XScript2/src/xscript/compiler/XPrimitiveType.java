@@ -1,7 +1,6 @@
 package xscript.compiler;
 
 import xscript.runtime.clazz.XClass;
-import xscript.runtime.clazz.XField;
 import xscript.runtime.clazz.XPrimitive;
 import xscript.runtime.genericclass.XClassPtr;
 import xscript.runtime.genericclass.XClassPtrClass;
@@ -14,11 +13,6 @@ public class XPrimitiveType extends XVarType {
 	public XPrimitiveType(int primitiveID, XClass c) {
 		this.primitiveID = primitiveID;
 		this.c = c;
-	}
-
-	@Override
-	public XField getField(String name) {
-		return null;
 	}
 
 	@Override

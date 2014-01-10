@@ -1,6 +1,7 @@
 package xscript.compiler;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import xscript.compiler.message.XMessageLevel;
@@ -107,6 +108,11 @@ public class XClassCompiler extends XClass implements XVisitor {
 			for(XMethod method:methods){
 				((XMethodCompiler)method).gen();
 			}
+			for(XPackage p:childs.values()){
+				if(p instanceof XClassCompiler){
+					((XClassCompiler) p).gen();
+				}
+			}
 			if(errored){
 				state = STATE_ERRORED;
 			}else{
@@ -129,17 +135,20 @@ public class XClassCompiler extends XClass implements XVisitor {
 		}
 	}
 	
-	private void registerClasses(XClassCompiler classCompiler, List<XTree> defs){
+	private void registerClasses(List<XTree> defs){
+		if(importHelper==null){
+			importHelper = new XImportHelper((XCompiler) virtualMachine, this);
+		}
 		for(XTree tree:defs){
 			if(tree instanceof XClassDecl){
 				XClassDecl decl = (XClassDecl)tree;
-				String name = classCompiler.getName()+"."+decl.name;
+				String name = getName()+"."+decl.name;
 				XClassCompiler compiler = new XClassCompiler(virtualMachine, decl.name, new XMessageClass((XCompiler) virtualMachine, name), importHelper);
-				if(classCompiler.childs.containsKey(decl.name)){
+				if(childs.containsKey(decl.name)){
 					compilerError(XMessageLevel.ERROR, "duplicatedclass", decl.line, decl.name);
 				}else{
-					classCompiler.childs.put(decl.name, compiler);
-					registerClasses(compiler, decl.defs);
+					addChild(compiler);
+					compiler.registerClasses(decl.defs);
 				}
 			}
 		}
@@ -156,12 +165,12 @@ public class XClassCompiler extends XClass implements XVisitor {
 					XClassCompiler compiler = new XClassCompiler(virtualMachine, decl.name, new XMessageClass((XCompiler) virtualMachine, name), importHelper);
 					if(xPackage.getChild(decl.name)==null){
 						xPackage.addChild(compiler);
-						registerClasses(compiler, decl.defs);
+						compiler.registerClasses(decl.defs);
 					}else{
 						compilerError(XMessageLevel.ERROR, "duplicatedclass", decl.line, decl.name);
 					}
 				}else{
-					registerClasses(this, decl.defs);
+					registerClasses(decl.defs);
 					gotFirst = true;
 				}
 			}
@@ -171,9 +180,6 @@ public class XClassCompiler extends XClass implements XVisitor {
 	@Override
 	public void visitTopLevel(XClassFile xClassFile) {
 		if(state==STATE_TOGEN){
-			if(importHelper!=null)
-				shouldNeverCalled();
-			importHelper = new XImportHelper((XCompiler) virtualMachine, this);
 			if(xClassFile.packID==null){
 				if(getParent().getName()!=null){
 					compilerError(XMessageLevel.ERROR, "nopackagename", new XLineDesk(1, 1, 1, 1), getParent().getName());
@@ -236,6 +242,11 @@ public class XClassCompiler extends XClass implements XVisitor {
 				modifier = xClassDef.modifier==null?0:xClassDef.modifier.modifier;
 				methodList = new ArrayList<XMethod>();
 				fieldList = new ArrayList<XField>();
+				if(parent!=null && parent.getClass() != XPackage.class){
+					XField f = new XField(this, xscript.runtime.XModifier.PRIVATE | xscript.runtime.XModifier.FINAL, "outer$", new XClassPtrClass(getParent().getName()), new xscript.runtime.XAnnotation[0]);
+					fieldList.add(f);
+					addChild(f);
+				}
 				visitTree(xClassDef.defs);
 				annotations = new xscript.runtime.XAnnotation[0];
 				methods = methodList.toArray(new XMethod[methodList.size()]);
@@ -567,6 +578,10 @@ public class XClassCompiler extends XClass implements XVisitor {
 			ptr[i] = getGenericClass(types.get(i), extra);
 		}
 		return ptr;
+	}
+
+	public Collection<XPackage> getChildren() {
+		return childs.values();
 	}
 
 	

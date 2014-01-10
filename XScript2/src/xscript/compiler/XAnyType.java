@@ -12,11 +12,6 @@ public class XAnyType extends XVarType {
 	private XAnyType(){}
 
 	@Override
-	public XField getField(String name) {
-		return null;
-	}
-
-	@Override
 	public XClass[] getXClasses() {
 		return null;
 	}

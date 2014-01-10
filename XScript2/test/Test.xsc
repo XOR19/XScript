@@ -1,0 +1,23 @@
+package test;
+
+public class Test{
+	
+	public int j;
+	
+	public static class Inner{
+	
+		public int k;
+	
+		public class Inner2{
+			
+			public int i;
+			
+			private void test(){
+				j = Inner2.this.i;
+			}
+			
+		}
+	
+	}
+	
+}

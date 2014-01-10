@@ -6,16 +6,4 @@ public class Int{
 
 	public static native String toHex(int i);
 
-	public static String test(int i){
-		switch(i){
-		case 0:
-			return "Hallo";
-		case 1:
-			return "Toll";
-		case 3:
-			return "Was";
-		}
-		return "Haha";
-	}
-
 }

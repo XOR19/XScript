@@ -878,7 +878,17 @@ public class XParser {
 			}else if(token.kind==XTokenKind.ELEMENT){
 				XToken t = token;
 				nextToken();
-				statement = new XOperatorStatement(t.lineDesk, statement, XOperator.ELEMENT, makeIdent());
+				XIdent ident;
+				if(token.kind==XTokenKind.CLASS){
+					ident = new XIdent(token.lineDesk, "class");
+					nextToken();
+				}else if(token.kind==XTokenKind.THIS){
+					ident = new XIdent(token.lineDesk, "this");
+					nextToken();
+				}else{
+					ident = makeIdent();
+				}
+				statement = new XOperatorStatement(t.lineDesk, statement, XOperator.ELEMENT, ident);
 			}else if(token.kind==XTokenKind.INSTANCEOF){
 				XToken t = token;
 				nextToken();

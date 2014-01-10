@@ -79,18 +79,18 @@ public class XThreadProvider {
 		return thread;
 	}
 	
-	public int run(int numInstructions){
+	public int run(int numInstructions, int numBlocks){
 		XThread thread;
-		while(numInstructions>0){
+		while(numBlocks>0){
 			thread = getNextInterrupt();
 			if(thread==null){
 				thread = getNextThread();
 			}
 			if(thread==null){
-				return numInstructions;
+				return numBlocks;
 			}
-			thread.run();
-			numInstructions--;
+			thread.run(numInstructions);
+			numBlocks--;
 		}
 		return 0;
 	}

@@ -1,7 +1,6 @@
 package xscript.compiler;
 
 import xscript.runtime.clazz.XClass;
-import xscript.runtime.clazz.XField;
 import xscript.runtime.genericclass.XClassPtr;
 
 public class XSingleType extends XVarType {
@@ -12,11 +11,6 @@ public class XSingleType extends XVarType {
 	public XSingleType(XClassPtr type, XClass c) {
 		this.type = type;
 		this.c = c;
-	}
-
-	@Override
-	public XField getField(String name) {
-		return c.getField(name);
 	}
 
 	public XClass getXClass() {

@@ -36,30 +36,32 @@ public class XThread {
 		return userData;
 	}
 	
-	protected void run(){
+	protected void run(int numInstructions){
 		if(methodExecutor!=null){
-			XInstruction instruction = methodExecutor.getNextInstruction();
-			while(instruction==null){
-				XMethodExecutor oldMethodExecutor = methodExecutor.getParent();
-				if(methodExecutor.getMethod().getReturnTypePrimitive() != XPrimitive.VOID){
-					result = methodExecutor.getReturn();
-					if(oldMethodExecutor!=null){
-						oldMethodExecutor.push(result[0], (int) result[1]);
+			while(numInstructions-->0){
+				XInstruction instruction = methodExecutor.getNextInstruction();
+				while(instruction==null){
+					XMethodExecutor oldMethodExecutor = methodExecutor.getParent();
+					if(methodExecutor.getMethod().getReturnTypePrimitive() != XPrimitive.VOID){
+						result = methodExecutor.getReturn();
+						if(oldMethodExecutor!=null){
+							oldMethodExecutor.push(result[0], (int) result[1]);
+						}
 					}
+					methodExecutor = oldMethodExecutor;
+					instruction = methodExecutor.getNextInstruction();
 				}
-				methodExecutor = oldMethodExecutor;
-				instruction = methodExecutor.getNextInstruction();
-			}
-			if(instruction!=null){
-				try{
-					instruction.run(virtualMachine, this, methodExecutor);
-				}catch(XRuntimeException e){
-					e.printStackTrace();
-				}
-				XObject obj = virtualMachine.getObjectProvider().getObject(exception);
-				if(obj!=null){
-					while(methodExecutor!=null && methodExecutor.jumpToExceptionHandlePoint(obj.getXClass(), exception)){
-						methodExecutor = methodExecutor.getParent();
+				if(instruction!=null){
+					try{
+						instruction.run(virtualMachine, this, methodExecutor);
+					}catch(XRuntimeException e){
+						e.printStackTrace();
+					}
+					XObject obj = virtualMachine.getObjectProvider().getObject(exception);
+					if(obj!=null){
+						while(methodExecutor!=null && methodExecutor.jumpToExceptionHandlePoint(obj.getXClass(), exception)){
+							methodExecutor = methodExecutor.getParent();
+						}
 					}
 				}
 			}

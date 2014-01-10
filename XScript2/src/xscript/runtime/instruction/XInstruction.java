@@ -151,6 +151,7 @@ public abstract class XInstruction {
 		instructions[131] = XInstructionSwap.class;
 		instructions[132] = XInstructionOSwap.class;
 		instructions[133] = XInstructionStackSizeSave.class;
+		instructions[134] = XInstructionLoadConstClass.class;
 	}
 	
 	public abstract void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor);

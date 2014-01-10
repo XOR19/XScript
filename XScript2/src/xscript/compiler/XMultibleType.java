@@ -3,7 +3,6 @@ package xscript.compiler;
 import java.util.Arrays;
 
 import xscript.runtime.clazz.XClass;
-import xscript.runtime.clazz.XField;
 import xscript.runtime.genericclass.XClassPtr;
 
 
@@ -15,16 +14,6 @@ public class XMultibleType extends XVarType {
 	public XMultibleType(XClassPtr type, XSingleType[] classes) {
 		this.type = type;
 		this.classes = classes;
-	}
-
-	@Override
-	public XField getField(String name) {
-		for(int i=0; i<classes.length; i++){
-			XField field = classes[i].getField(name);
-			if(field!=null)
-				return field;
-		}
-		return null;
 	}
 
 	@Override

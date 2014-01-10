@@ -25,7 +25,7 @@ public class XZipClassLoader extends XClassLoader {
 				if(!entry.isDirectory()){
 					String className = entry.getName().substring(0, entry.getName().length()-5);
 					className = className.replace('\\', '.').replace('/', '.');
-					if(name.startsWith(className)){
+					if(name.startsWith(className) && (name.length() == className.length() || name.charAt(className.length())=='.')){
 						return new XInputStream(new XZipInputStream(file.getInputStream(entry), file), className);
 					}
 				}

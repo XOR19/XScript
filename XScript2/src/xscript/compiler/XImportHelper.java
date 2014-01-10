@@ -1,6 +1,7 @@
 package xscript.compiler;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import xscript.compiler.message.XMessageLevel;
@@ -8,6 +9,7 @@ import xscript.compiler.tree.XTree.XImport;
 import xscript.compiler.tree.XTree.XType;
 import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XGenericInfo;
+import xscript.runtime.clazz.XPackage;
 import xscript.runtime.clazz.XPrimitive;
 import xscript.runtime.genericclass.XClassPtr;
 import xscript.runtime.genericclass.XClassPtrClass;
@@ -53,6 +55,22 @@ public class XImportHelper {
 		}
 	}
 
+	private String getChilds(XClassCompiler c, String name){
+		Collection<XPackage> col = c.getChildren();
+		for(XPackage p:col){
+			if(p instanceof XClassCompiler){
+				XClassCompiler cc = (XClassCompiler) p;
+				if(cc.getName().endsWith(name)){
+					return cc.getName();
+				}
+				String n = getChilds(cc, name);
+				if(n!=null)
+					return n;
+			}
+		}
+		return null;
+	}
+	
 	private XClassPtr getGenericClass1(XClassCompiler xClassCompiler, XType type, XGenericInfo[] extra, boolean doError) {
 		for(int i=1; i<9; i++){
 			if(XPrimitive.getName(i).equals(type.name.name)){
@@ -64,13 +82,26 @@ public class XImportHelper {
 			return new XClassPtrClassGeneric(xClassCompiler.getName(), type.name.name);
 		}catch(Exception e){}
 		String name = null;
-		for(String s:directImports){
-			if(s.endsWith(type.name.name)){
-				try{
-					xClassCompiler.getVirtualMachine().getClassProvider().getXClass(s);
-					name = s;
-					break;
-				}catch(Exception e){}
+		if(xClassCompiler.getName().endsWith(type.name.name)){
+			name = xClassCompiler.getName();
+		}
+		if(name==null){
+			if(this.xClassCompiler.getName().endsWith(type.name.name)){
+				name = this.xClassCompiler.getName();
+			}
+		}
+		if(name==null){
+			name = getChilds(this.xClassCompiler, type.name.name);
+		}
+		if(name==null){
+			for(String s:directImports){
+				if(s.endsWith(type.name.name)){
+					try{
+						xClassCompiler.getVirtualMachine().getClassProvider().getXClass(s);
+						name = s;
+						break;
+					}catch(Exception e){}
+				}
 			}
 		}
 		if(name==null){

@@ -6,8 +6,8 @@ import xscript.compiler.XFileSourceProviderToZip;
 import xscript.compiler.message.XMessageFormatter;
 import xscript.compiler.tree.XTreeMakeEasy;
 import xscript.runtime.XVirtualMachine;
+import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XZipClassLoader;
-import xscript.runtime.method.XMethod;
 
 
 
@@ -25,8 +25,8 @@ public class Test {
 		compiler.printMessages(new XMessageFormatter());
 		
 		XVirtualMachine vm = new XVirtualMachine(new XZipClassLoader(new File(f, "rt.zip")), 1024);
-		XMethod m = vm.getClassProvider().getXClass("xscript.lang.Int").getMethod("test");
-		System.out.println(m.dump());
+		XClass c = vm.getClassProvider().getXClass("test.Test.Inner.Inner2");
+		System.out.println(c.dump());
 		/*XStandartTreeMaker maker = new XStandartTreeMaker();
 		XTree tree = maker.makeTree("public class A {public void A(A.c...b){a=1<4?a:b;}}", new XMessagePrinter());
 		XTreePrinter treePrinter = new XTreePrinter();

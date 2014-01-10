@@ -153,5 +153,9 @@ public class XField extends XPackage {
 		}
 		type.save(outputStream);
 	}
+
+	public String dump() {
+		return XModifier.getSource(modifier)+type+" "+name+";";
+	}
 	
 }

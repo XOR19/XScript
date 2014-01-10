@@ -70,6 +70,7 @@ import xscript.runtime.instruction.XInstructionInvokeDynamic;
 import xscript.runtime.instruction.XInstructionInvokeSpecial;
 import xscript.runtime.instruction.XInstructionInvokeStatic;
 import xscript.runtime.instruction.XInstructionLoadConstBool;
+import xscript.runtime.instruction.XInstructionLoadConstClass;
 import xscript.runtime.instruction.XInstructionLoadConstDouble;
 import xscript.runtime.instruction.XInstructionLoadConstFloat;
 import xscript.runtime.instruction.XInstructionLoadConstInt;
@@ -202,48 +203,33 @@ public class XStatementCompiler implements XVisitor {
 
 	public XCodeGen getCodeGen(){
 		if(varAccess!=null){
-			XField field = null;
-			XVariable var = null;
-			if(varAccess.declaringClass==null){
-				var = getVariable(varAccess.name);
-				if(var==null){
-					field = methodCompiler.getDeclaringClass().getField(varAccess.name);
-					if(field==null){
-						compilerError(XMessageLevel.ERROR, "var.notfound", varAccess.tree.line, varAccess.name);
-					}
-				}
-			}else{
-				field = varAccess.declaringClass.getField(varAccess.name);
-				if(field==null){
-					compilerError(XMessageLevel.ERROR, "field.notfound", varAccess.tree.line, varAccess.name);
-				}
-			}
-			if(field==null){
-				if(var!=null){
+			XResolvedVariable rv = getVariable(varAccess, varAccess.tree);
+			if(rv.field==null){
+				if(rv.variable!=null){
 					addInstructions(varAccess.codeGen);
-					addInstruction(new XInstructionReadLocal(var.id), varAccess.tree);
-					setReturn(var.type, varAccess.tree);
+					addInstruction(new XInstructionReadLocal(rv.variable.id), varAccess.tree);
+					setReturn(rv.variable.type, varAccess.tree);
 				}
 			}else{
-				if(xscript.runtime.XModifier.isStatic(field.getModifier())){
-					if(!varAccess.isStatic)
+				if(xscript.runtime.XModifier.isStatic(rv.field.getModifier())){
+					if(!rv.isStatic && varAccess.codeGen!=null)
 						compilerError(XMessageLevel.WARNING, "field.shouldnt.be.static", varAccess.tree.line, varAccess.name);
-					addInstruction(new XInstructionGetStaticField(field), varAccess.tree);
+					addInstruction(new XInstructionGetStaticField(rv.field), varAccess.tree);
 				}else{
-					if(varAccess.isStatic)
+					if(rv.isStatic)
 						compilerError(XMessageLevel.ERROR, "field.is.static", varAccess.tree.line, varAccess.name);
 					addInstructions(varAccess.codeGen);
 					if(varAccess.variable==null){
 						if(varAccess.declaringClass==null){
-							addInstruction(new XInstructionGetLocalField(0, field), varAccess.tree);
+							addInstruction(new XInstructionGetLocalField(0, rv.field), varAccess.tree);
 						}else{
-							addInstruction(new XInstructionGetField(field), varAccess.tree);
+							addInstruction(new XInstructionGetField(rv.field), varAccess.tree);
 						}
 					}else{
-						addInstruction(new XInstructionGetLocalField(varAccess.variable.id, field), varAccess.tree);
+						addInstruction(new XInstructionGetLocalField(varAccess.variable.id, rv.field), varAccess.tree);
 					}
 				}
-				setReturn(getVarTypeFor(field.getType()), varAccess.tree);
+				setReturn(getVarTypeFor(rv.field.getType()), varAccess.tree);
 			}
 		}
 		return codeGen;
@@ -356,7 +342,6 @@ public class XStatementCompiler implements XVisitor {
 	@Override
 	public void visitIdent(XIdent xIdent) {
 		varAccess = new XVarAccess();
-		varAccess.codeGen = new XCodeGen();
 		varAccess.name = xIdent.name;
 		varAccess.tree = xIdent;
 	}
@@ -364,7 +349,6 @@ public class XStatementCompiler implements XVisitor {
 	@Override
 	public void visitType(XType xType) {
 		varAccess = new XVarAccess();
-		varAccess.codeGen = new XCodeGen();
 		varAccess.name = null;
 		varAccess.tree = xType;
 		if(xType.array>0 || xType.typeParam!=null){
@@ -397,48 +381,35 @@ public class XStatementCompiler implements XVisitor {
 				String[] na = next.split("\\.");
 				varAccess.name = na[0];
 				for(int i=1; i<na.length; i++){
-					XField field = null;
-					XVariable var = null;
-					if(varAccess.declaringClass==null){
-						var = getVariable(varAccess.name);
-						if(var==null){
-							field = methodCompiler.getDeclaringClass().getField(varAccess.name);
-							if(field==null){
-								compilerError(XMessageLevel.ERROR, "var.notfound", varAccess.tree.line, varAccess.name);
-							}
+					XResolvedVariable rv = getVariable(varAccess, xType);
+					if(rv.field==null){
+						if(rv.variable!=null){
+							varAccess.variable = rv.variable;
+							varAccess.declaringClass = rv.variable.type;
 						}
 					}else{
-						field = varAccess.declaringClass.getField(varAccess.name);
-						if(field==null){
-							compilerError(XMessageLevel.ERROR, "field.notfound", varAccess.tree.line, varAccess.name);
-						}
-					}
-					if(field==null){
-						if(var!=null){
-							varAccess.variable = var;
-							varAccess.declaringClass = var.type;
-						}
-					}else{
-						if(xscript.runtime.XModifier.isStatic(field.getModifier())){
-							if(!varAccess.isStatic)
+						if(xscript.runtime.XModifier.isStatic(rv.field.getModifier())){
+							if(!rv.isStatic)
 								compilerError(XMessageLevel.WARNING, "field.shouldnt.be.static", varAccess.tree.line, varAccess.name);
 							varAccess.codeGen = new XCodeGen();
-							varAccess.codeGen.addInstruction(new XInstructionGetStaticField(field), xType.line.startLine);
+							varAccess.codeGen.addInstruction(new XInstructionGetStaticField(rv.field), xType.line.startLine);
 						}else{
-							if(varAccess.isStatic)
+							if(rv.isStatic)
 								compilerError(XMessageLevel.ERROR, "field.is.static", varAccess.tree.line, varAccess.name);
+							if(varAccess.codeGen==null)
+								varAccess.codeGen = new XCodeGen();
 							if(varAccess.variable==null){
 								if(varAccess.declaringClass==null){
-									varAccess.codeGen.addInstruction(new XInstructionGetLocalField(0, field), xType.line.startLine);
+									varAccess.codeGen.addInstruction(new XInstructionGetLocalField(0, rv.field), xType.line.startLine);
 								}else{
-									varAccess.codeGen.addInstruction(new XInstructionGetField(field), xType.line.startLine);
+									varAccess.codeGen.addInstruction(new XInstructionGetField(rv.field), xType.line.startLine);
 								}
 							}else{
-								varAccess.codeGen.addInstruction(new XInstructionGetLocalField(varAccess.variable.id, field), xType.line.startLine);
+								varAccess.codeGen.addInstruction(new XInstructionGetLocalField(varAccess.variable.id, rv.field), xType.line.startLine);
 							}
 						}
 						varAccess.variable = null;
-						varAccess.declaringClass = getVarTypeFor(field.getType());
+						varAccess.declaringClass = getVarTypeFor(rv.field.getType());
 					}
 					varAccess.name = na[i];
 				}
@@ -943,78 +914,170 @@ public class XStatementCompiler implements XVisitor {
 		}
 	}
 	
+	public XResolvedVariable getVariable(XVarAccess varAccess, XTree tree){
+		XResolvedVariable rv = new XResolvedVariable();
+		rv.isStatic = varAccess.isStatic;
+		if(varAccess.declaringClass==null){
+			rv.variable = getVariable(varAccess.name);
+			if(rv.variable==null){
+				int outer = 0;
+				XClass cc;
+				XClass c=cc=methodCompiler.getDeclaringClass();
+				rv.field = c.getFieldAndParents(varAccess.name);
+				while(rv.field==null && c!=null){
+					if(xscript.runtime.XModifier.isStatic(c.getModifier()))
+						rv.isStatic = true;
+					c = c.getOuterClass();
+					if(c==null)
+						break;
+					outer++;
+					rv.field = c.getFieldAndParents(varAccess.name);
+				}
+				if(rv.field==null){
+					compilerError(XMessageLevel.ERROR, "var.notfound", varAccess.tree.line, varAccess.name);
+				}else{
+					if(!rv.isStatic && outer>0){
+						outer--;
+						XField field = cc.getFieldAndParents("outer$");
+						if(varAccess.codeGen==null){
+							varAccess.codeGen = new XCodeGen();
+						}
+						varAccess.codeGen.addInstruction(new XInstructionGetLocalField(0, field), tree.line.startLine);
+						while(outer>0){
+							cc = cc.getOuterClass();
+							field = cc.getFieldAndParents("outer$");
+							varAccess.codeGen.addInstruction(new XInstructionGetField(field), tree.line.startLine);
+							outer--;
+						}
+						varAccess.declaringClass = getVarTypeFor(field.getType());
+					}
+				}
+			}
+		}else if(varAccess.name!=null){
+			rv.field = getField(varAccess.declaringClass.getXClasses(), varAccess.name, tree);
+			if(rv.field==null){
+				compilerError(XMessageLevel.ERROR, "field.notfound", varAccess.tree.line, varAccess.name);
+			}
+		}
+		return rv;
+	}
+	
+	public XField getField(XClass[] classes, String name, XTree tree){
+		XField field = null;
+		for(int i=0; i<classes.length; i++){
+			XField f = classes[i].getFieldAndParents(name);
+			if(field==null){
+				field = f;
+			}else if(field!=f){
+				compilerError(XMessageLevel.ERROR, "multible.joise", tree.line, name);
+			}
+		}
+		return field;
+	}
+	
 	@Override
 	public void visitOperator(XOperatorStatement xOperatorStatement) {
 		XOperator op = xOperatorStatement.operator;
 		if(op == XOperator.ELEMENT){
 			String name = ((XIdent)xOperatorStatement.right).name;
-			if(xOperatorStatement.left instanceof XSuper){
-				varAccess = new XVarAccess();
-				varAccess.codeGen = new XCodeGen();
-				varAccess.declaringClass = getXSuperClassFor(methodCompiler.getDeclaringClassGen());
-				varAccess.specialInvoke = true;
-				setReturn(XAnyType.type, xOperatorStatement);
-			}else{
-				XStatementCompiler cl = visitTree(xOperatorStatement.left, XAnyType.type);
-				varAccess = cl.varAccess;
-				if(varAccess==null){
-					varAccess = new XVarAccess();
-					varAccess.codeGen = new XCodeGen();
-					varAccess.codeGen.addInstructions(cl.getCodeGen());
-					varAccess.declaringClass = cl.returnType;
-					setReturn(XAnyType.type, xOperatorStatement);
+			if(name.equals("class")){
+				XVarAccess varAccess = visitVarAccess(xOperatorStatement.left);
+				if(varAccess.isStatic && varAccess.declaringClass!=null && varAccess.variable==null && varAccess.name==null){
+					addInstruction(new XInstructionLoadConstClass(varAccess.declaringClass.getXClassPtr()), xOperatorStatement);
+					setReturn(getVarTypeFor(new XClassPtrClass("xscript.lang.Class")), xOperatorStatement);
 				}else{
-					XField field = null;
-					XVariable var = null;
-					if(varAccess.declaringClass==null){
-						var = getVariable(varAccess.name);
-						if(var==null){
-							field = methodCompiler.getDeclaringClass().getField(varAccess.name);
-							if(field==null){
-								compilerError(XMessageLevel.ERROR, "var.notfound", varAccess.tree.line, varAccess.name);
+					compilerError(XMessageLevel.ERROR, "not.a.class", xOperatorStatement.line);
+				}
+			}else if(name.equals("this")){
+				XVarAccess varAccess = visitVarAccess(xOperatorStatement.left);
+				if(varAccess.isStatic && varAccess.declaringClass!=null && varAccess.variable==null && varAccess.name==null){
+					varAccess.codeGen = new XCodeGen();
+					varAccess.isStatic = false;
+					XClass c = getXClassFor(varAccess.declaringClass.getXClassPtr());
+					XClass cc = methodCompiler.getDeclaringClass();
+					if(cc==c){
+						this.varAccess = new XVarAccess();
+						this.varAccess.name = "this";
+						this.varAccess.tree = xOperatorStatement;
+					}else{
+						if(!xscript.runtime.XModifier.isStatic(cc.getModifier())){
+							XField field = cc.getFieldAndParents("outer$");
+							varAccess.codeGen.addInstruction(new XInstructionGetLocalField(0, field), xOperatorStatement.line.startLine);
+							cc = cc.getOuterClass();
+							while(cc!=c){
+								if(cc==null)
+									break;
+								if(xscript.runtime.XModifier.isStatic(cc.getModifier()))
+									break;
+								field = cc.getFieldAndParents("outer$");
+								varAccess.codeGen.addInstruction(new XInstructionGetField(field), xOperatorStatement.line.startLine);
+								cc = cc.getOuterClass();
 							}
 						}
-					}else if(varAccess.name!=null){
-						field = varAccess.declaringClass.getField(varAccess.name);
-						if(field==null){
-							compilerError(XMessageLevel.ERROR, "field.notfound", varAccess.tree.line, varAccess.name);
+						this.varAccess = varAccess;
+						if(cc!=c){
+							compilerError(XMessageLevel.ERROR, "not.a.outer.class", xOperatorStatement.left.line);
 						}
 					}
-					if(varAccess.name==null){
-						varAccess.name = name;
+				}else{
+					compilerError(XMessageLevel.ERROR, "not.a.class", xOperatorStatement.line);
+				}
+			}else{
+				if(xOperatorStatement.left instanceof XSuper){
+					varAccess = new XVarAccess();
+					varAccess.declaringClass = getXSuperClassFor(methodCompiler.getDeclaringClassGen());
+					varAccess.specialInvoke = true;
+					setReturn(XAnyType.type, xOperatorStatement);
+				}else{
+					XStatementCompiler cl = visitTree(xOperatorStatement.left, XAnyType.type);
+					varAccess = cl.varAccess;
+					if(varAccess==null){
+						varAccess = new XVarAccess();
+						varAccess.codeGen = new XCodeGen();
+						varAccess.codeGen.addInstructions(cl.getCodeGen());
+						varAccess.declaringClass = cl.returnType;
+						setReturn(XAnyType.type, xOperatorStatement);
 					}else{
-						if(field==null){
-							if(var!=null){
-								varAccess.variable = var;
-								varAccess.declaringClass = var.type;
-							}
+						XResolvedVariable rv = getVariable(varAccess, xOperatorStatement);
+						if(varAccess.name==null){
+							varAccess.name = name;
 						}else{
-							if(xscript.runtime.XModifier.isStatic(field.getModifier())){
-								if(!varAccess.isStatic)
-									compilerError(XMessageLevel.WARNING, "field.shouldnt.be.static", varAccess.tree.line, varAccess.name);
-								varAccess.codeGen = new XCodeGen();
-								varAccess.codeGen.addInstruction(new XInstructionGetStaticField(field), xOperatorStatement.line.startLine);
-							}else{
-								if(varAccess.isStatic)
-									compilerError(XMessageLevel.ERROR, "field.is.static", varAccess.tree.line, varAccess.name);
-								if(varAccess.variable==null){
-									if(varAccess.declaringClass==null){
-										varAccess.codeGen.addInstruction(new XInstructionGetLocalField(0, field), xOperatorStatement.line.startLine);
-									}else{
-										varAccess.codeGen.addInstruction(new XInstructionGetField(field), xOperatorStatement.line.startLine);
-									}
-								}else{
-									varAccess.codeGen.addInstruction(new XInstructionGetLocalField(varAccess.variable.id, field), xOperatorStatement.line.startLine);
+							if(rv.field==null){
+								if(rv.variable!=null){
+									varAccess.variable = rv.variable;
+									varAccess.declaringClass = rv.variable.type;
 								}
+							}else{
+								if(xscript.runtime.XModifier.isStatic(rv.field.getModifier())){
+									if(!rv.isStatic)
+										compilerError(XMessageLevel.WARNING, "field.shouldnt.be.static", varAccess.tree.line, varAccess.name);
+									varAccess.codeGen = new XCodeGen();
+									varAccess.codeGen.addInstruction(new XInstructionGetStaticField(rv.field), xOperatorStatement.line.startLine);
+								}else{
+									if(rv.isStatic)
+										compilerError(XMessageLevel.ERROR, "field.is.static", varAccess.tree.line, varAccess.name);
+									if(varAccess.codeGen==null){
+										varAccess.codeGen = new XCodeGen();
+									}
+									if(varAccess.variable==null){
+										if(varAccess.declaringClass==null){
+											varAccess.codeGen.addInstruction(new XInstructionGetLocalField(0, rv.field), xOperatorStatement.line.startLine);
+										}else{
+											varAccess.codeGen.addInstruction(new XInstructionGetField(rv.field), xOperatorStatement.line.startLine);
+										}
+									}else{
+										varAccess.codeGen.addInstruction(new XInstructionGetLocalField(varAccess.variable.id, rv.field), xOperatorStatement.line.startLine);
+									}
+								}
+								varAccess.variable = null;
+								varAccess.declaringClass = getVarTypeFor(rv.field.getType());
 							}
-							varAccess.variable = null;
-							varAccess.declaringClass = getVarTypeFor(field.getType());
 						}
 					}
 				}
+				varAccess.name = name;
+				varAccess.tree = xOperatorStatement;
 			}
-			varAccess.name = name;
-			varAccess.tree = xOperatorStatement;
 		}else if(op == XOperator.LET){
 			if(xOperatorStatement.left instanceof XIndex){
 				XIndex index = ((XIndex)xOperatorStatement.left);
@@ -1029,89 +1092,61 @@ public class XStatementCompiler implements XVisitor {
 				setReturn(makeCall(methodSearch, index), index);
 			}else{
 				XVarAccess varAccess = visitVarAccess(xOperatorStatement.left);
-				XField field = null;
-				XVariable var = null;
-				if(varAccess.declaringClass==null){
-					var = getVariable(varAccess.name);
-					if(var==null){
-						field = methodCompiler.getDeclaringClass().getField(varAccess.name);
-						if(field==null){
-							compilerError(XMessageLevel.ERROR, "var.notfound", varAccess.tree.line, varAccess.name);
-						}
-					}
-				}else{
-					field = varAccess.declaringClass.getField(varAccess.name);
-					if(field==null){
-						compilerError(XMessageLevel.ERROR, "field.notfound", varAccess.tree.line, varAccess.name);
-					}
-				}
-				if(field==null){
-					addInstructions(varAccess.codeGen);
-					XStatementCompiler cr = visitTree(xOperatorStatement.right, var.type);
-					addInstructions(cr);
-					if(xscript.runtime.XModifier.isFinal(var.modifier)){
-						compilerError(XMessageLevel.ERROR, "write.final.var", xOperatorStatement.line, var.name);
-					}
-					addInstruction(new XInstructionWriteLocal(var.id), xOperatorStatement);
-				}else{
-					XStatementCompiler cr = visitTree(xOperatorStatement.right, getVarTypeFor(field.getType()));
-					if(xscript.runtime.XModifier.isFinal(field.getModifier())){
-						if(!(methodCompiler.getDeclaringClass()==field.getDeclaringClass() && methodCompiler.isConstructor() && 
-								xscript.runtime.XModifier.isStatic(field.getModifier())== xscript.runtime.XModifier.isStatic(methodCompiler.getModifier()))){
-							compilerError(XMessageLevel.ERROR, "write.final.field", xOperatorStatement.line, field.getName());
-						}
-					}
-					if(xscript.runtime.XModifier.isStatic(field.getModifier())){
+				XResolvedVariable rv = getVariable(varAccess, xOperatorStatement);
+				if(rv.field==null){
+					if(rv.variable!=null){
+						addInstructions(varAccess.codeGen);
+						XStatementCompiler cr = visitTree(xOperatorStatement.right, rv.variable.type);
 						addInstructions(cr);
-						if(!varAccess.isStatic)
+						if(xscript.runtime.XModifier.isFinal(rv.variable.modifier)){
+							compilerError(XMessageLevel.ERROR, "write.final.var", xOperatorStatement.line, rv.variable.name);
+						}
+						addInstruction(new XInstructionWriteLocal(rv.variable.id), xOperatorStatement);
+						setReturn(rv.variable.type, xOperatorStatement);
+					}
+				}else{
+					XStatementCompiler cr = visitTree(xOperatorStatement.right, getVarTypeFor(rv.field.getType()));
+					if(xscript.runtime.XModifier.isFinal(rv.field.getModifier())){
+						if(!(methodCompiler.getDeclaringClass()==rv.field.getDeclaringClass() && methodCompiler.isConstructor() && 
+								xscript.runtime.XModifier.isStatic(rv.field.getModifier())== xscript.runtime.XModifier.isStatic(methodCompiler.getModifier()))){
+							compilerError(XMessageLevel.ERROR, "write.final.field", xOperatorStatement.line, rv.field.getName());
+						}
+					}
+					if(xscript.runtime.XModifier.isStatic(rv.field.getModifier())){
+						addInstructions(cr);
+						if(!rv.isStatic)
 							compilerError(XMessageLevel.WARNING, "field.shouldnt.be.static", varAccess.tree.line, varAccess.name);
-						addInstruction(new XInstructionSetStaticField(field), xOperatorStatement);
+						addInstruction(new XInstructionSetStaticField(rv.field), xOperatorStatement);
 					}else{
 						addInstructions(varAccess.codeGen);
 						addInstructions(cr);
-						if(varAccess.isStatic)
+						if(rv.isStatic)
 							compilerError(XMessageLevel.ERROR, "field.is.static", varAccess.tree.line, varAccess.name);
 						if(varAccess.variable==null){
 							if(varAccess.declaringClass==null){
-								addInstruction(new XInstructionSetLocalField(0, field), xOperatorStatement);
+								addInstruction(new XInstructionSetLocalField(0, rv.field), xOperatorStatement);
 							}else{
-								addInstruction(new XInstructionSetField(field), xOperatorStatement);
+								addInstruction(new XInstructionSetField(rv.field), xOperatorStatement);
 							}
 						}else{
-							addInstruction(new XInstructionSetLocalField(varAccess.variable.id, field), xOperatorStatement);
+							addInstruction(new XInstructionSetLocalField(varAccess.variable.id, rv.field), xOperatorStatement);
 						}
 					}
+					setReturn(getVarTypeFor(rv.field.getType()), xOperatorStatement);
 				}
-				setReturn(getVarTypeFor(field.getType()), xOperatorStatement);
 			}
 		}else if(op == XOperator.LETADD || op == XOperator.LETSUB || op == XOperator.LETMUL || op == XOperator.LETDIV || op == XOperator.LETMOD ||
 				op == XOperator.LETOR || op == XOperator.LETAND || op == XOperator.LETXOR || op == XOperator.LETSHR || op == XOperator.LETSHL){
 			XVarAccess varAccess = visitVarAccess(xOperatorStatement.left);
-			XField field = null;
-			XVariable var = null;
-			if(varAccess.declaringClass==null){
-				var = getVariable(varAccess.name);
-				if(var==null){
-					varAccess.declaringClass = getVarTypeFor(methodCompiler.getDeclaringClassGen());
-					field = varAccess.declaringClass.getField(varAccess.name);
-					if(field==null){
-						compilerError(XMessageLevel.ERROR, "var.notfound", varAccess.tree.line, varAccess.name);
-					}
-				}
-			}else{
-				field = varAccess.declaringClass.getField(varAccess.name);
-				if(field==null){
-					compilerError(XMessageLevel.ERROR, "field.notfound", varAccess.tree.line, varAccess.name);
-				}
-			}
+			XResolvedVariable rv = getVariable(varAccess, xOperatorStatement);
 			int primitiveID;
-			if(field==null){
+			if(rv.field==null){
 				addInstructions(varAccess.codeGen);
-				addInstruction(new XInstructionReadLocal(var.id), xOperatorStatement);
-				if((primitiveID = var.type.getPrimitiveID())==XPrimitive.OBJECT){
+				addInstruction(new XInstructionReadLocal(rv.variable.id), xOperatorStatement);
+				if((primitiveID = rv.variable.type.getPrimitiveID())==XPrimitive.OBJECT){
 					XStatementCompiler sc = visitTree(xOperatorStatement.right, XAnyType.type);
 					addInstructions(sc);
-					XMethodSearch search = new XMethodSearch(var.type.getXClasses(), false, "operator"+op, false, true);
+					XMethodSearch search = new XMethodSearch(rv.variable.type.getXClasses(), false, "operator"+op, false, true);
 					search.applyTypes(sc.returnType);
 					setReturn(makeCall(search, xOperatorStatement), xOperatorStatement);
 				}else{
@@ -1119,78 +1154,78 @@ public class XStatementCompiler implements XVisitor {
 					addInstructions(sc);
 					XInstruction inst = XOperatorHelper.makeInstructionForOperator(op, pid2iid(primitiveID));
 					if(inst==null){
-						compilerError(XMessageLevel.ERROR, "no.operator.for", xOperatorStatement.line, xOperatorStatement.operator, var.type);
+						compilerError(XMessageLevel.ERROR, "no.operator.for", xOperatorStatement.line, xOperatorStatement.operator, rv.variable.type);
 					}
 					addInstruction(inst, xOperatorStatement);
-					addInstruction(new XInstructionWriteLocal(var.id), xOperatorStatement);
-					setReturn(var.type, xOperatorStatement);
+					addInstruction(new XInstructionWriteLocal(rv.variable.id), xOperatorStatement);
+					setReturn(rv.variable.type, xOperatorStatement);
 				}
 			}else{
-				if((primitiveID = field.getTypePrimitive())==XPrimitive.OBJECT){
-					if(xscript.runtime.XModifier.isStatic(field.getModifier())){
-						if(!varAccess.isStatic)
+				if((primitiveID = rv.field.getTypePrimitive())==XPrimitive.OBJECT){
+					if(xscript.runtime.XModifier.isStatic(rv.field.getModifier())){
+						if(!rv.isStatic)
 							compilerError(XMessageLevel.WARNING, "field.shouldnt.be.static", varAccess.tree.line, varAccess.name);
-						addInstruction(new XInstructionGetStaticField(field), xOperatorStatement);
+						addInstruction(new XInstructionGetStaticField(rv.field), xOperatorStatement);
 					}else{
 						addInstructions(varAccess.codeGen);
-						if(varAccess.isStatic)
+						if(rv.isStatic)
 							compilerError(XMessageLevel.ERROR, "field.is.static", varAccess.tree.line, varAccess.name);
 						if(varAccess.variable==null){
 							if(varAccess.declaringClass==null){
-								addInstruction(new XInstructionGetLocalField(0, field), xOperatorStatement);
+								addInstruction(new XInstructionGetLocalField(0, rv.field), xOperatorStatement);
 							}else{
-								addInstruction(new XInstructionGetField(field), xOperatorStatement);
+								addInstruction(new XInstructionGetField(rv.field), xOperatorStatement);
 							}
 						}else{
-							addInstruction(new XInstructionGetLocalField(varAccess.variable.id, field), xOperatorStatement);
+							addInstruction(new XInstructionGetLocalField(varAccess.variable.id, rv.field), xOperatorStatement);
 						}
 					}
 					XStatementCompiler sc = visitTree(xOperatorStatement.right, XAnyType.type);
 					addInstructions(sc);
-					XMethodSearch search = new XMethodSearch(var.type.getXClasses(), false, "operator"+op, false, true);
+					XMethodSearch search = new XMethodSearch(rv.variable.type.getXClasses(), false, "operator"+op, false, true);
 					search.applyTypes(sc.returnType);
 					setReturn(makeCall(search, xOperatorStatement), xOperatorStatement);
 				}else{
-					if(xscript.runtime.XModifier.isStatic(field.getModifier())){
-						if(!varAccess.isStatic)
+					if(xscript.runtime.XModifier.isStatic(rv.field.getModifier())){
+						if(!rv.isStatic)
 							compilerError(XMessageLevel.WARNING, "field.shouldnt.be.static", varAccess.tree.line, varAccess.name);
-						addInstruction(new XInstructionGetStaticField(field), xOperatorStatement);
+						addInstruction(new XInstructionGetStaticField(rv.field), xOperatorStatement);
 					}else{
 						addInstructions(varAccess.codeGen);
-						if(varAccess.isStatic)
+						if(rv.isStatic)
 							compilerError(XMessageLevel.ERROR, "field.is.static", varAccess.tree.line, varAccess.name);
 						if(varAccess.variable==null){
 							if(varAccess.declaringClass==null){
-								addInstruction(new XInstructionGetLocalField(0, field), xOperatorStatement);
+								addInstruction(new XInstructionGetLocalField(0, rv.field), xOperatorStatement);
 							}else{
 								addInstruction(new XInstructionODup(), xOperatorStatement);
-								addInstruction(new XInstructionGetField(field), xOperatorStatement);
+								addInstruction(new XInstructionGetField(rv.field), xOperatorStatement);
 							}
 						}else{
-							addInstruction(new XInstructionGetLocalField(varAccess.variable.id, field), xOperatorStatement);
+							addInstruction(new XInstructionGetLocalField(varAccess.variable.id, rv.field), xOperatorStatement);
 						}
 					}
 					XStatementCompiler sc = visitTree(xOperatorStatement.right, getPrimitiveType(primitiveID));
 					addInstructions(sc);
 					XInstruction inst = XOperatorHelper.makeInstructionForOperator(op, pid2iid(primitiveID));
 					if(inst==null){
-						compilerError(XMessageLevel.ERROR, "no.operator.for", xOperatorStatement.line, xOperatorStatement.operator, var.type);
+						compilerError(XMessageLevel.ERROR, "no.operator.for", xOperatorStatement.line, xOperatorStatement.operator, rv.variable.type);
 					}
 					addInstruction(inst, xOperatorStatement);
-					if(xscript.runtime.XModifier.isStatic(field.getModifier())){
-						addInstruction(new XInstructionSetStaticField(field), xOperatorStatement);
+					if(xscript.runtime.XModifier.isStatic(rv.field.getModifier())){
+						addInstruction(new XInstructionSetStaticField(rv.field), xOperatorStatement);
 					}else{
 						if(varAccess.variable==null){
 							if(varAccess.declaringClass==null){
-								addInstruction(new XInstructionSetLocalField(0, field), xOperatorStatement);
+								addInstruction(new XInstructionSetLocalField(0, rv.field), xOperatorStatement);
 							}else{
-								addInstruction(new XInstructionSetField(field), xOperatorStatement);
+								addInstruction(new XInstructionSetField(rv.field), xOperatorStatement);
 							}
 						}else{
-							addInstruction(new XInstructionSetLocalField(varAccess.variable.id, field), xOperatorStatement);
+							addInstruction(new XInstructionSetLocalField(varAccess.variable.id, rv.field), xOperatorStatement);
 						}
 					}
-					setReturn(getVarTypeFor(field.getType()), xOperatorStatement);
+					setReturn(getVarTypeFor(rv.field.getType()), xOperatorStatement);
 				}
 			}
 		}else{
@@ -1273,30 +1308,14 @@ public class XStatementCompiler implements XVisitor {
 	}
 	
 	private XVarType makeIncOrDec(XVarAccess varAccess, boolean inc, boolean suffix, XOperator op, XTree tree){
-		XField field = null;
-		XVariable var = null;
-		if(varAccess.declaringClass==null){
-			var = getVariable(varAccess.name);
-			if(var==null){
-				varAccess.declaringClass = getVarTypeFor(methodCompiler.getDeclaringClassGen());
-				field = varAccess.declaringClass.getField(varAccess.name);
-				if(field==null){
-					compilerError(XMessageLevel.ERROR, "var.notfound", varAccess.tree.line, varAccess.name);
-				}
-			}
-		}else{
-			field = varAccess.declaringClass.getField(varAccess.name);
-			if(field==null){
-				compilerError(XMessageLevel.ERROR, "field.notfound", varAccess.tree.line, varAccess.name);
-			}
-		}
+		XResolvedVariable rv = getVariable(varAccess, tree);
 		int primitiveID;
 		XVarType returnType;
-		if(field==null){
+		if(rv.field==null){
 			addInstructions(varAccess.codeGen);
-			addInstruction(new XInstructionReadLocal(var.id), tree);
-			if((primitiveID = var.type.getPrimitiveID())==XPrimitive.OBJECT){
-				XMethodSearch search = new XMethodSearch(var.type.getXClasses(), false, "operator"+op, false, true);
+			addInstruction(new XInstructionReadLocal(rv.variable.id), tree);
+			if((primitiveID = rv.variable.type.getPrimitiveID())==XPrimitive.OBJECT){
+				XMethodSearch search = new XMethodSearch(rv.variable.type.getXClasses(), false, "operator"+op.op, false, true);
 				if(suffix){
 					addInstruction(new XInstructionLoadConstInt(0), tree);
 					search.applyTypes(getPrimitiveType(XPrimitive.INT));
@@ -1305,40 +1324,43 @@ public class XStatementCompiler implements XVisitor {
 				}
 				returnType = makeCall(search, tree);
 			}else{
+				if(xscript.runtime.XModifier.isFinal(rv.variable.modifier)){
+					compilerError(XMessageLevel.ERROR, "write.final.var", tree.line, rv.variable.name);
+				}
 				if(suffix)
 					addInstruction(new XInstructionDup(), tree);
 				addInstruction(new XInstructionLoadConstInt(1), tree);
 				XInstruction inst = XOperatorHelper.makeInstructionForOperator(op, pid2iid(primitiveID));
 				if(inst==null){
-					compilerError(XMessageLevel.ERROR, "no.operator.for", tree.line, op, var.type);
+					compilerError(XMessageLevel.ERROR, "no.operator.for", tree.line, op, rv.variable.type);
 				}
 				addInstruction(inst, tree);
-				addInstruction(new XInstructionWriteLocal(var.id), tree);
-				returnType = var.type;
+				addInstruction(new XInstructionWriteLocal(rv.variable.id), tree);
+				returnType = rv.variable.type;
 				if(suffix)
 					addInstruction(new XInstructionPop(), tree);
 			}
 		}else{
-			if((primitiveID = field.getTypePrimitive())==XPrimitive.OBJECT){
-				if(xscript.runtime.XModifier.isStatic(field.getModifier())){
-					if(!varAccess.isStatic)
+			if((primitiveID = rv.field.getTypePrimitive())==XPrimitive.OBJECT){
+				if(xscript.runtime.XModifier.isStatic(rv.field.getModifier())){
+					if(!rv.isStatic && varAccess.codeGen!=null)
 						compilerError(XMessageLevel.WARNING, "field.shouldnt.be.static", varAccess.tree.line, varAccess.name);
-					addInstruction(new XInstructionGetStaticField(field), tree);
+					addInstruction(new XInstructionGetStaticField(rv.field), tree);
 				}else{
 					addInstructions(varAccess.codeGen);
-					if(varAccess.isStatic)
+					if(rv.isStatic)
 						compilerError(XMessageLevel.ERROR, "field.is.static", varAccess.tree.line, varAccess.name);
 					if(varAccess.variable==null){
 						if(varAccess.declaringClass==null){
-							addInstruction(new XInstructionGetLocalField(0, field), tree);
+							addInstruction(new XInstructionGetLocalField(0, rv.field), tree);
 						}else{
-							addInstruction(new XInstructionGetField(field), tree);
+							addInstruction(new XInstructionGetField(rv.field), tree);
 						}
 					}else{
-						addInstruction(new XInstructionGetLocalField(varAccess.variable.id, field), tree);
+						addInstruction(new XInstructionGetLocalField(varAccess.variable.id, rv.field), tree);
 					}
 				}
-				XMethodSearch search = new XMethodSearch(var.type.getXClasses(), false, "operator"+op, false, true);
+				XMethodSearch search = new XMethodSearch(rv.variable.type.getXClasses(), false, "operator"+op.op, false, true);
 				if(suffix){
 					addInstruction(new XInstructionLoadConstInt(0), tree);
 					search.applyTypes(getPrimitiveType(XPrimitive.INT));
@@ -1347,23 +1369,26 @@ public class XStatementCompiler implements XVisitor {
 				}
 				returnType = makeCall(search, tree);
 			}else{
-				if(xscript.runtime.XModifier.isStatic(field.getModifier())){
-					if(!varAccess.isStatic)
+				if(xscript.runtime.XModifier.isFinal(rv.field.getModifier())){
+					compilerError(XMessageLevel.ERROR, "write.final.field", tree.line, rv.field.getName());
+				}
+				if(xscript.runtime.XModifier.isStatic(rv.field.getModifier())){
+					if(!rv.isStatic && varAccess.codeGen!=null)
 						compilerError(XMessageLevel.WARNING, "field.shouldnt.be.static", varAccess.tree.line, varAccess.name);
-					addInstruction(new XInstructionGetStaticField(field), tree);
+					addInstruction(new XInstructionGetStaticField(rv.field), tree);
 				}else{
 					addInstructions(varAccess.codeGen);
-					if(varAccess.isStatic)
+					if(rv.isStatic)
 						compilerError(XMessageLevel.ERROR, "field.is.static", varAccess.tree.line, varAccess.name);
 					if(varAccess.variable==null){
 						if(varAccess.declaringClass==null){
-							addInstruction(new XInstructionGetLocalField(0, field), tree);
+							addInstruction(new XInstructionGetLocalField(0, rv.field), tree);
 						}else{
 							addInstruction(new XInstructionODup(), tree);
-							addInstruction(new XInstructionGetField(field), tree);
+							addInstruction(new XInstructionGetField(rv.field), tree);
 						}
 					}else{
-						addInstruction(new XInstructionGetLocalField(varAccess.variable.id, field), tree);
+						addInstruction(new XInstructionGetLocalField(varAccess.variable.id, rv.field), tree);
 					}
 				}
 				if(suffix)
@@ -1371,25 +1396,25 @@ public class XStatementCompiler implements XVisitor {
 				addInstruction(new XInstructionLoadConstInt(1), tree);
 				XInstruction inst = XOperatorHelper.makeInstructionForOperator(op, pid2iid(primitiveID));
 				if(inst==null){
-					compilerError(XMessageLevel.ERROR, "no.operator.for", tree.line, op, var.type);
+					compilerError(XMessageLevel.ERROR, "no.operator.for", tree.line, op, rv.variable.type);
 				}
 				addInstruction(inst, tree);
-				if(xscript.runtime.XModifier.isStatic(field.getModifier())){
-					addInstruction(new XInstructionSetStaticField(field), tree);
+				if(xscript.runtime.XModifier.isStatic(rv.field.getModifier())){
+					addInstruction(new XInstructionSetStaticField(rv.field), tree);
 				}else{
 					if(varAccess.variable==null){
 						if(varAccess.declaringClass==null){
-							addInstruction(new XInstructionSetLocalField(0, field), tree);
+							addInstruction(new XInstructionSetLocalField(0, rv.field), tree);
 						}else{
-							addInstruction(new XInstructionSetField(field), tree);
+							addInstruction(new XInstructionSetField(rv.field), tree);
 						}
 					}else{
-						addInstruction(new XInstructionSetLocalField(varAccess.variable.id, field), tree);
+						addInstruction(new XInstructionSetLocalField(varAccess.variable.id, rv.field), tree);
 					}
 				}
 				if(suffix)
 					addInstruction(new XInstructionPop(), tree);
-				returnType = getVarTypeFor(field.getType());
+				returnType = getVarTypeFor(rv.field.getType());
 			}
 		}
 		return returnType;
@@ -1416,11 +1441,15 @@ public class XStatementCompiler implements XVisitor {
 						methodSearch.applyTypes();
 						returnType = makeCall(methodSearch, xOperatorPrefixSuffix);
 					}else{
-						int type = pid2iid(t);
-						XInstruction inst = XOperatorHelper.makeInstructionForOperator(op, type);
-						if(inst==null)
-							compilerError(XMessageLevel.ERROR, "no.operator.for", xOperatorPrefixSuffix.line, op, returnType);
-						addInstruction(inst, xOperatorPrefixSuffix);
+						if(op==XOperator.INC || op==XOperator.DEC){
+							compilerError(XMessageLevel.ERROR, "operator.notallowed.here", xOperatorPrefixSuffix.line, op);
+						}else{
+							int type = pid2iid(t);
+							XInstruction inst = XOperatorHelper.makeInstructionForOperator(op, type);
+							if(inst==null)
+								compilerError(XMessageLevel.ERROR, "no.operator.for", xOperatorPrefixSuffix.line, op, returnType);
+							addInstruction(inst, xOperatorPrefixSuffix);
+						}
 					}
 				}
 			}
@@ -1448,11 +1477,15 @@ public class XStatementCompiler implements XVisitor {
 							returnType = makeCall(methodSearch, xOperatorPrefixSuffix);
 						}
 					}else{
-						int type = pid2iid(t);
-						XInstruction inst = XOperatorHelper.makeInstructionForOperator(op, type);
-						if(inst==null)
-							compilerError(XMessageLevel.ERROR, "no.operator.for", xOperatorPrefixSuffix.line, op, returnType);
-						addInstruction(inst, xOperatorPrefixSuffix);
+						if(op==XOperator.INCS || op==XOperator.DECS){
+							compilerError(XMessageLevel.ERROR, "operator.notallowed.here", xOperatorPrefixSuffix.line, op);
+						}else{
+							int type = pid2iid(t);
+							XInstruction inst = XOperatorHelper.makeInstructionForOperator(op, type);
+							if(inst==null)
+								compilerError(XMessageLevel.ERROR, "no.operator.for", xOperatorPrefixSuffix.line, op, returnType);
+							addInstruction(inst, xOperatorPrefixSuffix);
+						}
 					}
 				}
 			}
@@ -1798,7 +1831,6 @@ public class XStatementCompiler implements XVisitor {
 			compilerError(XMessageLevel.ERROR, "this.not.ariviable", xThis.line);
 		}else{
 			varAccess = new XVarAccess();
-			varAccess.codeGen = new XCodeGen();
 			varAccess.name = "this";
 			varAccess.tree = xThis;
 		}
