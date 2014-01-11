@@ -3,6 +3,7 @@ package xscript.compiler;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 
 import xscript.compiler.message.XMessageLevel;
 import xscript.compiler.token.XLineDesk;
@@ -449,7 +450,85 @@ public class XStatementCompiler implements XVisitor {
 
 	@Override
 	public void visitMethodDecl(XMethodDecl xMethodDecl) {
-		shouldNeverCalled();
+		if(parent==null){
+			vars = new HashMap<String, XVariable>();
+			if(!xscript.runtime.XModifier.isStatic(methodCompiler.getModifier())){
+				XVariable variable = new XVariable();
+				variable.modifier = xscript.runtime.XModifier.FINAL;
+				variable.type = getVarTypeFor(methodCompiler.getDeclaringClassGen());
+				variable.name = "this";
+				addInstruction(variable.start = new XInstructionDumyDelete(), xMethodDecl);
+				addVariable(variable);
+			}
+			addInstructions(visitTree(xMethodDecl.paramTypes));
+			if(methodCompiler.isConstructor()){
+				List<XClassPtr> superClasses = new ArrayList<XClassPtr>();
+				for(XClassPtr superClass:methodCompiler.getDeclaringClass().getSuperClasses()){
+					superClasses.add(superClass);
+				}
+				if(xMethodDecl.superConstructors!=null){
+					for(XStatement s:xMethodDecl.superConstructors){
+						if(s instanceof XMethodCall){
+							XMethodCall mc = (XMethodCall) s;
+							XVarAccess varAccess = visitVarAccess(mc.method);
+							if(varAccess.isStatic && varAccess.declaringClass!=null && varAccess.variable==null && varAccess.name==null){
+								XClassPtr sp = varAccess.declaringClass.getXClassPtr();
+								ListIterator<XClassPtr> i = superClasses.listIterator();
+								boolean found = false;
+								while(i.hasNext()){
+									if(sp.equals(i.next())){
+										i.remove();
+										found = true;
+										break;
+									}
+								}
+								if(found){
+									addInstruction(new XInstructionReadLocal(0), mc);
+									XMethodSearch possibleMethods = new XMethodSearch(getXClassFor(sp), false, "<init>", true, false);
+									XVarType[] types;
+									if(mc.params!=null){
+										types = new XVarType[mc.params.size()];
+										for(int j=0; j<types.length; j++){
+											XStatementCompiler sc = visitTree(mc.params.get(j), XAnyType.type);
+											addInstructions(sc);
+											types[j] = sc.returnType;
+										}
+									}else{
+										types = new XVarType[0];
+									}
+									possibleMethods.applyTypes(types);
+									makeCall(possibleMethods, mc);
+								}
+							}else{
+								compilerError(XMessageLevel.ERROR, "not.a.superType", mc.line);
+							}
+						}else{
+							compilerError(XMessageLevel.ERROR, "expect.methodcall", s.line);
+						}
+					}
+				}
+				for(XClassPtr superClass:superClasses){
+					XMethodSearch search = new XMethodSearch(getXClassFor(superClass), false, "<init>", true, false);
+					search.applyTypes(new XVarType[0]);
+					search.applyReturn(getVarTypeFor(new XClassPtrClass("void")));
+					XMethod m = search.getMethod();
+					if(m==null){
+						if(search.isEmpty()){
+							compilerError(XMessageLevel.ERROR, "nomethodfor", new XLineDesk(0, 0, 0, 0), search.getDesk());
+						}else{
+							compilerError(XMessageLevel.ERROR, "toomanymethodfor", new XLineDesk(0, 0, 0, 0), search.getDesk());
+						}
+					}else{
+						codeGen.addInstruction(new XInstructionReadLocal(0), xMethodDecl.line.startLine);
+						codeGen.addInstruction(new XInstructionInvokeSpecial(m, new XClassPtr[0]), xMethodDecl.line.startLine);
+					}
+				}
+			}
+			addInstructions(visitTree(xMethodDecl.block, null));
+			finalizeVars(xMethodDecl);
+		}else{
+			shouldNeverCalled();
+		}
 	}
 
 	private void finalizeVars(XTree tree){
@@ -467,18 +546,6 @@ public class XStatementCompiler implements XVisitor {
 	@Override
 	public void visitBlock(XBlock xBlock) {
 		vars = new HashMap<String, XVariable>();
-		if(parent==null){
-			XMethodDecl decl = methodCompiler.getMethodDecl();
-			if(!xscript.runtime.XModifier.isStatic(methodCompiler.getModifier())){
-				XVariable variable = new XVariable();
-				variable.modifier = xscript.runtime.XModifier.FINAL;
-				variable.type = getVarTypeFor(methodCompiler.getDeclaringClassGen());
-				variable.name = "this";
-				addInstruction(variable.start = new XInstructionDumyDelete(), xBlock);
-				addVariable(variable);
-			}
-			addInstructions(visitTree(decl.paramTypes));
-		}
 		addInstructions(visitTree(xBlock.statements));
 		finalizeVars(xBlock);
 	}
@@ -768,7 +835,7 @@ public class XStatementCompiler implements XVisitor {
 			}
 			possibleMethods.applyGenerics(generics);
 		}
-		XVarType[] types = null;
+		XVarType[] types;
 		if(xMethodCall.params!=null){
 			types = new XVarType[xMethodCall.params.size()];
 			for(int i=0; i<types.length; i++){
@@ -776,6 +843,8 @@ public class XStatementCompiler implements XVisitor {
 				addInstructions(sc);
 				types[i] = sc.returnType;
 			}
+		}else{
+			types = new XVarType[0];
 		}
 		possibleMethods.applyTypes(types);
 		setReturn(makeCall(possibleMethods, xMethodCall), xMethodCall);

@@ -20,4 +20,9 @@ public class XErroredType extends XVarType {
 		return "!error!";
 	}
 
+	@Override
+	public boolean equals(Object other) {
+		return false;
+	}
+
 }

@@ -61,6 +61,8 @@ import xscript.runtime.clazz.XGenericInfo;
 import xscript.runtime.clazz.XPackage;
 import xscript.runtime.genericclass.XClassPtr;
 import xscript.runtime.genericclass.XClassPtrClass;
+import xscript.runtime.genericclass.XClassPtrClassGeneric;
+import xscript.runtime.genericclass.XClassPtrGeneric;
 import xscript.runtime.method.XMethod;
 
 public class XClassCompiler extends XClass implements XVisitor {
@@ -84,6 +86,8 @@ public class XClassCompiler extends XClass implements XVisitor {
 	private XImportHelper importHelper;
 	
 	private boolean errored;
+	
+	private boolean visitConstructor;
 	
 	protected XClassCompiler(XVirtualMachine virtualMachine, String name, XMessageList messages, XImportHelper importHelper) {
 		super(virtualMachine, name);
@@ -248,6 +252,32 @@ public class XClassCompiler extends XClass implements XVisitor {
 					addChild(f);
 				}
 				visitTree(xClassDef.defs);
+				if(!visitConstructor){
+					XClassPtr[] params;
+					xscript.runtime.XAnnotation[][] paramAnnotations;
+					if(getOuterClass()==null){
+						params = new XClassPtr[0];
+						paramAnnotations = new xscript.runtime.XAnnotation[0][];
+					}else{
+						params = new XClassPtr[1];
+						paramAnnotations = new xscript.runtime.XAnnotation[1][0];
+						XClass outer = getOuterClass();
+						String name = outer.getName();
+						if(outer.getGenericParams()>0){
+							XClassPtr generics[] = new XClassPtr[outer.getGenericParams()];
+							for(int i=0; i<generics.length; i++){
+								generics[i] = new XClassPtrClassGeneric(name, outer.getGenericInfo(i).getName());
+							}
+							params[0] = new XClassPtrGeneric(name, generics);
+						}else{
+							params[0] = new XClassPtrClass(name);
+						}
+					}
+					XMethod  m = new XMethodCompiler(this, xscript.runtime.XModifier.PUBLIC, "<init>", new XClassPtrClass("void"), 
+							new xscript.runtime.XAnnotation[0], params, paramAnnotations, new XClassPtr[0], new XGenericInfo[0], null, importHelper);
+					methodList.add(m);
+					addChild(m);
+				}
 				annotations = new xscript.runtime.XAnnotation[0];
 				methods = methodList.toArray(new XMethod[methodList.size()]);
 				fields = fieldList.toArray(new XField[fieldList.size()]);
@@ -370,12 +400,49 @@ public class XClassCompiler extends XClass implements XVisitor {
 		xscript.runtime.XAnnotation[] annotations = new xscript.runtime.XAnnotation[0];
 		XClassPtr[] paramTypes;
 		if(xMethodDecl.paramTypes==null){
-			paramTypes = new XClassPtr[0];
+			if(xMethodDecl.name.equals("<init>") && getOuterClass()!=null){
+				XClass outer = getOuterClass();
+				String name = outer.getName();
+				paramTypes = new XClassPtr[1];
+				if(outer.getGenericParams()>0){
+					XClassPtr generics[] = new XClassPtr[outer.getGenericParams()];
+					for(int i=0; i<generics.length; i++){
+						generics[i] = new XClassPtrClassGeneric(name, outer.getGenericInfo(i).getName());
+					}
+					paramTypes[0] = new XClassPtrGeneric(name, generics);
+				}else{
+					paramTypes[0] = new XClassPtrClass(name);
+				}
+			}else{
+				paramTypes = new XClassPtr[0];
+			}
 		}else{
-			paramTypes = new XClassPtr[xMethodDecl.paramTypes.size()];
-			for(int i=0; i<paramTypes.length; i++){
+			int s;
+			if(xMethodDecl.name.equals("<init>") && getOuterClass()!=null){
+				s = 1;
+				paramTypes = new XClassPtr[xMethodDecl.paramTypes.size()+1];
+				XClass outer = getOuterClass();
+				String name = outer.getName();
+				paramTypes = new XClassPtr[1];
+				if(outer.getGenericParams()>0){
+					XClassPtr generics[] = new XClassPtr[outer.getGenericParams()];
+					for(int i=0; i<generics.length; i++){
+						generics[i] = new XClassPtrClassGeneric(name, outer.getGenericInfo(i).getName());
+					}
+					paramTypes[0] = new XClassPtrGeneric(name, generics);
+				}else{
+					paramTypes[0] = new XClassPtrClass(name);
+				}
+			}else{
+				s = 0;
+				paramTypes = new XClassPtr[xMethodDecl.paramTypes.size()];
+			}
+			for(int i=s; i<paramTypes.length; i++){
 				paramTypes[i] = getGenericClass(xMethodDecl.paramTypes.get(i).type, genericInfos);
 			}
+		}
+		if(xMethodDecl.name.equals("<init>")){
+			visitConstructor = true;
 		}
 		xscript.runtime.XAnnotation[][] paramAnnotations = new xscript.runtime.XAnnotation[paramTypes.length][0];
 		XClassPtr[] throwTypes = getGenericClasses(xMethodDecl.throwList, genericInfos);

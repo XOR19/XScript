@@ -1,4 +1,17 @@
 package xscript.lang;
 
 public class Exception:Throwable{
+
+	public Exception():Throwable(){
+	}
+	
+	public Exception(String message):Throwable(message){
+	}
+	
+	public Exception(Throwable cause):Throwable(cause){
+	}
+	
+	public Exception(String message, Throwable cause):Throwable(message, cause){
+	}
+
 }

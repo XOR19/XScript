@@ -51,4 +51,9 @@ public class XClassPtrErrored extends XClassPtr {
 		return "errored:"+name;
 	}
 
+	@Override
+	public boolean equals(Object other) {
+		return false;
+	}
+
 }

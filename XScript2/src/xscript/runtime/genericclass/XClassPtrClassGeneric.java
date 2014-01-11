@@ -69,4 +69,12 @@ public class XClassPtrClassGeneric extends XClassPtr{
 		return genericName;
 	}
 	
+	@Override
+	public boolean equals(Object other) {
+		if(other instanceof XClassPtrClassGeneric){
+			return className.equals(((XClassPtrClassGeneric) other).className) && genericName.equals(((XClassPtrClassGeneric) other).genericName);
+		}
+		return false;
+	}
+	
 }

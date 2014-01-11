@@ -88,4 +88,20 @@ public class XClassPtrGeneric extends XClassPtr{
 	public XClassPtr getGeneric(int id){
 		return genericPtrs[id];
 	}
+	
+	@Override
+	public boolean equals(Object other) {
+		if(other instanceof XClassPtrGeneric){
+			if(className.equals(((XClassPtrGeneric) other).className)){
+				for(int i=0; i<genericPtrs.length; i++){
+					if(!genericPtrs[i].equals(((XClassPtrGeneric) other).genericPtrs[i])){
+						return false;
+					}
+				}
+				return true;
+			}
+		}
+		return false;
+	}
+	
 }

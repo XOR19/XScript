@@ -91,5 +91,13 @@ public class XClassPtrClass extends XClassPtr{
 	public String toString() {
 		return className;
 	}
+
+	@Override
+	public boolean equals(Object other) {
+		if(other instanceof XClassPtrClass){
+			return className.equals(((XClassPtrClass) other).className);
+		}
+		return false;
+	}
 	
 }

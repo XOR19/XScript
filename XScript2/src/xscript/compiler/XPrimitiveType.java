@@ -34,5 +34,13 @@ public class XPrimitiveType extends XVarType {
 	public String toString() {
 		return XPrimitive.getName(primitiveID);
 	}
+
+	@Override
+	public boolean equals(Object other) {
+		if(other instanceof XVarType){
+			return primitiveID == ((XVarType)other).getPrimitiveID();
+		}
+		return false;
+	}
 	
 }

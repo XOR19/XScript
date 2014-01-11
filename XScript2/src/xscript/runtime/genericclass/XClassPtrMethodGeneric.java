@@ -82,4 +82,25 @@ public class XClassPtrMethodGeneric extends XClassPtr{
 		return genericName;
 	}
 	
+	@Override
+	public boolean equals(Object other) {
+		if(other instanceof XClassPtrMethodGeneric){
+			if(className.equals(((XClassPtrMethodGeneric) other).className)){
+				if(methodName.equals(((XClassPtrMethodGeneric) other).methodName)){
+					for(int i=0; i<paramNames.length; i++){
+						if(!paramNames[i].equals(((XClassPtrMethodGeneric) other).paramNames[i])){
+							return false;
+						}
+					}
+					if(retName.equals(((XClassPtrMethodGeneric) other).retName)){
+						if(genericName.equals(((XClassPtrMethodGeneric) other).genericName)){
+							return true;
+						}
+					}
+				}
+			}
+		}
+		return false;
+	}
+	
 }

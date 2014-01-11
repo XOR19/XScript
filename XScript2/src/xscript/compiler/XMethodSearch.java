@@ -115,7 +115,7 @@ public class XMethodSearch {
 			}
 		}
 		if(expectedReturn!=null){
-			if(!m.getReturnTypePtr().equals(expectedReturn)){
+			if(!m.getReturnTypePtr().equals(expectedReturn.getXClassPtr())){
 				return false;
 			}
 		}

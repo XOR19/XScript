@@ -42,4 +42,7 @@ public abstract class XVarType {
 	@Override
 	public abstract String toString();
 	
+	@Override
+	public abstract boolean equals(Object other);
+	
 }

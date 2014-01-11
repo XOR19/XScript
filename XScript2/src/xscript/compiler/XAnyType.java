@@ -25,4 +25,9 @@ public class XAnyType extends XVarType {
 		return "<any>";
 	}
 
+	@Override
+	public boolean equals(Object other) {
+		return other instanceof XVarType;
+	}
+
 }

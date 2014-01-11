@@ -39,6 +39,12 @@ public class XMultibleType extends XVarType {
 		}
 	}
 
+	@Override
+	public boolean equals(Object other) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 	
 	
 }

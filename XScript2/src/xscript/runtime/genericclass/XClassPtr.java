@@ -33,6 +33,9 @@ public abstract class XClassPtr {
 	@Override
 	public abstract String toString();
 	
+	@Override
+	public abstract boolean equals(Object other);
+	
 	public static XClassPtr load(XInputStream inputStream) throws IOException {
 		return load(inputStream.readUnsignedByte(), inputStream);
 	}

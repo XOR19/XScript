@@ -32,4 +32,9 @@ public class XSingleType extends XVarType {
 		return type.toString();
 	}
 
+	@Override
+	public boolean equals(Object other) {
+		return type.equals(other);
+	}
+
 }
