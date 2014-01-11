@@ -24,7 +24,7 @@ public abstract class XInstruction {
 		instructions[4] = XInstructionAndBool.class;
 		instructions[5] = XInstructionAndInt.class;
 		instructions[6] = XInstructionAndLong.class;
-		instructions[7] = XInstructionB2I.class;
+		instructions[7] = XInstructionI2B.class;
 		instructions[8] = XInstructionBEqDouble.class;
 		instructions[9] = XInstructionBEqFloat.class;
 		instructions[10] = XInstructionBEqInt.class;
@@ -120,7 +120,7 @@ public abstract class XInstruction {
 		instructions[100] = XInstructionPowLong.class;
 		instructions[101] = XInstructionReadLocal.class;
 		instructions[102] = XInstructionReturn.class;
-		instructions[103] = XInstructionS2I.class;
+		instructions[103] = XInstructionI2S.class;
 		instructions[104] = XInstructionSEqDouble.class;
 		instructions[105] = XInstructionSEqFloat.class;
 		instructions[106] = XInstructionSEqInt.class;
@@ -152,6 +152,7 @@ public abstract class XInstruction {
 		instructions[132] = XInstructionOSwap.class;
 		instructions[133] = XInstructionStackSizeSave.class;
 		instructions[134] = XInstructionLoadConstClass.class;
+		instructions[135] = XInstructionInvokeConstructor.class;
 	}
 	
 	public abstract void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor);

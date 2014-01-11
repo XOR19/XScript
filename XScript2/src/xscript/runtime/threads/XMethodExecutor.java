@@ -1,7 +1,11 @@
 package xscript.runtime.threads;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import xscript.runtime.XModifier;
 import xscript.runtime.XRuntimeException;
+import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XPrimitive;
 import xscript.runtime.genericclass.XGenericClass;
 import xscript.runtime.instruction.XInstruction;
@@ -24,10 +28,22 @@ public class XMethodExecutor implements XGenericMethodProvider {
 	private int programPointer;
 	private int[] catchStackPointer;
 	private int[] catchObjectStackPointer;
+	private boolean topConstructor = false;
+	private List<XClass> classes;
 	
 	public XMethodExecutor(XMethodExecutor parent, XMethod method, XGenericClass[] generics, long[] params) {
+		this(parent, method, generics, params, null);
+	}
+	
+	public XMethodExecutor(XMethodExecutor parent, XMethod method, XGenericClass[] generics, long[] params, List<XClass> classes) {
 		this.parent = parent;
 		this.method = method;
+		if(classes==null && method.isConstructor() && !XModifier.isStatic(method.getModifier())){
+			topConstructor = true;
+			classes = new ArrayList<XClass>();
+			classes.add(method.getDeclaringClass());
+		}
+		this.classes = classes;
 		if(XModifier.isNative(method.getModifier()))
 			throw new XRuntimeException("Can't run native method %s", method);
 		this.generics = generics;
@@ -54,6 +70,10 @@ public class XMethodExecutor implements XGenericMethodProvider {
 		catchObjectStackPointer = new int[method.getExceptionHanles()];
 	}
 
+	public List<XClass> getInitializizedClasses(){
+		return classes;
+	}
+	
 	@Override
 	public XGenericClass getGeneric(int genericID) {
 		return generics[genericID];

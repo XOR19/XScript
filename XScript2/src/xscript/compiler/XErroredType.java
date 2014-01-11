@@ -25,4 +25,9 @@ public class XErroredType extends XVarType {
 		return false;
 	}
 
+	@Override
+	public boolean canCastTo(XVarType varTypeFor) {
+		return false;
+	}
+
 }

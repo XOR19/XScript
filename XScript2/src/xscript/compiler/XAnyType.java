@@ -30,4 +30,9 @@ public class XAnyType extends XVarType {
 		return other instanceof XVarType;
 	}
 
+	@Override
+	public boolean canCastTo(XVarType varTypeFor) {
+		return true;
+	}
+
 }

@@ -6,7 +6,10 @@ import java.util.ListIterator;
 
 import xscript.runtime.XModifier;
 import xscript.runtime.clazz.XClass;
+import xscript.runtime.clazz.XPrimitive;
 import xscript.runtime.genericclass.XClassPtr;
+import xscript.runtime.genericclass.XClassPtrClass;
+import xscript.runtime.genericclass.XClassPtrGeneric;
 import xscript.runtime.method.XMethod;
 
 public class XMethodSearch {
@@ -18,7 +21,8 @@ public class XMethodSearch {
 	private XVarType[] types;
 	private XClassPtr[] generics;
 	private XVarType expectedReturn;
-	private List<XMethod> posibleMethods = new ArrayList<XMethod>();
+	@SuppressWarnings("unchecked")
+	private List<XMethod> posibleMethods[] = new List[]{new ArrayList<XMethod>(), new ArrayList<XMethod>(), new ArrayList<XMethod>(), new ArrayList<XMethod>(), new ArrayList<XMethod>()};
 	
 	public XMethodSearch(XClass declaringClass, boolean shouldBeStatic, String name, boolean specialInvoke, boolean lookIntoParents) {
 		this.declaringClass = new XClass[]{declaringClass};
@@ -59,7 +63,7 @@ public class XMethodSearch {
 	}
 	
 	private void addMethod(XMethod method){
-		posibleMethods.add(method);
+		posibleMethods[0].add(method);
 	}
 	
 	public void applyGenerics(XClassPtr... generics) {
@@ -84,42 +88,83 @@ public class XMethodSearch {
 	}
 	
 	private void search(){
-		ListIterator<XMethod> i = posibleMethods.listIterator();
+		for(int i=1; i<posibleMethods.length; i++){
+			posibleMethods[i].clear();
+		}
+		ListIterator<XMethod> i = posibleMethods[0].listIterator();
 		while(i.hasNext()){
 			XMethod m = i.next();
-			if(!isMethodOk(m))
+			int ret = isMethodOk(m);
+			if(ret<=0){
 				i.remove();
+			}else{
+				posibleMethods[ret].add(m);
+			}
 		}
 	}
 	
-	private boolean isMethodOk(XMethod m){
+	private int isMethodOk(XMethod m){
 		if(!m.getRealName().equals(name)){
-			return false;
+			return 0;
 		}
+		boolean casts = false;
+		boolean varargs = false;
 		if(types!=null){
 			int c = m.getParamCount();
 			if(c!=types.length){
 				if(XModifier.isVarargs(m.getModifier())){
-					if(c-1>types.length){
-						return false;
+					varargs = true;
+					if(c-1>=types.length){
+						return 0;
 					}
 				}else{
-					return false;
+					return 0;
+				}
+			}
+			for(int i=0; i<(varargs?c-1:c); i++){
+				if(!(types[i] instanceof XErroredType)){
+					XVarType vt = XVarType.getVarTypeFor(m.getParams()[i], m.getDeclaringClass().getVirtualMachine());
+					if(!types[i].canCastTo(vt)){
+						return 0;
+					}
+					if(!types[i].equals(vt)){
+						casts = true;
+					}
+				}
+			}
+			if(varargs){
+				XClassPtr pr = m.getParams()[c-1];
+				XClass cc = pr.getXClassNonNull(m.getDeclaringClass().getVirtualMachine());
+				XVarType type;
+				if(cc.getArrayPrimitive()==XPrimitive.OBJECT){
+					type = XVarType.getVarTypeFor(((XClassPtrGeneric)pr).getGeneric(0), m.getDeclaringClass().getVirtualMachine());
+				}else{
+					type = XVarType.getVarTypeFor(new XClassPtrClass(XPrimitive.getName(cc.getArrayPrimitive())), m.getDeclaringClass().getVirtualMachine());
+				}
+				for(int i=c-1; i<types.length; i++){
+					if(!(types[i] instanceof XErroredType)){
+						if(!types[i].canCastTo(type)){
+							return 0;
+						}
+						if(!types[i].equals(type)){
+							casts = true;
+						}
+					}
 				}
 			}
 		}
 		if(generics!=null){
 			int c = m.getGenericParams();
 			if(c!=generics.length){
-				return false;
+				return 0;
 			}
 		}
 		if(expectedReturn!=null){
-			if(!m.getReturnTypePtr().equals(expectedReturn.getXClassPtr())){
-				return false;
+			if(!XVarType.getVarTypeFor(m.getReturnTypePtr(), m.getDeclaringClass().getVirtualMachine()).canCastTo(expectedReturn)){
+				return 0;
 			}
 		}
-		return true;
+		return casts?varargs?4:2:varargs?3:1;
 	}
 	
 	public boolean isTypesSetted(){
@@ -131,17 +176,22 @@ public class XMethodSearch {
 	}
 	
 	public XMethod getMethod(){
-		if(posibleMethods.size()==1)
-			return posibleMethods.get(0);
+		for(int i=1; i<posibleMethods.length; i++){
+			if(posibleMethods[i].size()>0){
+				if(posibleMethods[i].size()==1)
+					return posibleMethods[i].get(0);
+				return null;
+			}
+		}
 		return null;
 	}
 	
 	public boolean isEmpty(){
-		return posibleMethods.isEmpty();
+		return posibleMethods[0].isEmpty();
 	}
 	
 	public boolean notIdentified(){
-		return posibleMethods.size()>1;
+		return posibleMethods[0].size()>1;
 	}
 	
 	public boolean shouldBeStatic(){
@@ -194,6 +244,10 @@ public class XMethodSearch {
 			s += expectedReturn;
 		}
 		return declaringClass[0].getName()+"."+name+s;
+	}
+
+	public XVarType[] getTypes() {
+		return types;
 	}
 	
 }

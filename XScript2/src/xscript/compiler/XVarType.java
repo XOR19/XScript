@@ -44,5 +44,7 @@ public abstract class XVarType {
 	
 	@Override
 	public abstract boolean equals(Object other);
+
+	public abstract boolean canCastTo(XVarType varTypeFor);
 	
 }

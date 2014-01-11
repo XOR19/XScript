@@ -41,6 +41,14 @@ public class XMultibleType extends XVarType {
 
 	@Override
 	public boolean equals(Object other) {
+		if(type!=null && other!=null){
+			return type.equals(other);
+		}
+		return false;
+	}
+
+	@Override
+	public boolean canCastTo(XVarType varTypeFor) {
 		// TODO Auto-generated method stub
 		return false;
 	}

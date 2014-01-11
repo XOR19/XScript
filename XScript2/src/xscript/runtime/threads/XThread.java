@@ -1,8 +1,11 @@
 package xscript.runtime.threads;
 
+import java.util.List;
+
 import xscript.runtime.XModifier;
 import xscript.runtime.XRuntimeException;
 import xscript.runtime.XVirtualMachine;
+import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XPrimitive;
 import xscript.runtime.genericclass.XGenericClass;
 import xscript.runtime.instruction.XInstruction;
@@ -80,6 +83,14 @@ public class XThread {
 			virtualMachine.getNativeProvider().call(this, methodExecutor, xMethod, generics, params);
 		}else{
 			methodExecutor = new XMethodExecutor(methodExecutor, xMethod, generics, params);
+		}
+	}
+	
+	public void callConstructor(XMethod xMethod, XGenericClass[] generics, long[] params, List<XClass> initializizedClasses) {
+		if(XModifier.isNative(xMethod.getModifier())){
+			virtualMachine.getNativeProvider().call(this, methodExecutor, xMethod, generics, params);
+		}else{
+			methodExecutor = new XMethodExecutor(methodExecutor, xMethod, generics, params, initializizedClasses);
 		}
 	}
 

@@ -13,8 +13,7 @@ import xscript.runtime.genericclass.XClassPtr;
 import xscript.runtime.genericclass.XClassPtrClass;
 import xscript.runtime.genericclass.XClassPtrClassGeneric;
 import xscript.runtime.genericclass.XClassPtrGeneric;
-import xscript.runtime.instruction.XInstructionInvokeSpecial;
-import xscript.runtime.instruction.XInstructionReadLocal;
+import xscript.runtime.instruction.XInstructionInvokeConstructor;
 import xscript.runtime.method.XMethod;
 
 public class XMethodCompiler extends XMethod {
@@ -55,8 +54,7 @@ public class XMethodCompiler extends XMethod {
 						compilerError(XMessageLevel.ERROR, "toomanymethodfor", new XLineDesk(0, 0, 0, 0), search.getDesk());
 					}
 				}else{
-					codeGen.addInstruction(new XInstructionReadLocal(0), 0);
-					codeGen.addInstruction(new XInstructionInvokeSpecial(m, new XClassPtr[0]), 0);
+					codeGen.addInstruction(new XInstructionInvokeConstructor(m, new XClassPtr[0]), 0);
 				}
 			}
 		}else{

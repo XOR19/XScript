@@ -466,5 +466,9 @@ public class XMethod extends XPackage {
 	public int getExceptionHanles() {
 		return catchEntries.length;
 	}
+
+	public XClassPtr[] getParams() {
+		return params;
+	}
 	
 }

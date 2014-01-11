@@ -34,7 +34,28 @@ public class XSingleType extends XVarType {
 
 	@Override
 	public boolean equals(Object other) {
-		return type.equals(other);
+		if(other instanceof XSingleType){
+			return type.equals(((XSingleType) other).type);
+		}
+		return false;
+	}
+
+	@Override
+	public boolean canCastTo(XVarType varTypeFor) {
+		if(equals(varTypeFor)){
+			return true;
+		}
+		if(varTypeFor instanceof XAnyType){
+			return true;
+		}else if(varTypeFor instanceof XSingleType){
+			XClassPtr[] classPtr = c.getSuperClasses();
+			for(XClassPtr cp:classPtr){
+				if(XVarType.getVarTypeFor(cp, c.getVirtualMachine()).canCastTo(varTypeFor)){
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 }

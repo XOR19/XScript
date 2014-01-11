@@ -68,8 +68,13 @@ public class XCompiler extends XVirtualMachine{
 				e.printStackTrace();
 				postMessage(XMessageLevel.ERROR, name, "errored", new XLineDesk(0, 0, 0, 0), e.getMessage());
 			}
-			while(!classes2Compile1.isEmpty()){
-				classes2Compile1.remove(0).gen();
+			try{
+				while(!classes2Compile1.isEmpty()){
+					classes2Compile1.remove(0).gen();
+				}
+			}catch(Throwable e){
+				e.printStackTrace();
+				postMessage(XMessageLevel.ERROR, name, "errored", new XLineDesk(0, 0, 0, 0), e.getMessage());
 			}
 		}
 		for(XSourceProvider sp:sourceProviders){

@@ -8,11 +8,11 @@ import xscript.runtime.clazz.XOutputStream;
 import xscript.runtime.threads.XMethodExecutor;
 import xscript.runtime.threads.XThread;
 
-public class XInstructionB2I extends XInstruction {
+public class XInstructionI2B extends XInstruction {
 
-	public XInstructionB2I(){}
+	public XInstructionI2B(){}
 	
-	public XInstructionB2I(XInputStream inputStream){}
+	public XInstructionI2B(XInputStream inputStream){}
 	
 	@Override
 	public void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
@@ -25,7 +25,7 @@ public class XInstructionB2I extends XInstruction {
 
 	@Override
 	public String getSource() {
-		return "b2i";
+		return "i2b";
 	}
 
 }

@@ -4,6 +4,26 @@ public class Test{
 	
 	public static int i;
 	
+	public static long l;
+	
+	public static double d;
+	
+	public Test():Test(1){
+		
+	}
+	
+	public Test(int i){
+		Test.i = i;
+	}
+	
+	public void test(){
+		i=4;
+		l++;
+		d++;
+		d = i;
+		l = (long)d;
+	}
+	
 	public static class Inner{
 	
 		public int i;

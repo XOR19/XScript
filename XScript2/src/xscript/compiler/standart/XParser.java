@@ -577,6 +577,7 @@ public class XParser {
 			case SHORT:
 			case CHAR:
 			case INT:
+			case LONG:
 			case FLOAT:
 			case DOUBLE:
 			case VOID:
