@@ -1,6 +1,7 @@
 package xscript.compiler;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -89,8 +90,8 @@ public class XClassCompiler extends XClass implements XVisitor {
 	
 	private boolean visitConstructor;
 	
-	protected XClassCompiler(XVirtualMachine virtualMachine, String name, XMessageList messages, XImportHelper importHelper) {
-		super(virtualMachine, name);
+	protected XClassCompiler(XVirtualMachine virtualMachine, String name, XMessageList messages, XImportHelper importHelper, XPackage p) {
+		super(virtualMachine, name, p);
 		this.messages = messages;
 		this.importHelper = importHelper;
 		state = STATE_TOGEN;
@@ -147,7 +148,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 			if(tree instanceof XClassDecl){
 				XClassDecl decl = (XClassDecl)tree;
 				String name = getName()+"."+decl.name;
-				XClassCompiler compiler = new XClassCompiler(virtualMachine, decl.name, new XMessageClass((XCompiler) virtualMachine, name), importHelper);
+				XClassCompiler compiler = new XClassCompiler(virtualMachine, decl.name, new XMessageClass((XCompiler) virtualMachine, name), importHelper, this);
 				if(childs.containsKey(decl.name)){
 					compilerError(XMessageLevel.ERROR, "duplicatedclass", decl.line, decl.name);
 				}else{
@@ -166,7 +167,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 				XClassDecl decl = (XClassDecl)tree;
 				if(gotFirst){
 					String name = xPackage.getName()+"."+decl.name;
-					XClassCompiler compiler = new XClassCompiler(virtualMachine, decl.name, new XMessageClass((XCompiler) virtualMachine, name), importHelper);
+					XClassCompiler compiler = new XClassCompiler(virtualMachine, decl.name, new XMessageClass((XCompiler) virtualMachine, name), importHelper, this);
 					if(xPackage.getChild(decl.name)==null){
 						xPackage.addChild(compiler);
 						compiler.registerClasses(decl.defs);
@@ -226,7 +227,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 					}
 					for(int i=0; i<genericInfos.length; i++){
 						XTypeParam typeParam = xClassDef.typeParam.get(i);
-						XClassPtr[] ptr = getGenericClasses(typeParam.extend, null);
+						XClassPtr[] ptr = getGenericClasses(typeParam.extend, null, null);
 						genericInfos[i] = new XGenericInfo(typeParam.name, ptr, typeParam.isSuper);
 					}
 				}
@@ -241,7 +242,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 						}catch(Exception e){}
 					}
 				}else{
-					superClasses = getGenericClasses(xClassDef.superClasses, null);
+					superClasses = getGenericClasses(xClassDef.superClasses, null, null);
 				}
 				modifier = xClassDef.modifier==null?0:xClassDef.modifier.modifier;
 				methodList = new ArrayList<XMethod>();
@@ -324,7 +325,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 		}else{
 			modifier = xVarDecl.modifier.modifier;
 		}
-		XClassPtr type = getGenericClass(xVarDecl.type, null);
+		XClassPtr type = getGenericClass(xVarDecl.type, null, null);
 		xscript.runtime.XAnnotation[] annotations = new xscript.runtime.XAnnotation[0];
 		try{
 			XField field = new XField(this, modifier, xVarDecl.name, type, annotations);
@@ -381,6 +382,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 		if(xMethodDecl.varargs){
 			modifier |= xscript.runtime.XModifier.VARARGS;
 		}
+		List<XClassPtr> classes = new ArrayList<XClassPtr>();
 		XGenericInfo[] genericInfos;
 		if(xMethodDecl.typeParam==null){
 			genericInfos = new XGenericInfo[0];
@@ -392,11 +394,13 @@ public class XClassCompiler extends XClass implements XVisitor {
 			}
 			for(int i=0; i<genericInfos.length; i++){
 				XTypeParam typeParam = xMethodDecl.typeParam.get(i);
-				XClassPtr[] ptr = getGenericClasses(typeParam.extend, genericInfos);
+				XClassPtr[] ptr = getGenericClasses(typeParam.extend, null, genericInfos);
+				classes.addAll(Arrays.asList(ptr));
 				genericInfos[i] = new XGenericInfo(typeParam.name, ptr, typeParam.isSuper);
 			}
 		}
-		XClassPtr returnType = getGenericClass(xMethodDecl.returnType, genericInfos);
+		XClassPtr returnType = getGenericClass(xMethodDecl.returnType, null, genericInfos);
+		classes.add(returnType);
 		xscript.runtime.XAnnotation[] annotations = new xscript.runtime.XAnnotation[0];
 		XClassPtr[] paramTypes;
 		if(xMethodDecl.paramTypes==null){
@@ -438,24 +442,39 @@ public class XClassCompiler extends XClass implements XVisitor {
 				paramTypes = new XClassPtr[xMethodDecl.paramTypes.size()];
 			}
 			for(int i=s; i<paramTypes.length; i++){
-				paramTypes[i] = getGenericClass(xMethodDecl.paramTypes.get(i).type, genericInfos);
+				paramTypes[i] = getGenericClass(xMethodDecl.paramTypes.get(i).type, null, genericInfos);
+				classes.add(paramTypes[i]);
 			}
 		}
 		if(xMethodDecl.name.equals("<init>")){
 			visitConstructor = true;
 		}
 		xscript.runtime.XAnnotation[][] paramAnnotations = new xscript.runtime.XAnnotation[paramTypes.length][0];
-		XClassPtr[] throwTypes = getGenericClasses(xMethodDecl.throwList, genericInfos);
+		XClassPtr[] throwTypes = getGenericClasses(xMethodDecl.throwList, null, genericInfos);
+		classes.addAll(Arrays.asList(throwTypes));
 		try{
 			XMethodCompiler method = new XMethodCompiler(this, modifier, xMethodDecl.name, returnType, 
 					annotations, paramTypes, paramAnnotations, throwTypes, genericInfos, xMethodDecl, importHelper);
 			addChild(method);
 			methodList.add(method);
+			for(XClassPtr cp:classes){
+				resolveClassGeneric(cp, method.getSimpleName());
+			}
 		}catch(XRuntimeException e){
 			compilerError(XMessageLevel.ERROR, "intern", xMethodDecl.line, e.getMessage());
 		}
 	}
 
+	private void resolveClassGeneric(XClassPtr cp, String methodName){
+		if(cp instanceof XClassPtrMethodGenericChangeable){
+			((XClassPtrMethodGenericChangeable) cp).methodName = methodName;
+		}else if(cp instanceof XClassPtrGeneric){
+			for(XClassPtr cpp:((XClassPtrGeneric) cp).genericPtrs){
+				resolveClassGeneric(cpp, methodName);
+			}
+		}
+	}
+	
 	public int getMethodIndex() {
 		if(state!=STATE_TOGEN)
 			throw new XRuntimeException("You can't get a method index now");
@@ -633,16 +652,16 @@ public class XClassCompiler extends XClass implements XVisitor {
 		throw new AssertionError("Should never be happened :(");
 	}
 
-	public XClassPtr getGenericClass(XType type, XGenericInfo[] extra) {
-		return importHelper.getGenericClass(this, type, extra, true);
+	public XClassPtr getGenericClass(XType type, String methodName, XGenericInfo[] extra) {
+		return importHelper.getGenericClass(this, type, methodName, extra, true);
 	}
 	
-	public XClassPtr[] getGenericClasses(List<XType> types, XGenericInfo[] extra) {
+	public XClassPtr[] getGenericClasses(List<XType> types, String methodName, XGenericInfo[] extra) {
 		if(types==null)
 			return new XClassPtr[0];
 		XClassPtr[] ptr = new XClassPtr[types.size()];
 		for(int i=0; i<ptr.length; i++){
-			ptr[i] = getGenericClass(types.get(i), extra);
+			ptr[i] = getGenericClass(types.get(i), methodName, extra);
 		}
 		return ptr;
 	}
@@ -651,5 +670,8 @@ public class XClassCompiler extends XClass implements XVisitor {
 		return childs.values();
 	}
 
+	public XField getLengthField() {
+		return getField("length");
+	}
 	
 }

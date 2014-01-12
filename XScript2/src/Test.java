@@ -41,4 +41,13 @@ public class Test {
 		tree.accept(treePrinter);*/
 	}
 	
+	class A{
+		<T> T test(){
+			class I{
+				T t;
+			}
+			return new I().t;
+		}
+	}
+	
 }

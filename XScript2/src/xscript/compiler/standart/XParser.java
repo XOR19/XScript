@@ -1158,7 +1158,7 @@ public class XParser {
 			if(token.kind==XTokenKind.SEMICOLON){
 				nextToken();
 			}else{
-				statement = makeStatement(false);
+				statement = makeStatement(false, XTokenKind.COLON);
 				if(token.kind==XTokenKind.COLON){
 					nextToken();
 					foreach = true;
@@ -1169,7 +1169,7 @@ public class XParser {
 			if(foreach){
 				statement2 = makeInnerStatement();
 				expected(XTokenKind.RGROUP);
-				block = makeStatement(needEnding);
+				block = makeStatement(needEnding, XTokenKind.SEMICOLON);
 				return new XForeach(endLineBlock(), statement, statement2, block);
 			}else{
 				if(token.kind!=XTokenKind.SEMICOLON){
@@ -1302,7 +1302,7 @@ public class XParser {
 					statements = new ArrayList<XTree.XStatement>();
 					cases.add(new XCase(token.lineDesk, null, statements));
 				}else{
-					statements.add(makeStatement(true));
+					statements.add(makeStatement(true, XTokenKind.SEMICOLON));
 				}
 				if(unhandledUnexpected){
 					skip(false, true, true, true, false, true, true);
@@ -1314,7 +1314,7 @@ public class XParser {
 		return null;
 	}
 
-	public XStatement makeStatement(boolean needEnding){
+	public XStatement makeStatement(boolean needEnding, XTokenKind ending){
 		XToken oldtoken;
 		switch(token.kind){
 		case IDENT:
@@ -1338,7 +1338,7 @@ public class XParser {
 							nextToken();
 							decl = makeVarDecls(line, new XModifier(line, 0), type, name, 1);
 						}
-					}else if(token.kind==XTokenKind.EQUAL || token.kind==XTokenKind.SEMICOLON){
+					}else if(token.kind==XTokenKind.EQUAL || token.kind==ending){
 						decl = makeVarDecls(line, new XModifier(line, 0), type, name);
 					}
 				}
@@ -1374,7 +1374,7 @@ public class XParser {
 		if(expected(XTokenKind.LBRAKET)){
 			List<XStatement> statements = new ArrayList<XTree.XStatement>();
 			while(token.kind!=XTokenKind.RBRAKET && token.kind!=XTokenKind.EOF){
-				statements.add(makeStatement(true));
+				statements.add(makeStatement(true, XTokenKind.SEMICOLON));
 				if(unhandledUnexpected){
 					skip(false, true, true, true, false, true, true);
 				}

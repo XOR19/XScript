@@ -18,8 +18,7 @@ import xscript.runtime.clazz.XPrimitive;
 import xscript.runtime.genericclass.XClassPtr;
 import xscript.runtime.genericclass.XGenericClass;
 import xscript.runtime.instruction.XInstruction;
-import xscript.runtime.instruction.XInstructionInvokeSpecial;
-import xscript.runtime.instruction.XInstructionNew;
+import xscript.runtime.instruction.XInstructionInvokeConstructor;
 import xscript.runtime.method.XCatchEntry.XCatchType;
 import xscript.runtime.nativemethod.XNativeMethod;
 import xscript.runtime.object.XObject;
@@ -33,6 +32,7 @@ public class XMethod extends XPackage {
 	public static final int CONSTRUCTORMODIFIER = XModifier.PRIVATE | XModifier.PROTECTED | XModifier.PUBLIC | XModifier.VARARGS;
 	public static final int STATICCONSTRUCTORMODIFIER = XModifier.STATIC | XModifier.FINAL | XModifier.PRIVATE;
 	
+	protected String desk;
 	protected int modifier;
 	protected XClassPtr returnType;
 	protected XAnnotation[] annotations;
@@ -62,6 +62,7 @@ public class XMethod extends XPackage {
 		int numParam = inputStream.readUnsignedByte();
 		paramAnnotations = new XAnnotation[numParam][];
 		params = new XClassPtr[numParam];
+		desk = "(";
 		for(int i=0; i<numParam; i++){
 			XAnnotation[] annotations = new XAnnotation[inputStream.readUnsignedByte()];
 			for(int j=0; j<annotations.length; j++){
@@ -69,7 +70,13 @@ public class XMethod extends XPackage {
 			}
 			paramAnnotations[i] = annotations;
 			(params[i] = XClassPtr.load(inputStream)).getXClass(declaringClass.getVirtualMachine());
+			if(i==0){
+				desk += params[0];
+			}else{
+				desk += ", "+params[i];
+			}
 		}
+		desk += ")"+returnType;
 		mThrows = new XClassPtr[inputStream.readUnsignedByte()];
 		for(int i=0; i<mThrows.length; i++){
 			(mThrows[i] = XClassPtr.load(inputStream)).getXClass(declaringClass.getVirtualMachine());
@@ -139,7 +146,15 @@ public class XMethod extends XPackage {
 		this.paramAnnotations = paramAnnotations;
 		this.mThrows = mThrows;
 		this.genericInfos = genericInfos;
-		
+		desk = "(";
+		for(int i=0; i<params.length; i++){
+			if(i==0){
+				desk += params[0];
+			}else{
+				desk += ", "+params[i];
+			}
+		}
+		desk += ")"+returnType;
 		if(XModifier.isNative(modifier)){
 			getNativeMethod();
 		}
@@ -175,12 +190,12 @@ public class XMethod extends XPackage {
 		throw new UnsupportedOperationException();
 	}
 	
-	public XClass getDeclaringClass(){
-		return (XClass)parent;
-	}
-	
 	public int getModifier(){
 		return modifier;
+	}
+	
+	public XClass getDeclaringClass(){
+		return (XClass)parent;
 	}
 	
 	public XGenericClass getReturnType(XGenericClass genericClass, XGenericMethodProvider methodExecutor){
@@ -324,38 +339,29 @@ public class XMethod extends XPackage {
 	public boolean isConstructor() {
 		return XModifier.isStatic(modifier)?name.equals("<staticInit>"):name.equals("<init>");
 	}
-
+	
 	public String getRealName(){
 		return name;
 	}
 	
+	@Override
 	public String getSimpleName(){
-		return name;
-		
+		return name+desk;
 	}
 	
 	public XClass[] getExplizitSuperInvokes() {
-		int numNews = 0;
 		List<XClass> explitite = new ArrayList<XClass>();
 		if(isConstructor() && XModifier.isStatic(modifier)){
 			for(int i=0; i<instructions.length; i++){
-				if(instructions[i] instanceof XInstructionInvokeSpecial){
-					if(numNews==0){
-						XMethod method = ((XInstructionInvokeSpecial)instructions[i]).getMethod(getDeclaringClass().getVirtualMachine());
-						if(method.isConstructor() && getDeclaringClass().canCastTo(method.getDeclaringClass())){
-							if(method.getParamCount()>0){
-								if(explitite.contains(method.getDeclaringClass())){
-									throw new XRuntimeException("Error, calling 2 times the same super constructor");
-								}else{
-									explitite.add(method.getDeclaringClass());
-								}
-							}
+				if(instructions[i] instanceof XInstructionInvokeConstructor){
+					XMethod method = ((XInstructionInvokeConstructor)instructions[i]).getMethod(getDeclaringClass().getVirtualMachine());
+					if(method.getParamCount()>0 && method.isConstructor() && getDeclaringClass().canCastTo(method.getDeclaringClass())){
+						if(explitite.contains(method.getDeclaringClass())){
+							throw new XRuntimeException("Error, calling 2 times the same super constructor");
+						}else{
+							explitite.add(method.getDeclaringClass());
 						}
-					}else{
-						numNews--;
 					}
-				}else if(instructions[i] instanceof XInstructionNew){
-					numNews++;
 				}
 			}
 		}
@@ -363,7 +369,7 @@ public class XMethod extends XPackage {
 	}
 
 	public void save(XOutputStream outputStream) throws IOException {
-		outputStream.writeUTF(getSimpleName());
+		outputStream.writeUTF(getRealName());
 		outputStream.writeShort(modifier);
 		
 		outputStream.writeByte(annotations.length);
@@ -449,7 +455,15 @@ public class XMethod extends XPackage {
 			}
 		}
 		out += ")";
+		if(mThrows.length>0){
+			out += " throws ";
+			out += mThrows[0];
+			for(int i=1; i<mThrows.length; i++){
+				out += ", "+mThrows[i];
+			}
+		}
 		if(!(XModifier.isNative(modifier) || XModifier.isAbstract(modifier))){
+			out += "{";
 			for(int i=0; i<instructions.length; i++){
 				out += "\n"+i + ":" + instructions[i];
 			}
@@ -459,6 +473,9 @@ public class XMethod extends XPackage {
 			for(int i=0; i<localEntries.length; i++){
 				out += "\n"+localEntries[i].dump();
 			}
+			out += "\n}";
+		}else{
+			out += ";";
 		}
 		return out;
 	}
@@ -469,6 +486,14 @@ public class XMethod extends XPackage {
 
 	public XClassPtr[] getParams() {
 		return params;
+	}
+
+	public String getMethodDesk() {
+		return desk;
+	}
+
+	public XClassPtr[] getThrows() {
+		return mThrows;
 	}
 	
 }

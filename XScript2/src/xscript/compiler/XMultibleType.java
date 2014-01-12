@@ -1,6 +1,7 @@
 package xscript.compiler;
 
 import java.util.Arrays;
+import java.util.List;
 
 import xscript.runtime.clazz.XClass;
 import xscript.runtime.genericclass.XClassPtr;
@@ -8,11 +9,9 @@ import xscript.runtime.genericclass.XClassPtr;
 
 public class XMultibleType extends XVarType {
 
-	public XClassPtr type;
-	public XSingleType[] classes;
+	public XVarType[] classes;
 
-	public XMultibleType(XClassPtr type, XSingleType[] classes) {
-		this.type = type;
+	public XMultibleType(XVarType[] classes) {
 		this.classes = classes;
 	}
 
@@ -20,39 +19,38 @@ public class XMultibleType extends XVarType {
 	public XClass[] getXClasses() {
 		XClass[] c = new XClass[classes.length];
 		for(int i=0; i<c.length; i++){
-			c[i] = classes[i].getXClass();
+			c[i] = classes[i].getXClasses()[0];
 		}
 		return c;
 	}
 
 	@Override
-	public XClassPtr getXClassPtr() {
-		return type;
-	}
-
-	@Override
 	public String toString() {
-		if(type==null){
-			return Arrays.toString(classes);
-		}else{
-			return type.toString();
-		}
+		return Arrays.toString(classes);
 	}
 
 	@Override
 	public boolean equals(Object other) {
-		if(type!=null && other!=null){
-			return type.equals(other);
-		}
 		return false;
 	}
 
 	@Override
-	public boolean canCastTo(XVarType varTypeFor) {
-		// TODO Auto-generated method stub
-		return false;
+	protected void getSuperClasses(List<XKnownType> superClasses) {
+		for(XVarType c:classes){
+			c.getSuperClasses(superClasses);
+		}
 	}
 
-	
+	@Override
+	protected void getSuperClassesAndThis(List<XKnownType> superClasses) {
+		for(XVarType c:classes){
+			c.getSuperClassesAndThis(superClasses);
+		}
+	}
+
+	@Override
+	public XClassPtr getXClassPtr() {
+		return null;
+	}
 	
 }

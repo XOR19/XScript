@@ -9,7 +9,7 @@ public abstract class XClassMaker extends XPackage {
 		super(name);
 	}
 
-	public abstract XClass makeClass();
+	public abstract XClass makeClass(XPackage p);
 
 	public abstract void onReplaced(XClass xClass);
 

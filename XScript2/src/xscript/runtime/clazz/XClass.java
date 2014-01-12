@@ -37,9 +37,9 @@ public class XClass extends XPackage{
 	protected XField[] fields;
 	protected XMethod[] methods;
 	
-	protected XGenericInfo[] genericInfos;
-	
 	protected XAnnotation[] annotations;
+	
+	protected XGenericInfo[] genericInfos;
 	
 	protected int classIndex;
 	protected XClassTable[] classTable;
@@ -55,11 +55,11 @@ public class XClass extends XPackage{
 	
 	protected int state;
 	
-	protected XClass(XVirtualMachine virtualMachine, String name) {
+	protected XClass(XVirtualMachine virtualMachine, String name, XPackage p) {
 		super(name);
 		state = STATE_CREATED;
 		this.virtualMachine = virtualMachine;
-		isArray = name.startsWith("xscript.lang.Array");
+		isArray = (p.getName()+"."+name).startsWith("xscript.lang.Array");
 		if(isArray()){
 			int primitiveID = XPrimitive.OBJECT;
 			for(int i=0; i<9; i++){
@@ -118,28 +118,11 @@ public class XClass extends XPackage{
 	}
 	
 	public boolean isAnnotation(){
-		return superClasses[0].getXClass(virtualMachine).getName().equals("xscript.lang.Annotation");
+		return superClasses.length!=0 && superClasses[0].getXClass(virtualMachine).getName().equals("xscript.lang.Annotation");
 	}
 	
 	public boolean isEnum(){
-		return superClasses[0].getXClass(virtualMachine).getName().equals("xscript.lang.Enum");
-	}
-	
-	public int getGenericID(String genericName) {
-		for(int i=0; i<genericInfos.length; i++){
-			if(genericInfos[i].getName().equals(genericName)){
-				return i;
-			}
-		}
-		throw new XRuntimeException("Can't find generic class %s", genericName);
-	}
-
-	public XGenericInfo getGenericInfo(int id) {
-		return genericInfos[id];
-	}
-	
-	public int getGenericParams() {
-		return genericInfos.length;
+		return superClasses.length!=0 && superClasses[0].getXClass(virtualMachine).getName().equals("xscript.lang.Enum");
 	}
 
 	public XClassTable getClassTable(XClass xClass){
@@ -173,6 +156,23 @@ public class XClass extends XPackage{
 		return objectFieldCount;
 	}
 
+	public int getGenericID(String genericName) {
+		for(int i=0; i<genericInfos.length; i++){
+			if(genericInfos[i].getName().equals(genericName)){
+				return i;
+			}
+		}
+		throw new XRuntimeException("Can't find generic class %s", genericName);
+	}
+
+	public XGenericInfo getGenericInfo(int id) {
+		return genericInfos[id];
+	}
+	
+	public int getGenericParams() {
+		return genericInfos.length;
+	}
+	
 	public void markObjectObjectsVisible(XObject object) {
 		for(int i=0; i<fields.length; i++){
 			if(!XModifier.isStatic(fields[i].getModifier())){
@@ -236,25 +236,16 @@ public class XClass extends XPackage{
 			}
 		}
 		for(int i=0; i<superClasses.length; i++){
-			XField field = superClasses[i].getXClass(virtualMachine).getFieldAndParents(name);
+			XField field = superClasses[i].getXClassNonNull(virtualMachine).getFieldAndParents(name);
 			if(field!=null)
 				return field;
 		}
 		return null;
 	}
 	
-	public XMethod getMethod(String methodName, String[] paramNames, String retName) {
-		for(int i=0; i<methods.length; i++){
-			if(methods[i].getRealName().equals(name)){
-				return methods[i];
-			}
-		}
-		return null;
-	}
-	
 	public XMethod getMethod(String name) {
 		for(int i=0; i<methods.length; i++){
-			if(methods[i].getRealName().equals(name)){
+			if(methods[i].getSimpleName().equals(name)){
 				return methods[i];
 			}
 		}
@@ -294,7 +285,7 @@ public class XClass extends XPackage{
 				}
 				int childCount = inputStream.readUnsignedByte();
 				for(int i=0; i<childCount; i++){
-					XClass xClass = new XClass(virtualMachine, inputStream.readUTF());
+					XClass xClass = new XClass(virtualMachine, inputStream.readUTF(), this);
 					super.addChild(xClass);
 					xClass.load(inputStream);
 				}
@@ -365,7 +356,7 @@ public class XClass extends XPackage{
 			try{
 				state = STATE_POST_LOADING;
 				for(int i=0; i<superClasses.length; i++){
-					XClass xClass = superClasses[i].getXClass(virtualMachine);
+					XClass xClass = superClasses[i].getXClassNonNull(virtualMachine);
 					xClass.postLoad();
 					if(xClass.state!=STATE_RUNNABLE){
 						throw new XRuntimeException("Class %s isn't inited correctly, so %s can't inited", xClass, this);
@@ -373,7 +364,7 @@ public class XClass extends XPackage{
 				}
 				
 				state = STATE_RUNNABLE;
-				XMethod xMethod = getMethod("<staticInit>", new String[0], "void");
+				XMethod xMethod = getMethod("<staticInit>()void");
 				if(xMethod!=null)
 					virtualMachine.getThreadProvider().importantInterrupt("Static "+getName(), xMethod, new XGenericClass[0], new long[0]);
 			}catch(Throwable e){
@@ -499,7 +490,21 @@ public class XClass extends XPackage{
 		}else{
 			out += "class ";
 		}
-		out += getSimpleName()+"{\n";
+		out += getSimpleName();
+		if(genericInfos.length>0){
+			out += "<"+genericInfos[0].dump();
+			for(int i=1; i<genericInfos.length; i++){
+				out += ", "+genericInfos[i].dump();
+			}
+			out += ">";
+		}
+		if(superClasses.length>0){
+			out += ":"+superClasses[0];
+			for(int i=1; i<superClasses.length; i++){
+				out += ", "+superClasses[i];
+			}
+		}
+		out += "{\n";
 		for(XField field:fields){
 			out += field.dump()+"\n";
 		}

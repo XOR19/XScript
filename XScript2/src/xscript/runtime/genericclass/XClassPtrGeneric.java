@@ -9,8 +9,8 @@ import xscript.runtime.threads.XGenericMethodProvider;
 
 public class XClassPtrGeneric extends XClassPtr{
 	
-	private String className;
-	private XClassPtr[] genericPtrs;
+	public final String className;
+	public final XClassPtr[] genericPtrs;
 	private XClass xClass;
 	private XGenericClass generic;
 	
@@ -83,10 +83,6 @@ public class XClassPtrGeneric extends XClassPtr{
 			g += ">";
 		}
 		return className+g;
-	}
-	
-	public XClassPtr getGeneric(int id){
-		return genericPtrs[id];
 	}
 	
 	@Override

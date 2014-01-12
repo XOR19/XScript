@@ -42,11 +42,12 @@ public class XMethodCompiler extends XMethod {
 		XCodeGen codeGen = null;
 		if(isConstructor() && xMethodDecl==null){
 			codeGen = new XCodeGen();
-			for(XClassPtr superClasses:getDeclaringClass().getSuperClasses()){
-				XMethodSearch search = new XMethodSearch(superClasses.getXClassNonNull(getDeclaringClass().getVirtualMachine()), false, "<init>", true, false);
+			List<XVarType> superClasses = getDeclaringClassVarType().getDirectSuperClasses();
+			for(XVarType superClass:superClasses){
+				XMethodSearch search = new XMethodSearch(getDeclaringClass().getVirtualMachine(), superClass, false, "<init>", true, false);
 				search.applyTypes(new XVarType[0]);
-				search.applyReturn(XVarType.getVarTypeFor(new XClassPtrClass("void"), getDeclaringClass().getVirtualMachine()));
-				XMethod m = search.getMethod();
+				search.applyReturn(XVarType.getVarTypeFor(getDeclaringClass().getVirtualMachine().getClassProvider().getXClass("void"), null));
+				XCompilerMethod m = search.getMethod();
 				if(m==null){
 					if(search.isEmpty()){
 						compilerError(XMessageLevel.ERROR, "nomethodfor", new XLineDesk(0, 0, 0, 0), search.getDesk());
@@ -54,7 +55,7 @@ public class XMethodCompiler extends XMethod {
 						compilerError(XMessageLevel.ERROR, "toomanymethodfor", new XLineDesk(0, 0, 0, 0), search.getDesk());
 					}
 				}else{
-					codeGen.addInstruction(new XInstructionInvokeConstructor(m, new XClassPtr[0]), 0);
+					codeGen.addInstruction(new XInstructionInvokeConstructor(m.method, new XClassPtr[0]), 0);
 				}
 			}
 		}else{
@@ -88,7 +89,7 @@ public class XMethodCompiler extends XMethod {
 	}
 	
 	public XClassPtr getGenericClass(XType type, boolean doError){
-		return importHelper.getGenericClass((XClassCompiler)getDeclaringClass(), type, genericInfos, doError);
+		return importHelper.getGenericClass((XClassCompiler)getDeclaringClass(), type, getSimpleName(), genericInfos, doError);
 	}
 
 	public XImportHelper getImportHelper() {
@@ -99,17 +100,20 @@ public class XMethodCompiler extends XMethod {
 		return returnType;
 	}
 
-	public XClassPtr getDeclaringClassGen() {
+	public XVarType getDeclaringClassVarType() {
 		XClass c = getDeclaringClass();
 		String name = c.getName();
+		XClassPtr ptr;
 		if(c.getGenericParams()>0){
 			XClassPtr generics[] = new XClassPtr[c.getGenericParams()];
 			for(int i=0; i<generics.length; i++){
 				generics[i] = new XClassPtrClassGeneric(name, c.getGenericInfo(i).getName());
 			}
-			return new XClassPtrGeneric(name, generics);
+			ptr = new XClassPtrGeneric(name, generics);
+		}else{
+			ptr = new XClassPtrClass(name);
 		}
-		return new XClassPtrClass(name);
+		return XVarType.getVarTypeFor(ptr, c.getVirtualMachine(), null, null);
 	}
 	
 }

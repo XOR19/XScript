@@ -19,6 +19,7 @@ import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XClassLoader;
 import xscript.runtime.clazz.XClassMaker;
 import xscript.runtime.clazz.XOutputStream;
+import xscript.runtime.clazz.XPackage;
 
 public class XCompiler extends XVirtualMachine{
 
@@ -130,10 +131,10 @@ public class XCompiler extends XVirtualMachine{
 		}
 
 		@Override
-		public XClass makeClass() {
+		public XClass makeClass(XPackage p) {
 			String name = getName();
 			XMessageClass messageClass = new XMessageClass(compiler, name);
-			XClassCompiler cc = new XClassCompiler(compiler, getSimpleName(), messageClass, null);
+			XClassCompiler cc = new XClassCompiler(compiler, getSimpleName(), messageClass, null, p);
 			compiler.classes2Save.put(cc, provider);
 			return cc;
 		}

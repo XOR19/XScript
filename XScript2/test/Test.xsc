@@ -1,27 +1,26 @@
 package test;
 
-public class Test{
+public class Test:Iterable<Int>{
 	
-	public static int i;
+	public int[] i;
 	
-	public static long l;
-	
-	public static double d;
-	
-	public Test():Test(1){
+	public Test(){
 		
 	}
 	
-	public Test(int i){
-		Test.i = i;
+	public void test(){
+		for(Object e:this){
+			e.toString();
+		}
+		gen(i);
 	}
 	
-	public void test(){
-		i=4;
-		l++;
-		d++;
-		d = i;
-		l = (long)d;
+	public <T> void gen(T t){
+		t = test();
+	}
+	
+	public <G> G test(){
+		return null;
 	}
 	
 	public static class Inner{
@@ -33,7 +32,7 @@ public class Test{
 			public int i;
 			
 			private void m(){
-				Test.i = Inner2.this.i = Inner.this.i;
+				Inner2.this.i = Inner.this.i;
 			}
 			
 		}

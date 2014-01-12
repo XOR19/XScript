@@ -13,10 +13,6 @@ public abstract class XClassPtr {
 	
 	public abstract XClass getXClass(XVirtualMachine virtualMachine);
 	
-	public XClassPtr[] getPossibleClasses(XVirtualMachine virtualMachine){
-		return null;
-	}
-	
 	public XClass getXClassNonNull(XVirtualMachine virtualMachine){
 		XClass xClass = getXClass(virtualMachine);
 		if(xClass==null)
@@ -49,19 +45,14 @@ public abstract class XClassPtr {
 			className = inputStream.readUTF();
 			XClassPtr[] generics = new XClassPtr[inputStream.readUnsignedByte()];
 			for(int j=0; j<generics.length; j++){
-				generics[i] = load(inputStream);
+				generics[j] = load(inputStream);
 			}
 			return new XClassPtrGeneric(className, generics);
 		}else if(i=='M'){
 			className = inputStream.readUTF();
 			String methodName = inputStream.readUTF();
-			String[] paramNames = new String[inputStream.readUnsignedByte()];
-			for(int j=0; j<paramNames.length; j++){
-				paramNames[j] = inputStream.readUTF();
-			}
-			String retName = inputStream.readUTF();
 			String genericName = inputStream.readUTF();
-			return new XClassPtrMethodGeneric(className, methodName, paramNames, retName, genericName);
+			return new XClassPtrMethodGeneric(className, methodName, genericName);
 		}else if(i=='C'){
 			className = inputStream.readUTF();
 			String genericName = inputStream.readUTF();

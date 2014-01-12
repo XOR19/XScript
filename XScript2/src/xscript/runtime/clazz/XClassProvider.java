@@ -39,7 +39,7 @@ public class XClassProvider {
 	}
 	
 	private XPrimitive createPrimitive(int id){
-		XPrimitive p = new XPrimitive(virtualMachine, id);
+		XPrimitive p = new XPrimitive(virtualMachine, id, rootPackage);
 		rootPackage.addChild(p);
 		return p;
 	}
@@ -70,7 +70,7 @@ public class XClassProvider {
 		if(xPackage instanceof XClass){
 			xClass = (XClass)xPackage;
 		}else if(xPackage instanceof XClassMaker){
-			xClass = ((XClassMaker)xPackage).makeClass();
+			xClass = ((XClassMaker)xPackage).makeClass(xPackage.getParent());
 			xPackage.getParent().overridePackage(xPackage.getSimpleName(), xClass);
 			((XClassMaker)xPackage).onReplaced(xClass);
 			xPackage = rootPackage.getChild(name);
@@ -100,8 +100,9 @@ public class XClassProvider {
 		if(inputStream!=null){
 			String fileName = inputStream.getFileName();
 			String s[] = fileName.split("\\.");
-			XClass xClass = new XClass(virtualMachine, s[s.length-1]);
-			addClassToPackage(xClass, s);
+			XPackage p = getClassToPackage(s);
+			XClass xClass = new XClass(virtualMachine, s[s.length-1], p);
+			p.addChild(xClass);
 			try{
 				xClass.load(inputStream);
 			}catch(IOException e){
@@ -131,7 +132,7 @@ public class XClassProvider {
 		return null;
 	}
 	
-	protected void addClassToPackage(XClass xClass, String s[]){
+	protected XPackage getClassToPackage(String s[]){
 		XPackage xPackage = rootPackage;
 		for(int i=0; i<s.length-1; i++){
 			XPackage xPackage2 = xPackage.getChild(s[i]);
@@ -141,7 +142,7 @@ public class XClassProvider {
 			}
 			xPackage = xPackage2;
 		}
-		xPackage.addChild(xClass);
+		return xPackage;
 	}
 	
 	public void addClassMaker(XClassMaker maker, String name){

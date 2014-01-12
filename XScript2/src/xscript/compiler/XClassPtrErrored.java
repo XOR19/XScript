@@ -56,4 +56,8 @@ public class XClassPtrErrored extends XClassPtr {
 		return false;
 	}
 
+	public String erroredClassName(){
+		return name;
+	}
+	
 }

@@ -58,8 +58,11 @@ import xscript.runtime.clazz.XField;
 import xscript.runtime.clazz.XPrimitive;
 import xscript.runtime.genericclass.XClassPtr;
 import xscript.runtime.genericclass.XClassPtrClass;
+import xscript.runtime.genericclass.XClassPtrClassGeneric;
 import xscript.runtime.genericclass.XClassPtrGeneric;
+import xscript.runtime.genericclass.XClassPtrMethodGeneric;
 import xscript.runtime.instruction.XInstruction;
+import xscript.runtime.instruction.XInstructionAddInt;
 import xscript.runtime.instruction.XInstructionCheckCast;
 import xscript.runtime.instruction.XInstructionD2F;
 import xscript.runtime.instruction.XInstructionD2I;
@@ -108,6 +111,7 @@ import xscript.runtime.instruction.XInstructionSetField;
 import xscript.runtime.instruction.XInstructionSetLocalField;
 import xscript.runtime.instruction.XInstructionSetReturn;
 import xscript.runtime.instruction.XInstructionSetStaticField;
+import xscript.runtime.instruction.XInstructionSmaInt;
 import xscript.runtime.instruction.XInstructionThrow;
 import xscript.runtime.instruction.XInstructionVarJump;
 import xscript.runtime.instruction.XInstructionWriteLocal;
@@ -254,7 +258,7 @@ public class XStatementCompiler implements XVisitor {
 						addInstruction(new XInstructionGetLocalField(varAccess.variable.id, rv.field), varAccess.tree);
 					}
 				}
-				setReturn(getVarTypeFor(rv.field.getType()), varAccess.tree);
+				setReturn(getVarTypeForFieldType(rv.field, varAccess.declaringClass), varAccess.tree);
 			}
 			if(returnType==null){
 				setReturn(null, varAccess.tree);
@@ -263,8 +267,43 @@ public class XStatementCompiler implements XVisitor {
 		return codeGen;
 	}
 	
-	private XVarType getVarTypeFor(XClassPtr classPtr){
-		return XVarType.getVarTypeFor(classPtr, methodCompiler.getDeclaringClass().getVirtualMachine());
+	private XVarType getVarTypeForFieldType(XField field, XVarType declaringClass){
+		return getVarTypeFor(field.getType(), field.getDeclaringClass(), declaringClass==null?methodCompiler.getDeclaringClassVarType():declaringClass);
+	}
+	
+	private XVarType getVarTypeFor(XClassPtr classPtr, XClass realDeclaringClass, XVarType declaringClass){
+		XVarType type = declaringClass.getSuperClass(realDeclaringClass.getName());
+		XVarType generics[];
+		if(type instanceof XSingleType){
+			generics = ((XSingleType)type).generics;
+		}else{
+			generics = null;
+		}
+		return XVarType.getVarTypeFor(classPtr, realDeclaringClass.getVirtualMachine(), generics, null);
+	}
+	
+	private XVarType getVarTypeForThis(XType type, boolean doError){
+		XClassPtr classPtr = methodCompiler.getGenericClass(type, doError);
+		return XVarType.getVarTypeFor(classPtr, methodCompiler.getDeclaringClass().getVirtualMachine(), null, null);
+	}
+	
+	private XVarType getVarTypeForName(String name){
+		XClass c = methodCompiler.getDeclaringClass().getVirtualMachine().getClassProvider().getXClass(name);
+		XClassPtr ptr;
+		if(c.getGenericParams()>0){
+			XClassPtr generics[] = new XClassPtr[c.getGenericParams()];
+			for(int i=0; i<generics.length; i++){
+				generics[i] = new XClassPtrClassGeneric(name, c.getGenericInfo(i).getName());
+			}
+			ptr = new XClassPtrGeneric(name, generics);
+		}else{
+			ptr = new XClassPtrClass(name);
+		}
+		return XVarType.getVarTypeFor(ptr, c.getVirtualMachine(), null, null);
+	}
+	
+	private XVarType getVarTypeForThis(XClassPtr classPtr){
+		return XVarType.getVarTypeFor(classPtr, methodCompiler.getDeclaringClass().getVirtualMachine(), null, null);
 	}
 	
 	public XVarAccess getVarAccess(){
@@ -346,7 +385,7 @@ public class XStatementCompiler implements XVisitor {
 	public void visitClassDecl(XClassDecl xClassDef) {
 		XCompiler compiler = (XCompiler) methodCompiler.getDeclaringClass().getVirtualMachine();
 		String fullName = methodCompiler.getName()+"."+xClassDef.name;
-		XClassCompiler classCompiler = new XClassCompiler(compiler, xClassDef.name, new XMessageClass(compiler, fullName), methodCompiler.getImportHelper());
+		XClassCompiler classCompiler = new XClassCompiler(compiler, xClassDef.name, new XMessageClass(compiler, fullName), methodCompiler.getImportHelper(), methodCompiler);
 		methodCompiler.addClass(classCompiler, xClassDef.line);
 		xClassDef.accept(classCompiler);
 		classCompiler.gen();
@@ -381,7 +420,7 @@ public class XStatementCompiler implements XVisitor {
 		varAccess.name = null;
 		varAccess.tree = xType;
 		if(xType.array>0 || xType.typeParam!=null){
-			varAccess.declaringClass = getVarTypeFor(methodCompiler.getGenericClass(xType, true));
+			varAccess.declaringClass = getVarTypeForThis(xType, true);
 		}else{
 			String rname = xType.name.name;
 			int s=-1;
@@ -389,7 +428,7 @@ public class XStatementCompiler implements XVisitor {
 			while(true){
 				XClassPtr c = methodCompiler.getGenericClass(xType, false);
 				if(c!=null){
-					varAccess.declaringClass =getVarTypeFor(c);
+					varAccess.declaringClass = getVarTypeForThis(c);
 					if(s>-1){
 						next = rname.substring(s+1);
 					}
@@ -438,7 +477,7 @@ public class XStatementCompiler implements XVisitor {
 							}
 						}
 						varAccess.variable = null;
-						varAccess.declaringClass = getVarTypeFor(rv.field.getType());
+						varAccess.declaringClass = getVarTypeForFieldType(rv.field, varAccess.declaringClass);
 					}
 					varAccess.name = na[i];
 				}
@@ -457,7 +496,7 @@ public class XStatementCompiler implements XVisitor {
 		XVariable var = new XVariable();
 		var.varDecl = xVarDecl;
 		var.modifier = xVarDecl.modifier==null?0:xVarDecl.modifier.modifier;
-		var.type = getVarTypeFor(methodCompiler.getGenericClass(xVarDecl.type, true));
+		var.type = getVarTypeForThis(xVarDecl.type, true);
 		var.name = xVarDecl.name;
 		if(getVariable(var.name)!=null){
 			compilerError(XMessageLevel.ERROR, "variable.duplicated", xVarDecl.line, var.name);
@@ -477,6 +516,18 @@ public class XStatementCompiler implements XVisitor {
 		}
 	}
 
+	private XMethodSearch searchMethod(XVarType varType, String name){
+		return searchMethod(varType, false, name, false, true);
+	}
+	
+	private XMethodSearch searchMethod(XVarType varType, boolean shouldBeStatic, String name, boolean specialInvoke){
+		return searchMethod(varType, shouldBeStatic, name, specialInvoke, true);
+	}
+	
+	private XMethodSearch searchMethod(XVarType varType, boolean shouldBeStatic, String name, boolean specialInvoke, boolean lookIntoParents){
+		return new XMethodSearch(methodCompiler.getDeclaringClass().getVirtualMachine(), varType, shouldBeStatic, name, specialInvoke, lookIntoParents);
+	}
+	
 	@Override
 	public void visitMethodDecl(XMethodDecl xMethodDecl) {
 		if(parent==null){
@@ -484,17 +535,14 @@ public class XStatementCompiler implements XVisitor {
 			if(!xscript.runtime.XModifier.isStatic(methodCompiler.getModifier())){
 				XVariable variable = new XVariable();
 				variable.modifier = xscript.runtime.XModifier.FINAL;
-				variable.type = getVarTypeFor(methodCompiler.getDeclaringClassGen());
+				variable.type = methodCompiler.getDeclaringClassVarType();
 				variable.name = "this";
 				addInstruction(variable.start = new XInstructionDumyDelete(), xMethodDecl);
 				addVariable(variable);
 			}
 			addInstructions(visitTree(xMethodDecl.paramTypes));
 			if(methodCompiler.isConstructor()){
-				List<XClassPtr> superClasses = new ArrayList<XClassPtr>();
-				for(XClassPtr superClass:methodCompiler.getDeclaringClass().getSuperClasses()){
-					superClasses.add(superClass);
-				}
+				List<XVarType> superClasses = methodCompiler.getDeclaringClassVarType().getDirectSuperClasses();
 				boolean selvInvokeOk = true;
 				boolean selvInvoke = false;
 				if(xMethodDecl.superConstructors!=null){
@@ -503,8 +551,8 @@ public class XStatementCompiler implements XVisitor {
 							XMethodCall mc = (XMethodCall) s;
 							XVarAccess varAccess = visitClassAccess(mc.method);
 							if(varAccess.isStatic && varAccess.declaringClass!=null && varAccess.variable==null && varAccess.name==null){
-								XClassPtr sp = varAccess.declaringClass.getXClassPtr();
-								ListIterator<XClassPtr> i = superClasses.listIterator();
+								XVarType sp = varAccess.declaringClass;
+								ListIterator<XVarType> i = superClasses.listIterator();
 								boolean found = false;
 								while(i.hasNext()){
 									if(sp.equals(i.next())){
@@ -517,11 +565,11 @@ public class XStatementCompiler implements XVisitor {
 									if(selvInvoke){
 										compilerError(XMessageLevel.ERROR, "allready.selvinvoked", mc.line);
 									}
-									XMethodSearch possibleMethods = new XMethodSearch(getXClassFor(sp), false, "<init>", true, false);
+									XMethodSearch possibleMethods = searchMethod(sp, false, "<init>", true, false);
 									if(mc.typeParam!=null){
-										XClassPtr[] generics = new XClassPtr[mc.typeParam.size()];
+										XVarType[] generics = new XVarType[mc.typeParam.size()];
 										for(int j=0; j<generics.length; j++){
-											generics[j] = methodCompiler.getGenericClass(mc.typeParam.get(j), true);
+											generics[j] = getVarTypeForThis(mc.typeParam.get(j), true);
 										}
 										possibleMethods.applyGenerics(generics);
 									}
@@ -543,16 +591,16 @@ public class XStatementCompiler implements XVisitor {
 									makeCall2(possibleMethods, mc, codeGens, true);
 									selvInvokeOk = false;
 								}else{
-									if(sp.equals(methodCompiler.getDeclaringClassGen())){
+									if(sp.equals(methodCompiler.getDeclaringClassVarType())){
 										if(selvInvokeOk){
 											if(selvInvoke){
 												compilerError(XMessageLevel.ERROR, "allready.selvinvoked", mc.line);
 											}else{
-												XMethodSearch possibleMethods = new XMethodSearch(methodCompiler.getDeclaringClass(), false, "<init>", true, false);
+												XMethodSearch possibleMethods = searchMethod(methodCompiler.getDeclaringClassVarType(), false, "<init>", true, false);
 												if(mc.typeParam!=null){
-													XClassPtr[] generics = new XClassPtr[mc.typeParam.size()];
+													XVarType[] generics = new XVarType[mc.typeParam.size()];
 													for(int j=0; j<generics.length; j++){
-														generics[j] = methodCompiler.getGenericClass(mc.typeParam.get(j), true);
+														generics[j] = getVarTypeForThis(mc.typeParam.get(j), true);
 													}
 													possibleMethods.applyGenerics(generics);
 												}
@@ -590,11 +638,11 @@ public class XStatementCompiler implements XVisitor {
 					}
 				}
 				if(!selvInvoke){
-					for(XClassPtr superClass:superClasses){
-						XMethodSearch search = new XMethodSearch(getXClassFor(superClass), false, "<init>", true, false);
+					for(XVarType superClass:superClasses){
+						XMethodSearch search = searchMethod(superClass, false, "<init>", true, false);
 						search.applyTypes(new XVarType[0]);
-						search.applyReturn(getVarTypeFor(new XClassPtrClass("void")));
-						XMethod m = search.getMethod();
+						search.applyReturn(getPrimitiveType(XPrimitive.VOID));
+						XCompilerMethod m = search.getMethod();
 						if(m==null){
 							if(search.isEmpty()){
 								compilerError(XMessageLevel.ERROR, "nomethodfor", new XLineDesk(0, 0, 0, 0), search.getDesk());
@@ -602,7 +650,7 @@ public class XStatementCompiler implements XVisitor {
 								compilerError(XMessageLevel.ERROR, "toomanymethodfor", new XLineDesk(0, 0, 0, 0), search.getDesk());
 							}
 						}else{
-							codeGen.addInstruction(new XInstructionInvokeConstructor(m, new XClassPtr[0]), xMethodDecl.line.startLine);
+							codeGen.addInstruction(new XInstructionInvokeConstructor(m.method, new XClassPtr[0]), xMethodDecl.line.startLine);
 						}
 					}
 				}
@@ -651,7 +699,7 @@ public class XStatementCompiler implements XVisitor {
 
 	private XPrimitiveType getPrimitiveType(int primitiveID){
 		XClass c = methodCompiler.getDeclaringClass().getVirtualMachine().getClassProvider().getXClass(XPrimitive.getName(primitiveID));
-		return new XPrimitiveType(primitiveID, c);
+		return new XPrimitiveType(c);
 	}
 	
 	@Override
@@ -776,7 +824,7 @@ public class XStatementCompiler implements XVisitor {
 				compilerError(XMessageLevel.ERROR, "nonevoidreturn", xReturn.line);
 			}
 		}else{
-			XStatementCompiler c = visitTree(xReturn.statement, getVarTypeFor(methodCompiler.getGenericReturnType()));
+			XStatementCompiler c = visitTree(xReturn.statement, getVarTypeForThis(methodCompiler.getGenericReturnType()));
 			addInstructions(c);
 		}
 		if(anyFinallyBlocks()){
@@ -792,7 +840,7 @@ public class XStatementCompiler implements XVisitor {
 
 	@Override
 	public void visitThrow(XThrow xThrow) {
-		XStatementCompiler c = visitTree(xThrow.statement, getVarTypeFor(new XClassPtrClass("xscript.lang.Throwable")));
+		XStatementCompiler c = visitTree(xThrow.statement, getVarTypeForName("xscript.lang.Throwable"));
 		addInstructions(c);
 		addInstruction(new XInstructionThrow(), xThrow);
 	}
@@ -809,7 +857,7 @@ public class XStatementCompiler implements XVisitor {
 
 	@Override
 	public void visitSynchronized(XSynchronized xSynchroized) {
-		XStatementCompiler sc = visitTree(xSynchroized.ident, getVarTypeFor(new XClassPtrClass("xscript.lang.Object")));
+		XStatementCompiler sc = visitTree(xSynchroized.ident, getVarTypeForName("xscript.lang.Object"));
 		addInstructions(sc);
 		addInstruction(new XInstructionMonitorEnter(), xSynchroized);
 		startFinallyBlock(xSynchroized);
@@ -884,7 +932,7 @@ public class XStatementCompiler implements XVisitor {
 			primitiveID = XPrimitive.DOUBLE;
 		}else if(c==String.class){
 			addInstruction(new XInstructionLoadConstString(xConstant.value.getString()), xConstant);
-			setReturn(getVarTypeFor(new XClassPtrClass("xscript.lang.String")), xConstant);
+			setReturn(getVarTypeForName("xscript.lang.String"), xConstant);
 			return;
 		}else{
 			shouldNeverCalled();
@@ -904,17 +952,17 @@ public class XStatementCompiler implements XVisitor {
 				addInstruction(new XInstructionReadLocal(0), xMethodCall);
 			}
 		}
-		XClass c[];
+		XVarType varType;
 		if(varAccess.declaringClass==null){
-			c = new XClass[]{methodCompiler.getDeclaringClass()};
+			varType = methodCompiler.getDeclaringClassVarType();
 		}else{
-			c = varAccess.declaringClass.getXClasses();
+			varType = varAccess.declaringClass;
 		}
-		XMethodSearch possibleMethods = new XMethodSearch(c, varAccess.isStatic, varAccess.name, varAccess.specialInvoke, true);
+		XMethodSearch possibleMethods = searchMethod(varType, varAccess.isStatic, varAccess.name, varAccess.specialInvoke);
 		if(xMethodCall.typeParam!=null){
-			XClassPtr[] generics = new XClassPtr[xMethodCall.typeParam.size()];
+			XVarType[] generics = new XVarType[xMethodCall.typeParam.size()];
 			for(int i=0; i<generics.length; i++){
-				generics[i] = methodCompiler.getGenericClass(xMethodCall.typeParam.get(i), true);
+				generics[i] = getVarTypeForThis(xMethodCall.typeParam.get(i), true);
 			}
 			possibleMethods.applyGenerics(generics);
 		}
@@ -933,6 +981,7 @@ public class XStatementCompiler implements XVisitor {
 			codeGens = new XCodeGen[0];
 		}
 		possibleMethods.applyTypes(types);
+		possibleMethods.applyReturn(returnExpected);
 		setReturn(makeCall(possibleMethods, xMethodCall, codeGens), xMethodCall);
 	}
 	
@@ -940,8 +989,50 @@ public class XStatementCompiler implements XVisitor {
 		return makeCall2(possibleMethods, tree, codeGens, false);
 	}
 
+	private XClassPtr[] makeMethodGenerics(XCompilerMethod method, XMethodSearch possibleMethods, XTree tree){
+		XClassPtr[] generics = new XClassPtr[method.method.getGenericParams()];
+		if(possibleMethods.getGenerics()==null){
+			if(possibleMethods.getTypes()!=null){
+				for(int i=0; i<method.method.getParamCount(); i++){
+					XClassPtr param = method.method.getParams()[i];
+					XVarType type = possibleMethods.getTypes()[i];
+					tryResolve(generics, method.method, param, type);
+				}
+			}
+			if(possibleMethods.getReturnType()!=null){
+				XClassPtr param = method.method.getReturnTypePtr();
+				tryResolve(generics, method.method, param, possibleMethods.getReturnType());
+			}
+		}else{
+			for(int i=0; i<generics.length; i++){
+				generics[i] = possibleMethods.getGenerics()[i].getXClassPtr();
+			}
+		}
+		boolean error = false;
+		for(int i=0; i<generics.length; i++){
+			if(generics[i]==null || generics[i] instanceof XClassPtrErrored){
+				error = true;
+				compilerError(XMessageLevel.ERROR, "unresolved.generic", tree.line, method.method.getGenericInfo(i).getName());
+			}
+		}
+		if(error)
+			return null;
+		return generics;
+	}
+	
+	private void tryResolve(XClassPtr[] generics, XMethod method, XClassPtr param, XVarType type){
+		if(param instanceof XClassPtrMethodGeneric){
+			generics[method.getGenericID(((XClassPtrMethodGeneric) param).genericName)] = type.getXClassPtr();
+		}else if(param instanceof XClassPtrGeneric){
+			XClassPtrGeneric cpg = (XClassPtrGeneric) param;
+			for(int i=0; i<cpg.genericPtrs.length; i++){
+				tryResolve(generics, method, cpg.genericPtrs[i], type.getGeneric(i));
+			}
+		}
+	}
+	
 	private XVarType makeCall2(XMethodSearch possibleMethods, XTree tree, XCodeGen[] codeGens, boolean constructorCall) {
-		XMethod m = possibleMethods.getMethod();
+		XCompilerMethod m = possibleMethods.getMethod();
 		if(m==null){
 			if(possibleMethods.isEmpty()){
 				compilerError(XMessageLevel.ERROR, "nomethodfor", tree.line, possibleMethods.getDesk());
@@ -952,29 +1043,32 @@ public class XStatementCompiler implements XVisitor {
 		}
 		for(int i=0; i<codeGens.length; i++){
 			addInstructions(codeGens[i]);
-			makeAutoCast(possibleMethods.getTypes()[i], getVarTypeFor(m.getParams()[i]), tree);
+			makeAutoCast(possibleMethods.getTypes()[i], m.params[i], tree);
 		}
-		if(xscript.runtime.XModifier.isStatic(m.getModifier())){
-			addInstruction(new XInstructionInvokeStatic(m, possibleMethods.getGenerics()), tree);
-			if(!possibleMethods.shouldBeStatic()){
-				addInstruction(new XInstructionOPop(), tree);
-				compilerError(XMessageLevel.WARNING, "static.access", tree.line, possibleMethods.getDesk());
-			}
-		}else{
-			if(possibleMethods.shouldBeStatic()){
-				compilerError(XMessageLevel.ERROR, "non.static.access", tree.line, possibleMethods.getDesk());
-			}
-			if(possibleMethods.specialInvoke()){
-				if(constructorCall){
-					addInstruction(new XInstructionInvokeConstructor(m, possibleMethods.getGenerics()), tree);
-				}else{
-					addInstruction(new XInstructionInvokeSpecial(m, possibleMethods.getGenerics()), tree);
+		XClassPtr[] generics = makeMethodGenerics(m, possibleMethods, tree);
+		if(generics!=null){
+			if(xscript.runtime.XModifier.isStatic(m.method.getModifier())){
+				addInstruction(new XInstructionInvokeStatic(m.method, generics), tree);
+				if(!possibleMethods.shouldBeStatic()){
+					addInstruction(new XInstructionOPop(), tree);
+					compilerError(XMessageLevel.WARNING, "static.access", tree.line, possibleMethods.getDesk());
 				}
 			}else{
-				addInstruction(new XInstructionInvokeDynamic(m, possibleMethods.getGenerics()), tree);
+				if(possibleMethods.shouldBeStatic()){
+					compilerError(XMessageLevel.ERROR, "non.static.access", tree.line, possibleMethods.getDesk());
+				}
+				if(possibleMethods.specialInvoke()){
+					if(constructorCall){
+						addInstruction(new XInstructionInvokeConstructor(m.method, generics), tree);
+					}else{
+						addInstruction(new XInstructionInvokeSpecial(m.method, generics), tree);
+					}
+				}else{
+					addInstruction(new XInstructionInvokeDynamic(m.method, generics), tree);
+				}
 			}
 		}
-		return getVarTypeFor(m.getReturnTypePtr());
+		return m.returnType;
 	}
 	
 	private void makeAutoCast(XVarType from, XVarType to, XTree tree){
@@ -1023,9 +1117,9 @@ public class XStatementCompiler implements XVisitor {
 	public void visitNew(XNew xNew) {
 		//TODO
 		
-		XClassPtr classPtr = methodCompiler.getGenericClass(xNew.type, true);
-		XMethodSearch search = new XMethodSearch(getXClassFor(classPtr), false, "<init>", true, false);
-		addInstruction(new XInstructionNew(classPtr), xNew);
+		XVarType newType = getVarTypeForThis(xNew.type, true);
+		XMethodSearch search = searchMethod(newType, false, "<init>", true, false);
+		addInstruction(new XInstructionNew(newType.getXClassPtr()), xNew);
 		addInstruction(new XInstructionODup(), xNew);
 		XVarType[] types;
 		XCodeGen[] codeGens;
@@ -1044,7 +1138,7 @@ public class XStatementCompiler implements XVisitor {
 		search.applyTypes(types);
 		search.applyReturn(getPrimitiveType(XPrimitive.VOID));
 		makeCall(search, xNew, codeGens);
-		setReturn(getVarTypeFor(classPtr), xNew);
+		setReturn(newType, xNew);
 	}
 	
 	private int num(int nid, XLineDesk lineDesk){
@@ -1160,14 +1254,17 @@ public class XStatementCompiler implements XVisitor {
 						}
 						outer--;
 						XField field = cc.getFieldAndParents("outer$");
+						XVarType declaringClass = methodCompiler.getDeclaringClassVarType();
+						declaringClass = getVarTypeForFieldType(field, declaringClass);
 						varAccess.codeGen.addInstruction(new XInstructionGetLocalField(0, field), tree.line.startLine);
 						while(outer>0){
 							cc = cc.getOuterClass();
 							field = cc.getFieldAndParents("outer$");
+							declaringClass = getVarTypeForFieldType(field, declaringClass);
 							varAccess.codeGen.addInstruction(new XInstructionGetField(field), tree.line.startLine);
 							outer--;
 						}
-						varAccess.declaringClass = getVarTypeFor(field.getType());
+						varAccess.declaringClass = declaringClass;
 					}
 				}
 			}
@@ -1202,7 +1299,7 @@ public class XStatementCompiler implements XVisitor {
 				XVarAccess varAccess = visitClassAccess(xOperatorStatement.left);
 				if(varAccess.isStatic && varAccess.declaringClass!=null && varAccess.variable==null && varAccess.name==null){
 					addInstruction(new XInstructionLoadConstClass(varAccess.declaringClass.getXClassPtr()), xOperatorStatement);
-					setReturn(getVarTypeFor(new XClassPtrClass("xscript.lang.Class")), xOperatorStatement);
+					setReturn(getVarTypeForName("xscript.lang.Class"), xOperatorStatement);
 				}else{
 					compilerError(XMessageLevel.ERROR, "not.a.class", xOperatorStatement.line);
 				}
@@ -1217,7 +1314,7 @@ public class XStatementCompiler implements XVisitor {
 						this.varAccess = new XVarAccess();
 						this.varAccess.name = "this";
 						this.varAccess.tree = xOperatorStatement;
-						setReturn(getVarTypeFor(varAccess.declaringClass.getXClassPtr()), xOperatorStatement);
+						setReturn(varAccess.declaringClass, xOperatorStatement);
 					}else{
 						if(!xscript.runtime.XModifier.isStatic(cc.getModifier())){
 							XField field = cc.getFieldAndParents("outer$");
@@ -1238,7 +1335,7 @@ public class XStatementCompiler implements XVisitor {
 							compilerError(XMessageLevel.ERROR, "not.a.outer.class", xOperatorStatement.left.line);
 							setReturn(new XErroredType(), xOperatorStatement);
 						}else{
-							setReturn(getVarTypeFor(new XClassPtrClass(cc.getName())), xOperatorStatement);
+							setReturn(getVarTypeForName(cc.getName()), xOperatorStatement);
 						}
 					}
 				}else{
@@ -1247,7 +1344,14 @@ public class XStatementCompiler implements XVisitor {
 			}else{
 				if(xOperatorStatement.left instanceof XSuper){
 					varAccess = new XVarAccess();
-					varAccess.declaringClass = getXSuperClassFor(methodCompiler.getDeclaringClassGen());
+					List<XVarType> l = methodCompiler.getDeclaringClassVarType().getDirectSuperClasses();
+					if(l.isEmpty()){
+						compilerError(XMessageLevel.ERROR, "unknown.type", xOperatorStatement.line);
+					}else if(l.size()==1){
+						varAccess.declaringClass = l.get(0);
+					}else{
+						varAccess.declaringClass = new XMultibleType(l.toArray(new XVarType[l.size()]));
+					}
 					varAccess.specialInvoke = true;
 					setReturn(XAnyType.type, xOperatorStatement);
 				}else{
@@ -1292,7 +1396,7 @@ public class XStatementCompiler implements XVisitor {
 									}
 								}
 								varAccess.variable = null;
-								varAccess.declaringClass = getVarTypeFor(rv.field.getType());
+								varAccess.declaringClass = getVarTypeForFieldType(rv.field, varAccess.declaringClass);
 							}
 						}
 						setReturn(XAnyType.type, xOperatorStatement);
@@ -1309,7 +1413,7 @@ public class XStatementCompiler implements XVisitor {
 				XStatementCompiler cr = visitTree(xOperatorStatement.right, XAnyType.type);
 				addInstructions(s);
 				XCodeGen[] codeGens = {i.getCodeGen(), cr.getCodeGen()};
-				XMethodSearch methodSearch = new XMethodSearch(s.returnType.getXClasses(), false, "operator[]", false, true);
+				XMethodSearch methodSearch = searchMethod(s.returnType, "operator[]");
 				methodSearch.applyTypes(i.returnType, cr.returnType);
 				setReturn(makeCall(methodSearch, index, codeGens), index);
 			}else{
@@ -1327,7 +1431,8 @@ public class XStatementCompiler implements XVisitor {
 						setReturn(rv.variable.type, xOperatorStatement);
 					}
 				}else{
-					XStatementCompiler cr = visitTree(xOperatorStatement.right, getVarTypeFor(rv.field.getType()));
+					XVarType ret = getVarTypeForFieldType(rv.field, varAccess.declaringClass);
+					XStatementCompiler cr = visitTree(xOperatorStatement.right, ret);
 					if(xscript.runtime.XModifier.isFinal(rv.field.getModifier())){
 						if(!(methodCompiler.getDeclaringClass()==rv.field.getDeclaringClass() && methodCompiler.isConstructor() && 
 								xscript.runtime.XModifier.isStatic(rv.field.getModifier())== xscript.runtime.XModifier.isStatic(methodCompiler.getModifier()))){
@@ -1354,7 +1459,7 @@ public class XStatementCompiler implements XVisitor {
 							addInstruction(new XInstructionSetLocalField(varAccess.variable.id, rv.field), xOperatorStatement);
 						}
 					}
-					setReturn(getVarTypeFor(rv.field.getType()), xOperatorStatement);
+					setReturn(ret, xOperatorStatement);
 				}
 			}
 		}else if(op == XOperator.LETADD || op == XOperator.LETSUB || op == XOperator.LETMUL || op == XOperator.LETDIV || op == XOperator.LETMOD ||
@@ -1368,7 +1473,7 @@ public class XStatementCompiler implements XVisitor {
 				if((primitiveID = rv.variable.type.getPrimitiveID())==XPrimitive.OBJECT){
 					XStatementCompiler sc = visitTree(xOperatorStatement.right, XAnyType.type);
 					XCodeGen[] codeGens = {sc.getCodeGen()};
-					XMethodSearch search = new XMethodSearch(rv.variable.type.getXClasses(), false, "operator"+op, false, true);
+					XMethodSearch search =searchMethod(rv.variable.type, "operator"+op);
 					search.applyTypes(sc.returnType);
 					setReturn(makeCall(search, xOperatorStatement, codeGens), xOperatorStatement);
 				}else{
@@ -1404,7 +1509,7 @@ public class XStatementCompiler implements XVisitor {
 					}
 					XStatementCompiler sc = visitTree(xOperatorStatement.right, XAnyType.type);
 					XCodeGen[] codeGens = {sc.getCodeGen()};
-					XMethodSearch search = new XMethodSearch(rv.variable.type.getXClasses(), false, "operator"+op, false, true);
+					XMethodSearch search = searchMethod(rv.variable.type, "operator"+op.op);
 					search.applyTypes(sc.returnType);
 					setReturn(makeCall(search, xOperatorStatement, codeGens), xOperatorStatement);
 				}else{
@@ -1447,7 +1552,7 @@ public class XStatementCompiler implements XVisitor {
 							addInstruction(new XInstructionSetLocalField(varAccess.variable.id, rv.field), xOperatorStatement);
 						}
 					}
-					setReturn(getVarTypeFor(rv.field.getType()), xOperatorStatement);
+					setReturn(getVarTypeForFieldType(rv.field, varAccess.declaringClass), xOperatorStatement);
 				}
 			}
 		}else{
@@ -1466,7 +1571,7 @@ public class XStatementCompiler implements XVisitor {
 					setReturn(getPrimitiveType(XPrimitive.BOOL), xOperatorStatement);
 				}else{
 					XCodeGen[] codeGens = {cr.getCodeGen()};
-					XMethodSearch methodSearch = new XMethodSearch(cl.returnType.getXClasses(), false, "operator"+op.op, false, true);
+					XMethodSearch methodSearch = searchMethod(cl.returnType, "operator"+op.op);
 					methodSearch.applyTypes(cr.returnType);
 					setReturn(makeCall(methodSearch, xOperatorStatement, codeGens), xOperatorStatement);
 				}
@@ -1514,16 +1619,6 @@ public class XStatementCompiler implements XVisitor {
 		}
 	}
 	
-	private XMultibleType getXSuperClassFor(XClassPtr classPtr){
-		XClass c = getXClassFor(classPtr);
-		XClassPtr[] superClasses = c.getSuperClasses();
-		XSingleType[] singleType = new XSingleType[superClasses.length];
-		for(int i=0; i<superClasses.length; i++){
-			singleType[i] = (XSingleType)getVarTypeFor(superClasses[i]);
-		}
-		return new XMultibleType(null, singleType);
-	}
-	
 	private XClass getXClassFor(XClassPtr classPtr){
 		if(classPtr==null)
 			return null;
@@ -1538,7 +1633,7 @@ public class XStatementCompiler implements XVisitor {
 			addInstructions(varAccess.codeGen);
 			addInstruction(new XInstructionReadLocal(rv.variable.id), tree);
 			if((primitiveID = rv.variable.type.getPrimitiveID())==XPrimitive.OBJECT){
-				XMethodSearch search = new XMethodSearch(rv.variable.type.getXClasses(), false, "operator"+op.op, false, true);
+				XMethodSearch search = searchMethod(rv.variable.type, "operator"+op.op);
 				XCodeGen[] codeGens;
 				if(suffix){
 					codeGens = new XCodeGen[]{new XCodeGen()};
@@ -1595,7 +1690,7 @@ public class XStatementCompiler implements XVisitor {
 						addInstruction(new XInstructionGetLocalField(varAccess.variable.id, rv.field), tree);
 					}
 				}
-				XMethodSearch search = new XMethodSearch(rv.variable.type.getXClasses(), false, "operator"+op.op, false, true);
+				XMethodSearch search = searchMethod(rv.variable.type, "operator"+op.op);
 				XCodeGen[] codeGens;
 				if(suffix){
 					codeGens = new XCodeGen[]{new XCodeGen()};
@@ -1661,7 +1756,7 @@ public class XStatementCompiler implements XVisitor {
 				}
 				if(suffix)
 					addInstruction(new XInstructionPop(), tree);
-				returnType = getVarTypeFor(rv.field.getType());
+				returnType = getVarTypeForFieldType(rv.field, varAccess.declaringClass);
 			}
 		}
 		return returnType;
@@ -1684,7 +1779,7 @@ public class XStatementCompiler implements XVisitor {
 					}
 					int t = returnType.getPrimitiveID();
 					if(t == XPrimitive.OBJECT){
-						XMethodSearch methodSearch = new XMethodSearch(returnType.getXClasses(), false, "operator"+op.op, false, true);
+						XMethodSearch methodSearch = searchMethod(returnType, "operator"+op.op);
 						methodSearch.applyTypes();
 						returnType = makeCall(methodSearch, xOperatorPrefixSuffix, new XCodeGen[0]);
 					}else{
@@ -1714,7 +1809,7 @@ public class XStatementCompiler implements XVisitor {
 					}
 					int t = returnType.getPrimitiveID();
 					if(t == XPrimitive.OBJECT){
-						XMethodSearch methodSearch = new XMethodSearch(returnType.getXClasses(), false, "operator"+op.op, false, true);
+						XMethodSearch methodSearch = searchMethod(returnType, "operator"+op.op);
 						if(op==XOperator.INCS || op==XOperator.DECS){
 							XCodeGen[] codeGens = {new XCodeGen()};
 							codeGens[0].addInstruction(new XInstructionLoadConstInt(0), xOperatorPrefixSuffix.line.startLine);
@@ -1747,7 +1842,7 @@ public class XStatementCompiler implements XVisitor {
 		XStatementCompiler i = visitTree(xIndex.index, XAnyType.type);
 		addInstructions(s);
 		XCodeGen[] codeGens = {i.getCodeGen()};
-		XMethodSearch methodSearch = new XMethodSearch(s.returnType.getXClasses(), false, "operator[]", false, true);
+		XMethodSearch methodSearch = searchMethod(s.returnType, "operator[]");
 		methodSearch.applyTypes(i.returnType);
 		setReturn(makeCall(methodSearch, xIndex, codeGens), xIndex);
 	}
@@ -1773,10 +1868,9 @@ public class XStatementCompiler implements XVisitor {
 	public void visitCast(XCast xCast) {
 		XStatementCompiler a = visitTree(xCast.statement, XAnyType.type);
 		addInstructions(a);
-		XClassPtr castTo = methodCompiler.getGenericClass(xCast.type, true);
-		XVarType vt = getVarTypeFor(castTo);
+		XVarType castTo = getVarTypeForThis(xCast.type, true);
 		int prim1 = a.returnType.getPrimitiveID();
-		int prim2 = vt.getPrimitiveID();
+		int prim2 = castTo.getPrimitiveID();
 		if(prim1!=prim2){
 			if(prim1>=2 && prim1<=8 && prim2>=2 && prim2<=8){
 				int s1 = prim1-XPrimitive.INT;
@@ -1828,16 +1922,16 @@ public class XStatementCompiler implements XVisitor {
 					addInstruction(new XInstructionI2S(), xCast);
 				}
 			}else{
-				compilerError(XMessageLevel.ERROR, "no.cast.able", xCast.line, a.returnType, vt);
+				compilerError(XMessageLevel.ERROR, "no.cast.able", xCast.line, a.returnType, castTo);
 			}
 		}else if(prim1 == XPrimitive.OBJECT){
-			if(a.returnType.canCastTo(vt) || vt.canCastTo(a.returnType)){
-				addInstruction(new XInstructionCheckCast(castTo), xCast);
+			if(a.returnType.canCastTo(castTo) || castTo.canCastTo(a.returnType)){
+				addInstruction(new XInstructionCheckCast(castTo.getXClassPtr()), xCast);
 			}else{
-				compilerError(XMessageLevel.ERROR, "no.cast.able", xCast.line, a.returnType, vt);
+				compilerError(XMessageLevel.ERROR, "no.cast.able", xCast.line, a.returnType, castTo);
 			}
 		}
-		setReturn(vt, xCast);
+		setReturn(castTo, xCast);
 	}
 
 	@Override
@@ -1860,7 +1954,7 @@ public class XStatementCompiler implements XVisitor {
 					XVariable var = new XVariable();
 					var.varDecl = varDecl;
 					var.modifier = varDecl.modifier==null?0:varDecl.modifier.modifier;
-					var.type = getVarTypeFor(methodCompiler.getGenericClass(varDecl.type, true));
+					var.type = getVarTypeForThis(varDecl.type, true);
 					var.name = varDecl.name;
 					if(getVariable(var.name)!=null){
 						compilerError(XMessageLevel.ERROR, "variable.duplicated", varDecl.line, var.name);
@@ -1920,24 +2014,24 @@ public class XStatementCompiler implements XVisitor {
 				XVariable var = new XVariable();
 				var.modifier = c.modifier.modifier;
 				var.name = c.varName;
-				XClassPtr[] ptrs;
+				XVarType[] ptrs;
 				if(c.types.size()==1){
-					ptrs = new XClassPtr[1];
-					var.type = getVarTypeFor(ptrs[0] = methodCompiler.getGenericClass(c.types.get(0), true));
+					ptrs = new XVarType[1];
+					var.type = ptrs[0] = getVarTypeForThis(c.types.get(0), true);
 				}else{
-					ptrs = new XClassPtr[c.types.size()];
-					XSingleType types[] = new XSingleType[c.types.size()];
+					ptrs = new XVarType[c.types.size()];
+					XVarType types[] = new XVarType[c.types.size()];
 					for(int i=0; i<types.length; i++){
-						types[i] = (XSingleType) getVarTypeFor(ptrs[i] = methodCompiler.getGenericClass(c.types.get(i), true));
+						types[i] = ptrs[i] = getVarTypeForThis(c.types.get(i), true);
 					}
-					var.type = new XMultibleType(null, types);
+					var.type = new XMultibleType(types);
 				}
 				addVariable(var);
 				addInstruction(var.start = new XInstructionDumyDelete(), c);
 				sc = visitTree(c.block, null);
 				XInstructionDumyDelete target = new XInstructionDumyDelete();
-				for(XClassPtr ptr:ptrs){
-					tryHandle.jumpTargets.put(ptr, target);
+				for(XVarType ptr:ptrs){
+					tryHandle.jumpTargets.put(ptr.getXClassPtr(), target);
 				}
 				addInstruction(target, c);
 				addInstruction(new XInstructionWriteLocal(var.id), c);
@@ -2015,9 +2109,9 @@ public class XStatementCompiler implements XVisitor {
 				}
 			}
 		}
-		XClassPtr type = methodCompiler.getGenericClass(xNewArray.type, true);
+		XVarType type = getVarTypeForThis(xNewArray.type, true);
 		if(init==0){
-			XStatementCompiler sc = visitTree(xNewArray.arrayInitialize, getVarTypeFor(type));
+			XStatementCompiler sc = visitTree(xNewArray.arrayInitialize, type);
 			addInstructions(sc);
 			setReturn(sc.returnType, xNewArray);
 		}else{
@@ -2026,16 +2120,16 @@ public class XStatementCompiler implements XVisitor {
 				XStatementCompiler sc = visitTree(s, getPrimitiveType(XPrimitive.INT));
 				addInstructions(sc);
 			}
-			addInstruction(new XInstructionNewArray(type, init), xNewArray);
-			setReturn(getVarTypeFor(type), xNewArray);
+			addInstruction(new XInstructionNewArray(type.getXClassPtr(), init), xNewArray);
+			setReturn(type, xNewArray);
 		}
 	}
 	
 	@Override
 	public void visitArrayInitialize(XArrayInitialize xArrayInitialize) {
 		XClassPtr cptr = returnExpected.getXClassPtr();
-		XClass[] c = returnExpected.getXClasses();
-		if(c!=null && c.length==1 && c[0].isArray()){
+		XClass c = returnExpected.getXClass();
+		if(c!=null && c.isArray()){
 			if(xArrayInitialize.statements==null){
 				addInstruction(new XInstructionLoadConstInt(0), xArrayInitialize);
 				addInstruction(new XInstructionNewArray(cptr, 1), xArrayInitialize);
@@ -2044,20 +2138,21 @@ public class XStatementCompiler implements XVisitor {
 				int size = xArrayInitialize.statements.size();
 				addInstruction(new XInstructionLoadConstInt(size), xArrayInitialize);
 				addInstruction(new XInstructionNewArray(cptr, 1), xArrayInitialize);
-				XClassPtr inner;
-				if(cptr instanceof XClassPtrGeneric){
-					inner = ((XClassPtrGeneric)cptr).getGeneric(0);
+				int prim = c.getArrayPrimitive();
+				XVarType inner;
+				if(prim==XPrimitive.OBJECT){
+					inner = returnExpected.getGeneric(0);
 				}else{
-					inner = new XClassPtrClass(XPrimitive.getName(c[0].getArrayPrimitive()));
+					inner = getPrimitiveType(prim);
 				}
 				for(int i=0; i<size; i++){
 					XStatement s = xArrayInitialize.statements.get(i);
 					if(s!=null){
-						XStatementCompiler sc = visitTree(s, getVarTypeFor(inner));
+						XStatementCompiler sc = visitTree(s, inner);
 						addInstruction(new XInstructionODup(), xArrayInitialize);
 						XCodeGen[] codeGens = {new XCodeGen(), sc.getCodeGen()};
 						codeGens[0].addInstruction(new XInstructionLoadConstInt(i), s.line.startLine);
-						XMethodSearch search = new XMethodSearch(c, false, "operator[]", false, true);
+						XMethodSearch search = searchMethod(returnExpected, "operator[]");
 						search.applyTypes(getPrimitiveType(XPrimitive.INT), sc.returnType);
 						makeCall(search, xArrayInitialize, codeGens);
 						addInstruction(new XInstructionPop(), xArrayInitialize);
@@ -2072,10 +2167,110 @@ public class XStatementCompiler implements XVisitor {
 
 	@Override
 	public void visitForeach(XForeach xForeach) {
-		// TODO Auto-generated method stub
-		
+		XStatementCompiler sc = visitTree(xForeach.in, XAnyType.type);
+		addInstructions(sc);
+		vars = new HashMap<String, XVariable>();
+		if(xForeach.var instanceof XVarDecls){
+			XVarDecls varDecls = (XVarDecls)xForeach.var;
+			if(varDecls.varDecls.size()==1){
+				XVarDecl varDecl = varDecls.varDecls.get(0);
+				XVariable variable = new XVariable();
+				variable.name = varDecl.name;
+				variable.type = getVarTypeForThis(varDecl.type, true);
+				int primitive = variable.type.getPrimitiveID();
+				addInstruction(variable.start = new XInstructionDumyDelete(), varDecl);
+				addVariable(variable);
+				breaks = new ArrayList<XInstructionDumyJump>();
+				continues = new ArrayList<XInstructionDumyJump>();
+				XInstruction continueTarget;
+				XInstructionDumyJump endJump;
+				XInstruction breakTarget;
+				XVarType cp = sc.returnType.getSuperClass("xscript.lang.Iterable");
+				System.out.println(cp);
+				if(cp != null){
+					XMethodSearch search = searchMethod(sc.returnType, "iterator");
+					search.applyTypes(new XVarType[0]);
+					XVarType ret = makeCall(search, xForeach, new XCodeGen[0]);
+					addInstruction(continueTarget = new XInstructionODup(), xForeach);
+					search = searchMethod(ret, "hasNext");
+					search.applyTypes(new XVarType[0]);
+					search.applyReturn(getPrimitiveType(XPrimitive.BOOL));
+					makeCall(search, xForeach, new XCodeGen[0]);
+					addInstruction(endJump = new XInstructionDumyNIf(), xForeach);
+					
+					addInstruction(new XInstructionODup(), xForeach);
+					search = searchMethod(ret, "next");
+					search.applyTypes(new XVarType[0]);
+					search.applyReturn(variable.type);
+					makeCall(search, xForeach, new XCodeGen[0]);
+					addInstruction(new XInstructionWriteLocal(variable.id), xForeach);
+					if(primitive==XPrimitive.OBJECT){
+						addInstruction(new XInstructionOPop(), xForeach);
+					}else{
+						addInstruction(new XInstructionPop(), xForeach);
+					}
+					sc = visitTree(xForeach.block, null);
+					addInstructions(sc);
+					
+					XInstructionDumyJump jump = new XInstructionDumyJump();
+					jump.target = continueTarget;
+					addInstruction(jump, xForeach);
+					
+					addInstruction(breakTarget = new XInstructionOPop(), xForeach);
+					
+				}else{
+					XClass c = sc.returnType.getXClass();
+					if(c!=null && c.isArray()){
+						
+						addInstruction(new XInstructionLoadConstInt(0), xForeach);
+						XInstruction startJump;
+						addInstruction(startJump = new XInstructionDup(), xForeach);
+						addInstruction(new XInstructionODup(), xForeach);
+						addInstruction(new XInstructionGetField(c.getLengthField()), xForeach);
+						addInstruction(new XInstructionSmaInt(), xForeach);
+						addInstruction(endJump = new XInstructionDumyNIf(), xForeach);
+						addInstruction(new XInstructionODup(), xForeach);
+						addInstruction(new XInstructionDup(), xForeach);
+						XMethodSearch search = searchMethod(sc.returnType, "operator[]");
+						search.applyTypes(getPrimitiveType(XPrimitive.INT));
+						search.applyReturn(variable.type);
+						makeCall(search, xForeach, new XCodeGen[]{new XCodeGen()});
+						addInstruction(new XInstructionWriteLocal(variable.id), xForeach);
+						if(primitive==XPrimitive.OBJECT){
+							addInstruction(new XInstructionOPop(), xForeach);
+						}else{
+							addInstruction(new XInstructionPop(), xForeach);
+						}
+						sc = visitTree(xForeach.block, null);
+						addInstructions(sc);
+						addInstruction(continueTarget = new XInstructionLoadConstInt(1), xForeach);
+						addInstruction(new XInstructionAddInt(), xForeach);
+						XInstructionDumyJump jump = new XInstructionDumyJump();
+						jump.target = startJump;
+						addInstruction(jump, xForeach);
+						addInstruction(breakTarget = new XInstructionOPop(), xForeach);
+						addInstruction(new XInstructionPop(), xForeach);
+					}else{
+						compilerError(XMessageLevel.ERROR, "wrong.foreach.type", xForeach.line);
+						return;
+					}
+				}
+				endJump.target = breakTarget;
+				for(XInstructionDumyJump ccontinue:continues){
+					ccontinue.target = continueTarget;
+				}
+				for(XInstructionDumyJump bbreak:breaks){
+					bbreak.target = breakTarget;
+				}
+			}else{
+				compilerError(XMessageLevel.ERROR, "worng.vardecl", xForeach.line);
+			}
+		}else{
+			compilerError(XMessageLevel.ERROR, "worng.vardecl", xForeach.line);
+		}
+		finalizeVars(xForeach);
 	}
-
+	
 	@Override
 	public void visitLable(XLable xLable) {
 		lable = xLable.name;
@@ -2143,7 +2338,7 @@ public class XStatementCompiler implements XVisitor {
 			varAccess = new XVarAccess();
 			varAccess.name = "this";
 			varAccess.tree = xThis;
-			setReturn(getVarTypeFor(methodCompiler.getDeclaringClassGen()), xThis);
+			setReturn(methodCompiler.getDeclaringClassVarType(), xThis);
 		}
 	}
 

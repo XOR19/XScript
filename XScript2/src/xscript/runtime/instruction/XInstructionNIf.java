@@ -26,7 +26,7 @@ public class XInstructionNIf extends XInstructionJump {
 
 	@Override
 	public String getSource() {
-		return "if "+super.getSource();
+		return "nif "+super.getSource();
 	}
 
 }

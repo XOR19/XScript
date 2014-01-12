@@ -1,17 +1,24 @@
 package xscript.compiler;
 
+import java.util.List;
+
 import xscript.runtime.clazz.XClass;
 import xscript.runtime.genericclass.XClassPtr;
 
 public class XErroredType extends XVarType {
 
-	@Override
-	public XClass[] getXClasses() {
-		return null;
+	private String className;
+	
+	public XErroredType(String className){
+		this.className = className;
+	}
+	
+	public XErroredType() {
+		className = "!error!";
 	}
 
 	@Override
-	public XClassPtr getXClassPtr() {
+	public XClass[] getXClasses() {
 		return null;
 	}
 
@@ -26,8 +33,14 @@ public class XErroredType extends XVarType {
 	}
 
 	@Override
-	public boolean canCastTo(XVarType varTypeFor) {
-		return false;
+	protected void getSuperClasses(List<XKnownType> superClasses) {}
+
+	@Override
+	protected void getSuperClassesAndThis(List<XKnownType> superClasses) {}
+
+	@Override
+	public XClassPtr getXClassPtr() {
+		return new XClassPtrErrored(className);
 	}
 
 }

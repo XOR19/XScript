@@ -15,6 +15,7 @@ import xscript.runtime.genericclass.XClassPtr;
 import xscript.runtime.genericclass.XClassPtrClass;
 import xscript.runtime.genericclass.XClassPtrClassGeneric;
 import xscript.runtime.genericclass.XClassPtrGeneric;
+import xscript.runtime.genericclass.XClassPtrMethodGeneric;
 
 
 public class XImportHelper {
@@ -35,6 +36,7 @@ public class XImportHelper {
 		this.compiler = compiler;
 		this.xClassCompiler = xClassCompiler;
 		indirectImports.add(xClassCompiler.getParent().getName());
+		indirectImports.add("xscript.lang");
 	}
 
 	public void addImport(XClassCompiler xClassCompiler, XImport xImport) {
@@ -71,10 +73,28 @@ public class XImportHelper {
 		return null;
 	}
 	
-	private XClassPtr getGenericClass1(XClassCompiler xClassCompiler, XType type, XGenericInfo[] extra, boolean doError) {
+	private boolean endsWith(String s, String with){
+		if(s.endsWith(with)){
+			return s.lastIndexOf('.') == s.length()-with.length();
+		}
+		return false;
+	}
+	
+	private XClassPtr getGenericClass1(XClassCompiler xClassCompiler, XType type, String methodName, XGenericInfo[] extra, boolean doError) {
 		for(int i=1; i<9; i++){
 			if(XPrimitive.getName(i).equals(type.name.name)){
 				return new XClassPtrClass(type.name.name);
+			}
+		}
+		if(extra!=null){
+			for(XGenericInfo info:extra){
+				if(info.getName().equals(type.name.name)){
+					if(methodName==null){
+						return new XClassPtrMethodGenericChangeable(xClassCompiler.getName(), methodName, type.name.name);
+					}else{
+						return new XClassPtrMethodGeneric(xClassCompiler.getName(), methodName, type.name.name);
+					}
+				}
 			}
 		}
 		try{
@@ -82,11 +102,11 @@ public class XImportHelper {
 			return new XClassPtrClassGeneric(xClassCompiler.getName(), type.name.name);
 		}catch(Exception e){}
 		String name = null;
-		if(xClassCompiler.getName().endsWith(type.name.name)){
+		if(endsWith(xClassCompiler.getName(), type.name.name)){
 			name = xClassCompiler.getName();
 		}
 		if(name==null){
-			if(this.xClassCompiler.getName().endsWith(type.name.name)){
+			if(endsWith(this.xClassCompiler.getName(),type.name.name)){
 				name = this.xClassCompiler.getName();
 			}
 		}
@@ -95,7 +115,7 @@ public class XImportHelper {
 		}
 		if(name==null){
 			for(String s:directImports){
-				if(s.endsWith(type.name.name)){
+				if(endsWith(s, type.name.name)){
 					try{
 						xClassCompiler.getVirtualMachine().getClassProvider().getXClass(s);
 						name = s;
@@ -130,14 +150,14 @@ public class XImportHelper {
 		}else{
 			XClassPtr[] genericPtrs = new XClassPtr[type.typeParam.size()];
 			for(int i=0; i<genericPtrs.length; i++){
-				genericPtrs[i] = getGenericClass(xClassCompiler, type.typeParam.get(i), extra, true);
+				genericPtrs[i] = getGenericClass(xClassCompiler, type.typeParam.get(i), methodName, extra, true);
 			}
 			return new XClassPtrGeneric(name, genericPtrs);
 		}
 	}
 	
-	public XClassPtr getGenericClass(XClassCompiler xClassCompiler, XType type, XGenericInfo[] extra, boolean doError) {
-		XClassPtr classPtr = getGenericClass1(xClassCompiler, type, extra, doError);
+	public XClassPtr getGenericClass(XClassCompiler xClassCompiler, XType type, String methodName, XGenericInfo[] extra, boolean doError) {
+		XClassPtr classPtr = getGenericClass1(xClassCompiler, type, methodName, extra, doError);
 		if(classPtr==null)
 			return null;
 		if(type.array>0){

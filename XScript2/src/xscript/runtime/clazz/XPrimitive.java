@@ -29,8 +29,8 @@ public class XPrimitive extends XClass {
 	
 	private int primitiveID;
 	
-	protected XPrimitive(XVirtualMachine virtualMachine, int primitiveID) {
-		super(virtualMachine, NAME[primitiveID]);
+	protected XPrimitive(XVirtualMachine virtualMachine, int primitiveID, XPackage p) {
+		super(virtualMachine, NAME[primitiveID], p);
 		this.primitiveID = primitiveID;
 		state = XClass.STATE_RUNNABLE;
 	}
@@ -62,11 +62,6 @@ public class XPrimitive extends XClass {
 
 	@Override
 	public XField getFieldAndParents(String name) {
-		return null;
-	}
-
-	@Override
-	public XMethod getMethod(String methodName, String[] paramNames, String retName) {
 		return null;
 	}
 

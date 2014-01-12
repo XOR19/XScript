@@ -9,7 +9,7 @@ import xscript.runtime.threads.XGenericMethodProvider;
 
 public class XClassPtrClass extends XClassPtr{
 	
-	private String className;
+	public final String className;
 	private XGenericClass generic;
 	
 	public XClassPtrClass(String className){

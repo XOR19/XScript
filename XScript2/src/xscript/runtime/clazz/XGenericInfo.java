@@ -48,5 +48,21 @@ public class XGenericInfo {
 	public XClassPtr[] getTypeParams() {
 		return typeParams;
 	}
+
+	public String dump() {
+		String out = genericName;
+		if(typeParams.length>0){
+			if(isSuper){
+				out += " super ";
+			}else{
+				out += ":";
+			}
+			out += typeParams[0];
+			for(int i=1; i<typeParams.length; i++){
+				out += " & "+typeParams[0];
+			}
+		}
+		return out;
+	}
 	
 }

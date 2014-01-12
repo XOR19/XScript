@@ -5,15 +5,14 @@ import java.io.IOException;
 import xscript.runtime.XRuntimeException;
 import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XClass;
-import xscript.runtime.clazz.XGenericInfo;
 import xscript.runtime.clazz.XOutputStream;
 import xscript.runtime.threads.XGenericMethodProvider;
 
 public class XClassPtrClassGeneric extends XClassPtr{
 	
-	private String className;
+	public final String className;
 	private XClass xClass;
-	private String genericName;
+	public final String genericName;
 	private int genericID;
 	
 	public XClassPtrClassGeneric(String className, String genericName){
@@ -24,21 +23,6 @@ public class XClassPtrClassGeneric extends XClassPtr{
 	@Override
 	public XClass getXClass(XVirtualMachine virtualMachine) {
 		return null;
-	}
-	
-	@Override
-	public XClassPtr[] getPossibleClasses(XVirtualMachine virtualMachine){
-		if(xClass==null){
-			xClass = virtualMachine.getClassProvider().getXClass(className);
-			genericID = xClass.getGenericID(genericName);
-			if(genericID==-1)
-				throw new XRuntimeException("Can't find generic class %s", genericName);
-		}
-		XGenericInfo info = xClass.getGenericInfo(genericID);
-		if(info.isSuper()){
-			return new XClassPtr[]{new XClassPtrClass("xstript.lang.Object")};
-		}
-		return info.getTypeParams();
 	}
 	
 	@Override

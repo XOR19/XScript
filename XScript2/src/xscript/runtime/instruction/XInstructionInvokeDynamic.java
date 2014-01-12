@@ -85,7 +85,7 @@ public class XInstructionInvokeDynamic extends XInstruction {
 	private void resolve(XVirtualMachine vm, XMethodExecutor methodExecutor){
 		if(method==null){
 			XClass xClass = vm.getClassProvider().getXClass(className);
-			method = xClass.getMethod(methodName, methodParams, methodReturn);
+			method = xClass.getMethod(methodName+makeDesk());
 			XChecks.checkAccess(methodExecutor.getMethod().getDeclaringClass(), method);
 			if(generics==null){
 				if(method.getGenericParams()!=0)
@@ -116,7 +116,19 @@ public class XInstructionInvokeDynamic extends XInstruction {
 
 	@Override
 	public String getSource() {
-		String s = "(";
+		return "invd "+className+"."+methodName+makeDesk();
+	}
+
+	private String makeDesk(){
+		String s = "";
+		if(generics.length>0){
+			s+="<"+generics[0];
+			for(int i=1; i<generics.length; i++){
+				s += ", "+generics[i];
+			}
+			s+=">";
+		}
+		s += "(";
 		if(methodParams.length>0){
 			s += methodParams[0];
 			for(int i=1; i<methodParams.length; i++){
@@ -124,7 +136,7 @@ public class XInstructionInvokeDynamic extends XInstruction {
 			}
 		}
 		s += ")"+methodReturn;
-		return "invd "+className+"."+methodName+s;
+		return s;
 	}
-
+	
 }
