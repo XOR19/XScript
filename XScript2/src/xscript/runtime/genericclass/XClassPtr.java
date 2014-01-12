@@ -77,7 +77,7 @@ public abstract class XClassPtr {
 			String genericName = inputStream.readUTF();
 			return new XClassPtrClassGeneric(className, genericName);
 		}else if(i=='z'){
-			return new XClassPtrClass("boolean");
+			return new XClassPtrClass("bool");
 		}else if(i=='b'){
 			return new XClassPtrClass("byte");
 		}else if(i=='s'){

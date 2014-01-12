@@ -40,7 +40,7 @@ public class XClassPtrClass extends XClassPtr{
 
 	@Override
 	public void save(XOutputStream outputStream, List<XClassPtr> done) throws IOException {
-		if(className.equals("boolean")){
+		if(className.equals("bool")){
 			outputStream.writeByte('z');
 		}else if(className.equals("byte")){
 			outputStream.writeByte('b');
