@@ -89,7 +89,7 @@ public class XMethodCompiler extends XMethod {
 	}
 	
 	public XClassPtr getGenericClass(XType type, boolean doError){
-		return importHelper.getGenericClass((XClassCompiler)getDeclaringClass(), type, getSimpleName(), genericInfos, doError);
+		return importHelper.getGenericClass((XClassCompiler)getDeclaringClass(), type, this, genericInfos, doError);
 	}
 
 	public XImportHelper getImportHelper() {

@@ -1,6 +1,7 @@
 package xscript.compiler;
 
 import java.io.IOException;
+import java.util.List;
 
 import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XClass;
@@ -42,7 +43,7 @@ public class XClassPtrErrored extends XClassPtr {
 	}
 
 	@Override
-	public void save(XOutputStream outputStream) throws IOException {
+	public void save(XOutputStream outputStream, List<XClassPtr> done) throws IOException {
 		throw new AssertionError();
 	}
 

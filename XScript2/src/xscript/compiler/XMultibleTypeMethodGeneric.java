@@ -36,7 +36,7 @@ public class XMultibleTypeMethodGeneric extends XMultibleType {
 
 	@Override
 	public XClassPtr getXClassPtr() {
-		return new XClassPtrMethodGeneric(m.getDeclaringClass().getName(), m.getName(), m.getGenericInfo(id).getName());
+		return new XClassPtrMethodGeneric(m.getDeclaringClass().getName(), m.getRealName(), m.getParams(), m.getReturnTypePtr(), m.getGenericInfo(id).getName());
 	}
 	
 }

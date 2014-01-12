@@ -55,7 +55,7 @@ public abstract class XVarType {
 		}else if(classPtr instanceof XClassPtrMethodGeneric){
 			XClassPtrMethodGeneric cpmg = (XClassPtrMethodGeneric)classPtr;
 			XClass c = vm.getClassProvider().getXClass(cpmg.className);
-			XMethod m = c.getMethod(cpmg.getMethodName());
+			XMethod m = c.getMethod(cpmg.getMethodDesk());
 			int id = m.getGenericID(cpmg.genericName);
 			if(methodGenerics==null){
 				return new XMultibleTypeMethodGeneric(m, id);

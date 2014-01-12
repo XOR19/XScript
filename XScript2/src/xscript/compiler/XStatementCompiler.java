@@ -2355,6 +2355,9 @@ public class XStatementCompiler implements XVisitor {
 	}
 
 	private void setReturn(XVarType returnType, XTree tree){
+		if(returnType!=null && returnType.getPrimitiveID()==XPrimitive.VOID){
+			returnType = null;
+		}
 		if(returnExpected==null){
 			if(returnType!=null){
 				if(returnType.getPrimitiveID()==XPrimitive.OBJECT){

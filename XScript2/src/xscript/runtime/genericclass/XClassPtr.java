@@ -1,6 +1,8 @@
 package xscript.runtime.genericclass;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import xscript.runtime.XRuntimeException;
 import xscript.runtime.XVirtualMachine;
@@ -24,7 +26,11 @@ public abstract class XClassPtr {
 	
 	public abstract boolean isStatic();
 
-	public abstract void save(XOutputStream outputStream) throws IOException;
+	public void save(XOutputStream outputStream) throws IOException{
+		save(outputStream, new ArrayList<XClassPtr>());
+	}
+	
+	public abstract void save(XOutputStream outputStream, List<XClassPtr> done) throws IOException;
 	
 	@Override
 	public abstract String toString();
@@ -33,26 +39,39 @@ public abstract class XClassPtr {
 	public abstract boolean equals(Object other);
 	
 	public static XClassPtr load(XInputStream inputStream) throws IOException {
-		return load(inputStream.readUnsignedByte(), inputStream);
+		return load(inputStream.readUnsignedByte(), inputStream, new ArrayList<XClassPtr>());
 	}
 	
-	public static XClassPtr load(int i, XInputStream inputStream) throws IOException {
+	public static XClassPtr load(XInputStream inputStream, List<XClassPtr> done) throws IOException {
+		return load(inputStream.readUnsignedByte(), inputStream, done);
+	}
+	
+	public static XClassPtr load(int i, XInputStream inputStream, List<XClassPtr> done) throws IOException {
 		String className;
 		if(i=='N'){
 			className = inputStream.readUTF();
 			return new XClassPtrClass(className);
 		}else if(i=='G'){
-			className = inputStream.readUTF();
-			XClassPtr[] generics = new XClassPtr[inputStream.readUnsignedByte()];
-			for(int j=0; j<generics.length; j++){
-				generics[j] = load(inputStream);
+			XClassPtrGeneric cpg = new XClassPtrGeneric();
+			done.add(cpg);
+			cpg.className = inputStream.readUTF();
+			cpg.genericPtrs = new XClassPtr[inputStream.readUnsignedByte()];
+			for(int j=0; j<cpg.genericPtrs.length; j++){
+				cpg.genericPtrs[j] = load(inputStream, done);
 			}
-			return new XClassPtrGeneric(className, generics);
+			return cpg;
 		}else if(i=='M'){
-			className = inputStream.readUTF();
-			String methodName = inputStream.readUTF();
-			String genericName = inputStream.readUTF();
-			return new XClassPtrMethodGeneric(className, methodName, genericName);
+			XClassPtrMethodGeneric cpmg = new XClassPtrMethodGeneric();
+			done.add(cpmg);
+			cpmg.className = inputStream.readUTF();
+			cpmg.methodName = inputStream.readUTF();
+			cpmg.params = new XClassPtr[inputStream.readUnsignedByte()];
+			for(int j=0; j<cpmg.params.length; j++){
+				cpmg.params[j] = load(inputStream, done);
+			}
+			cpmg.returnType = load(inputStream, done);
+			cpmg.genericName = inputStream.readUTF();
+			return cpmg;
 		}else if(i=='C'){
 			className = inputStream.readUTF();
 			String genericName = inputStream.readUTF();
@@ -94,7 +113,9 @@ public abstract class XClassPtr {
 			}else if(ni=='d'){
 				return new XClassPtrClass("xscript.lang.ArrayDouble");
 			}
-			return new XClassPtrGeneric("xscript.lang.Array", new XClassPtr[]{load(ni, inputStream)});
+			return new XClassPtrGeneric("xscript.lang.Array", new XClassPtr[]{load(ni, inputStream, done)});
+		}else if(i=='D'){
+			return done.get(inputStream.readUnsignedShort());
 		}
 		return null;
 	}

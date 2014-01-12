@@ -16,6 +16,7 @@ import xscript.runtime.genericclass.XClassPtrClass;
 import xscript.runtime.genericclass.XClassPtrClassGeneric;
 import xscript.runtime.genericclass.XClassPtrGeneric;
 import xscript.runtime.genericclass.XClassPtrMethodGeneric;
+import xscript.runtime.method.XMethod;
 
 
 public class XImportHelper {
@@ -80,7 +81,7 @@ public class XImportHelper {
 		return false;
 	}
 	
-	private XClassPtr getGenericClass1(XClassCompiler xClassCompiler, XType type, String methodName, XGenericInfo[] extra, boolean doError) {
+	private XClassPtr getGenericClass1(XClassCompiler xClassCompiler, XType type, XMethod method, XGenericInfo[] extra, boolean doError) {
 		for(int i=1; i<9; i++){
 			if(XPrimitive.getName(i).equals(type.name.name)){
 				return new XClassPtrClass(type.name.name);
@@ -89,10 +90,10 @@ public class XImportHelper {
 		if(extra!=null){
 			for(XGenericInfo info:extra){
 				if(info.getName().equals(type.name.name)){
-					if(methodName==null){
-						return new XClassPtrMethodGenericChangeable(xClassCompiler.getName(), methodName, type.name.name);
+					if(method==null){
+						return new XClassPtrMethodGeneric(xClassCompiler.getName(), null, null, null, type.name.name);
 					}else{
-						return new XClassPtrMethodGeneric(xClassCompiler.getName(), methodName, type.name.name);
+						return new XClassPtrMethodGeneric(xClassCompiler.getName(), method.getRealName(), method.getParams(), method.getReturnTypePtr(), type.name.name);
 					}
 				}
 			}
@@ -150,14 +151,14 @@ public class XImportHelper {
 		}else{
 			XClassPtr[] genericPtrs = new XClassPtr[type.typeParam.size()];
 			for(int i=0; i<genericPtrs.length; i++){
-				genericPtrs[i] = getGenericClass(xClassCompiler, type.typeParam.get(i), methodName, extra, true);
+				genericPtrs[i] = getGenericClass(xClassCompiler, type.typeParam.get(i), method, extra, true);
 			}
 			return new XClassPtrGeneric(name, genericPtrs);
 		}
 	}
 	
-	public XClassPtr getGenericClass(XClassCompiler xClassCompiler, XType type, String methodName, XGenericInfo[] extra, boolean doError) {
-		XClassPtr classPtr = getGenericClass1(xClassCompiler, type, methodName, extra, doError);
+	public XClassPtr getGenericClass(XClassCompiler xClassCompiler, XType type, XMethod method, XGenericInfo[] extra, boolean doError) {
+		XClassPtr classPtr = getGenericClass1(xClassCompiler, type, method, extra, doError);
 		if(classPtr==null)
 			return null;
 		if(type.array>0){

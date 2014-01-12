@@ -22,8 +22,8 @@ import xscript.runtime.threads.XThread;
 public class XInstructionInvokeConstructor extends XInstruction {
 
 	private String className;
-	private String[] methodParams;
-	private String methodReturn;
+	private XClassPtr[] methodParams;
+	private XClassPtr methodReturn;
 	private XClassPtr[] generics;
 	private XMethod method;
 	private boolean selvInvoke;
@@ -32,8 +32,8 @@ public class XInstructionInvokeConstructor extends XInstruction {
 		className = method.getDeclaringClass().getName();
 		if(!method.isConstructor())
 			throw new IllegalArgumentException();
-		methodParams = method.getMethodParamNames();
-		methodReturn = method.getMethodReturnName();
+		methodParams = method.getParams();
+		methodReturn = method.getReturnTypePtr();
 		this.generics = generics;
 		this.method = method;
 		if(generics.length==0){
@@ -49,11 +49,11 @@ public class XInstructionInvokeConstructor extends XInstruction {
 	
 	public XInstructionInvokeConstructor(XInputStream inputStream) throws IOException{
 		className = inputStream.readUTF();
-		methodParams = new String[inputStream.readUnsignedByte()];
+		methodParams = new XClassPtr[inputStream.readUnsignedByte()];
 		for(int i=0; i<methodParams.length; i++){
-			methodParams[i] = inputStream.readUTF();
+			methodParams[i] = XClassPtr.load(inputStream);
 		}
-		methodReturn = inputStream.readUTF();
+		methodReturn = XClassPtr.load(inputStream);
 		generics = new XClassPtr[inputStream.readUnsignedByte()];
 		for(int i=0; i<generics.length; i++){
 			generics[i] = XClassPtr.load(inputStream);
@@ -125,9 +125,9 @@ public class XInstructionInvokeConstructor extends XInstruction {
 		outputStream.writeUTF(className);
 		outputStream.writeByte(methodParams.length);
 		for(int i=0; i<methodParams.length; i++){
-			outputStream.writeUTF(methodParams[i]);
+			methodParams[i].save(outputStream);
 		}
-		outputStream.writeUTF(methodReturn);
+		methodReturn.save(outputStream);
 		outputStream.writeByte(generics.length);
 		for(int i=0; i<generics.length; i++){
 			generics[i].save(outputStream);

@@ -64,6 +64,7 @@ import xscript.runtime.genericclass.XClassPtr;
 import xscript.runtime.genericclass.XClassPtrClass;
 import xscript.runtime.genericclass.XClassPtrClassGeneric;
 import xscript.runtime.genericclass.XClassPtrGeneric;
+import xscript.runtime.genericclass.XClassPtrMethodGeneric;
 import xscript.runtime.method.XMethod;
 
 public class XClassCompiler extends XClass implements XVisitor {
@@ -227,7 +228,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 					}
 					for(int i=0; i<genericInfos.length; i++){
 						XTypeParam typeParam = xClassDef.typeParam.get(i);
-						XClassPtr[] ptr = getGenericClasses(typeParam.extend, null, null);
+						XClassPtr[] ptr = getGenericClasses(typeParam.extend, null);
 						genericInfos[i] = new XGenericInfo(typeParam.name, ptr, typeParam.isSuper);
 					}
 				}
@@ -242,7 +243,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 						}catch(Exception e){}
 					}
 				}else{
-					superClasses = getGenericClasses(xClassDef.superClasses, null, null);
+					superClasses = getGenericClasses(xClassDef.superClasses, null);
 				}
 				modifier = xClassDef.modifier==null?0:xClassDef.modifier.modifier;
 				methodList = new ArrayList<XMethod>();
@@ -325,7 +326,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 		}else{
 			modifier = xVarDecl.modifier.modifier;
 		}
-		XClassPtr type = getGenericClass(xVarDecl.type, null, null);
+		XClassPtr type = getGenericClass(xVarDecl.type, null);
 		xscript.runtime.XAnnotation[] annotations = new xscript.runtime.XAnnotation[0];
 		try{
 			XField field = new XField(this, modifier, xVarDecl.name, type, annotations);
@@ -394,12 +395,12 @@ public class XClassCompiler extends XClass implements XVisitor {
 			}
 			for(int i=0; i<genericInfos.length; i++){
 				XTypeParam typeParam = xMethodDecl.typeParam.get(i);
-				XClassPtr[] ptr = getGenericClasses(typeParam.extend, null, genericInfos);
+				XClassPtr[] ptr = getGenericClasses(typeParam.extend, genericInfos);
 				classes.addAll(Arrays.asList(ptr));
 				genericInfos[i] = new XGenericInfo(typeParam.name, ptr, typeParam.isSuper);
 			}
 		}
-		XClassPtr returnType = getGenericClass(xMethodDecl.returnType, null, genericInfos);
+		XClassPtr returnType = getGenericClass(xMethodDecl.returnType, genericInfos);
 		classes.add(returnType);
 		xscript.runtime.XAnnotation[] annotations = new xscript.runtime.XAnnotation[0];
 		XClassPtr[] paramTypes;
@@ -442,7 +443,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 				paramTypes = new XClassPtr[xMethodDecl.paramTypes.size()];
 			}
 			for(int i=s; i<paramTypes.length; i++){
-				paramTypes[i] = getGenericClass(xMethodDecl.paramTypes.get(i).type, null, genericInfos);
+				paramTypes[i] = getGenericClass(xMethodDecl.paramTypes.get(i).type, genericInfos);
 				classes.add(paramTypes[i]);
 			}
 		}
@@ -450,7 +451,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 			visitConstructor = true;
 		}
 		xscript.runtime.XAnnotation[][] paramAnnotations = new xscript.runtime.XAnnotation[paramTypes.length][0];
-		XClassPtr[] throwTypes = getGenericClasses(xMethodDecl.throwList, null, genericInfos);
+		XClassPtr[] throwTypes = getGenericClasses(xMethodDecl.throwList, genericInfos);
 		classes.addAll(Arrays.asList(throwTypes));
 		try{
 			XMethodCompiler method = new XMethodCompiler(this, modifier, xMethodDecl.name, returnType, 
@@ -458,19 +459,21 @@ public class XClassCompiler extends XClass implements XVisitor {
 			addChild(method);
 			methodList.add(method);
 			for(XClassPtr cp:classes){
-				resolveClassGeneric(cp, method.getSimpleName());
+				resolveClassGeneric(cp, method);
 			}
 		}catch(XRuntimeException e){
 			compilerError(XMessageLevel.ERROR, "intern", xMethodDecl.line, e.getMessage());
 		}
 	}
 
-	private void resolveClassGeneric(XClassPtr cp, String methodName){
-		if(cp instanceof XClassPtrMethodGenericChangeable){
-			((XClassPtrMethodGenericChangeable) cp).methodName = methodName;
+	private void resolveClassGeneric(XClassPtr cp, XMethod method){
+		if(cp instanceof XClassPtrMethodGeneric){
+			((XClassPtrMethodGeneric) cp).methodName = method.getRealName();
+			((XClassPtrMethodGeneric) cp).params = method.getParams();
+			((XClassPtrMethodGeneric) cp).returnType = method.getReturnTypePtr();
 		}else if(cp instanceof XClassPtrGeneric){
 			for(XClassPtr cpp:((XClassPtrGeneric) cp).genericPtrs){
-				resolveClassGeneric(cpp, methodName);
+				resolveClassGeneric(cpp, method);
 			}
 		}
 	}
@@ -652,16 +655,16 @@ public class XClassCompiler extends XClass implements XVisitor {
 		throw new AssertionError("Should never be happened :(");
 	}
 
-	public XClassPtr getGenericClass(XType type, String methodName, XGenericInfo[] extra) {
-		return importHelper.getGenericClass(this, type, methodName, extra, true);
+	public XClassPtr getGenericClass(XType type, XGenericInfo[] extra) {
+		return importHelper.getGenericClass(this, type, null, extra, true);
 	}
 	
-	public XClassPtr[] getGenericClasses(List<XType> types, String methodName, XGenericInfo[] extra) {
+	public XClassPtr[] getGenericClasses(List<XType> types, XGenericInfo[] extra) {
 		if(types==null)
 			return new XClassPtr[0];
 		XClassPtr[] ptr = new XClassPtr[types.size()];
 		for(int i=0; i<ptr.length; i++){
-			ptr[i] = getGenericClass(types.get(i), methodName, extra);
+			ptr[i] = getGenericClass(types.get(i), extra);
 		}
 		return ptr;
 	}

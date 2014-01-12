@@ -1,6 +1,7 @@
 package xscript.runtime.genericclass;
 
 import java.io.IOException;
+import java.util.List;
 
 import xscript.runtime.XRuntimeException;
 import xscript.runtime.XVirtualMachine;
@@ -11,18 +12,24 @@ import xscript.runtime.threads.XGenericMethodProvider;
 
 public class XClassPtrMethodGeneric extends XClassPtr{
 
-	public final String className;
-	private final String methodName;
+	public String className;
+	public String methodName;
+	public XClassPtr[] params;
+	public XClassPtr returnType;
 	private XMethod method;
-	public final String genericName;
+	public String genericName;
 	private int genericID;
 	
-	public XClassPtrMethodGeneric(String className, String methodName, String genericName){
+	public XClassPtrMethodGeneric(String className, String methodName, XClassPtr[] params, XClassPtr returnType, String genericName){
 		this.className = className;
 		this.methodName = methodName;
+		this.params = params;
+		this.returnType = returnType;
 		this.genericName = genericName;
 	}
 	
+	public XClassPtrMethodGeneric() {}
+
 	@Override
 	public XClass getXClass(XVirtualMachine virtualMachine) {
 		return null;
@@ -32,7 +39,7 @@ public class XClassPtrMethodGeneric extends XClassPtr{
 	public XGenericClass getXClass(XVirtualMachine virtualMachine, XGenericClass genericClass, XGenericMethodProvider methodExecutor) {
 		if(method==null){
 			XClass xClass = virtualMachine.getClassProvider().getXClass(className);
-			method = xClass.getMethod(getMethodName());
+			method = xClass.getMethod(getMethodDesk());
 			genericID = method.getGenericID(genericName);
 		}
 		if(methodExecutor.getMethod()!=method)
@@ -46,11 +53,24 @@ public class XClassPtrMethodGeneric extends XClassPtr{
 	}
 
 	@Override
-	public void save(XOutputStream outputStream) throws IOException {
-		outputStream.writeByte('M');
-		outputStream.writeUTF(className);
-		outputStream.writeUTF(getMethodName());
-		outputStream.writeUTF(genericName);
+	public void save(XOutputStream outputStream, List<XClassPtr> done) throws IOException {
+		int id = done.indexOf(this);
+		if(id==-1){
+			done.add(this);
+			outputStream.writeByte('M');
+			outputStream.writeUTF(className);
+			outputStream.writeUTF(getMethodName());
+			XClassPtr[] params = getMethodParams();
+			outputStream.writeByte(params.length);
+			for(int i=0; i<params.length; i++){
+				params[i].save(outputStream, done);
+			}
+			getMethodReturnType().save(outputStream, done);
+			outputStream.writeUTF(genericName);
+		}else{
+			outputStream.writeByte('D');
+			outputStream.writeShort(id);
+		}
 	}
 
 	@Override
@@ -62,7 +82,7 @@ public class XClassPtrMethodGeneric extends XClassPtr{
 	public boolean equals(Object other) {
 		if(other instanceof XClassPtrMethodGeneric){
 			if(className.equals(((XClassPtrMethodGeneric) other).className)){
-				if(getMethodName().equals(((XClassPtrMethodGeneric) other).getMethodName())){
+				if(getMethodDesk().equals(((XClassPtrMethodGeneric) other).getMethodDesk())){
 					if(genericName.equals(((XClassPtrMethodGeneric) other).genericName)){
 						return true;
 					}
@@ -72,8 +92,29 @@ public class XClassPtrMethodGeneric extends XClassPtr{
 		return false;
 	}
 
+	public String getMethodDesk(){
+		String desk = getMethodName()+"(";
+		XClassPtr[] params = getMethodParams();
+		if(params.length>0){
+			desk += params[0];
+			for(int i=1; i<params.length; i++){
+				desk += ", "+params[i];
+			}
+		}
+		desk += ")"+getMethodReturnType();
+		return desk;
+	}
+	
 	public String getMethodName() {
 		return methodName;
+	}
+	
+	public XClassPtr[] getMethodParams() {
+		return params;
+	}
+	
+	public XClassPtr getMethodReturnType() {
+		return returnType;
 	}
 	
 }

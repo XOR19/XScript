@@ -1,6 +1,7 @@
 package xscript.runtime.genericclass;
 
 import java.io.IOException;
+import java.util.List;
 
 import xscript.runtime.XRuntimeException;
 import xscript.runtime.XVirtualMachine;
@@ -42,7 +43,7 @@ public class XClassPtrClassGeneric extends XClassPtr{
 	}
 
 	@Override
-	public void save(XOutputStream outputStream) throws IOException {
+	public void save(XOutputStream outputStream, List<XClassPtr> done) throws IOException {
 		outputStream.writeByte('C');
 		outputStream.writeUTF(className);
 		outputStream.writeUTF(genericName);
