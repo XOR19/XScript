@@ -18,7 +18,6 @@ import xscript.runtime.genericclass.XClassPtrGeneric;
 import xscript.runtime.genericclass.XClassPtrMethodGeneric;
 import xscript.runtime.method.XMethod;
 
-
 public class XImportHelper {
 
 	private XCompiler compiler;
@@ -37,7 +36,8 @@ public class XImportHelper {
 		this.compiler = compiler;
 		this.xClassCompiler = xClassCompiler;
 		indirectImports.add(xClassCompiler.getParent().getName());
-		indirectImports.add("xscript.lang");
+		indirectImports.addAll(compiler.getPredefIndirectImports());
+		staticIndirectImports.addAll(compiler.getPredefStaticIndirectImports());
 	}
 
 	public void addImport(XClassCompiler xClassCompiler, XImport xImport) {
@@ -73,7 +73,7 @@ public class XImportHelper {
 		}
 		return null;
 	}
-	
+
 	private boolean endsWith(String s, String with){
 		if(s.endsWith(with)){
 			return s.lastIndexOf('.') == s.length()-with.length();
@@ -87,6 +87,7 @@ public class XImportHelper {
 				return new XClassPtrClass(type.name.name);
 			}
 		}
+		// dfdf
 		if(extra!=null){
 			for(XGenericInfo info:extra){
 				if(info.getName().equals(type.name.name)){
@@ -173,6 +174,19 @@ public class XImportHelper {
 			}
 		}
 		return classPtr;
+	}
+
+	public String getStaticImportFor(String name) {
+		for(String s:staticDirectImports){
+			if(endsWith(s, name)){
+				return s;
+			}
+		}
+		return null;
+	}
+
+	public List<String> getStaticIndirectImports() {
+		return staticIndirectImports;
 	}
 	
 }

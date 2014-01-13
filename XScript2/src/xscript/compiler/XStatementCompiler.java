@@ -1038,11 +1038,44 @@ public class XStatementCompiler implements XVisitor {
 		XCompilerMethod m = possibleMethods.getMethod();
 		if(m==null){
 			if(possibleMethods.isEmpty()){
-				compilerError(XMessageLevel.ERROR, "nomethodfor", tree.line, possibleMethods.getDesk());
+				if(loadThis){
+					String lookFor = methodCompiler.getImportHelper().getStaticImportFor(possibleMethods.getName());
+					XVarType type;
+					if(lookFor==null){
+						List<String> list = methodCompiler.getImportHelper().getStaticIndirectImports();
+						if(!list.isEmpty()){
+							XVarType[] vt = new XVarType[list.size()];
+							for(int i=0; i<vt.length; i++){
+								vt[i] = getVarTypeForName(list.get(i));
+							}
+							if(vt.length==1){
+								type = vt[0];
+							}else{
+								type = new XMultibleType(vt);
+							}
+						}else{
+							type = null;
+						}
+					}else{
+						int index = lookFor.lastIndexOf('.');
+						type = getVarTypeForName(lookFor.substring(0, index));
+					}
+					if(type!=null){
+						XMethodSearch search = searchMethod(type, true, possibleMethods.getName(), true, false);
+						search.applyTypes(possibleMethods.getTypes());
+						search.applyGenerics(possibleMethods.getGenerics());
+						search.applyReturn(possibleMethods.getReturnType());
+						m = search.getMethod();
+					}
+				}
+				if(m==null){
+					compilerError(XMessageLevel.ERROR, "nomethodfor", tree.line, possibleMethods.getDesk());
+					return new XErroredType();
+				}
 			}else{
 				compilerError(XMessageLevel.ERROR, "toomanymethodfor", tree.line, possibleMethods.getDesk());
+				return new XErroredType();
 			}
-			return new XErroredType();
 		}
 		boolean shouldBeStatic = loadThis && xscript.runtime.XModifier.isStatic(methodCompiler.getModifier());
 		if(!xscript.runtime.XModifier.isStatic(m.method.getModifier()) && loadThis){
@@ -1079,6 +1112,9 @@ public class XStatementCompiler implements XVisitor {
 	}
 	
 	private void makeAutoCast(XVarType from, XVarType to, XTree tree){
+		if(from instanceof XErroredType){
+			return;
+		}
 		if(!(to instanceof XAnyType)){
 			if(from.canCastTo(to)){
 				int prim1 = from.getPrimitiveID();
@@ -1253,7 +1289,24 @@ public class XStatementCompiler implements XVisitor {
 					rv.field = c.getFieldAndParents(varAccess.name);
 				}
 				if(rv.field==null){
-					compilerError(XMessageLevel.ERROR, "var.notfound", varAccess.tree.line, varAccess.name);
+					String lookFor = methodCompiler.getImportHelper().getStaticImportFor(varAccess.name);
+					if(lookFor==null){
+						List<String> list = methodCompiler.getImportHelper().getStaticIndirectImports();
+						for(String s:list){
+							XClass imp = methodCompiler.getDeclaringClass().getVirtualMachine().getClassProvider().getXClass(s);
+							rv.field = imp.getField(varAccess.name);
+							if(rv.field!=null && xscript.runtime.XModifier.isStatic(rv.field.getModifier())){
+								break;
+							}
+						}
+					}else{
+						int index = lookFor.lastIndexOf('.');
+						XClass imp = methodCompiler.getDeclaringClass().getVirtualMachine().getClassProvider().getXClass(lookFor.substring(0, index));
+						rv.field = imp.getField(varAccess.name);
+					}
+					if(rv.field==null){
+						compilerError(XMessageLevel.ERROR, "var.notfound", varAccess.tree.line, varAccess.name);
+					}
 				}else{
 					if(!rv.isStatic && outer>0){
 						if(varAccess.codeGen==null){

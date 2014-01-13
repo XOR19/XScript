@@ -216,6 +216,10 @@ public class XMethodSearch {
 		return specialInvoke;
 	}
 	
+	public String getName(){
+		return name;
+	}
+	
 	@Override
 	public String toString() {
 		String out = name;

@@ -9,8 +9,6 @@ import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XZipClassLoader;
 
-
-
 public class Test {
 	
 	public static void main(String[] args) throws IOException{

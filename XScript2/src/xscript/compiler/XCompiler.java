@@ -37,12 +37,17 @@ public class XCompiler extends XVirtualMachine{
 	
 	private List<XSourceProvider> sourceProviders = new ArrayList<XSourceProvider>();
 	
+	private List<String> predefIndirectImports = new ArrayList<String>();
+	
+	private List<String> predefStaticIndirectImports = new ArrayList<String>();
+	
 	static{
 		treeMakers.put("xscript", new XStandartTreeMaker());
 	}
 	
 	public XCompiler(XClassLoader standartClassLoade){
 		super(standartClassLoade, 0);
+		predefIndirectImports.add("xscript.lang");
 	}
 
 	public void registerSourceProvider(XSourceProvider sourceProvider) {
@@ -155,6 +160,26 @@ public class XCompiler extends XVirtualMachine{
 			compiler.classes2Compile1.add(classCompiler);
 		}
 		
+	}
+
+	public List<String> getPredefIndirectImports() {
+		return predefIndirectImports;
+	}
+
+	public List<String> getPredefStaticIndirectImports() {
+		return predefStaticIndirectImports;
+	}
+	
+	public void addPredefIndirectImport(String name){
+		if(!predefIndirectImports.contains(name)){
+			predefIndirectImports.add(name);
+		}
+	}
+	
+	public void addPredefStaticIndirectImports(String name){
+		if(!predefStaticIndirectImports.contains(name)){
+			predefStaticIndirectImports.add(name);
+		}
 	}
 	
 }
