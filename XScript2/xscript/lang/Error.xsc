@@ -1,0 +1,17 @@
+package xscript.lang;
+
+public class Error:Throwable{
+
+	public Error():Throwable(){
+	}
+	
+	public Error(String message):Throwable(message){
+	}
+	
+	public Error(Throwable cause):Throwable(cause){
+	}
+	
+	public Error(String message, Throwable cause):Throwable(message, cause){
+	}
+
+}

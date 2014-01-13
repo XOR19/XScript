@@ -8,7 +8,7 @@ public enum XTokenKind {
 	IDENT, 
 	FLOATLITERAL, DOUBLELITERAL, LONGLITERAL, INTLITERAL, CHARLITERAL, STRINGLITERAL, 
 	TRUE("true"), FALSE("false"), NULL("null"), 
-	BOOL("bool"), BYTE("byte"), CHAR("char"), SHORT("short"), INT("int"), LONG("long"), FLOAT("float"), DOUBLE("double"), VOID("void"),
+	BOOL("bool", "boolean"), BYTE("byte"), CHAR("char"), SHORT("short"), INT("int"), LONG("long"), FLOAT("float"), DOUBLE("double"), VOID("void"),
 	CLASS("class"), ENUM("enum"), INTERFACE("interface"), ANNOTATION("@interface"),
 	PACKAGE("package"), IMPORT("import"),
 	PUBLIC("public"), PRIVATE("private"), PROTECTED("protected"), FINAL("final"), ABSTRACT("abstract"), NATIVE("native"), STATIC("static"),
@@ -27,23 +27,37 @@ public enum XTokenKind {
 	ELEMENT('.'), AT('@'),
 	COMMA(','), LBRAKET('{'), RBRAKET('}'), LINDEX('['), RINDEX(']'), LGROUP('('), RGROUP(')'),
 	SEMICOLON(';'), 
-	EXTENDS("extends"), IMPLEMENTS("implements"), THROWS("throws"), NEW("new"), SYNCHRONIZED("synchronized");
+	EXTENDS("extends"), IMPLEMENTS("implements"), THROWS("throws"), NEW("new"), SYNCHRONIZED("synchronized"),
+	ASM("asm"), ASSERT("assert");
 	
 	
 	public final String name;
+	public final String[] otherNames;
 	
 	XTokenKind(){
 		name = null;
+		otherNames = null;
 	}
 	
 	XTokenKind(String keyword){
 		Statics.keywords.put(keyword, this);
 		name = keyword;
+		otherNames = null;
+	}
+	
+	XTokenKind(String keyword, String...otherNames){
+		Statics.keywords.put(keyword, this);
+		for(String s:otherNames){
+			Statics.keywords.put(s, this);
+		}
+		name = keyword;
+		this.otherNames = otherNames;
 	}
 	
 	XTokenKind(char charToken){
 		Statics.charTokens.put(charToken, this);
 		name = ""+charToken;
+		otherNames = null;
 	}
 	
 	public String getName() {

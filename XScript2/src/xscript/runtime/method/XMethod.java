@@ -86,7 +86,7 @@ public class XMethod extends XPackage {
 			genericInfos[i] = new XGenericInfo(declaringClass.getVirtualMachine(), inputStream);
 		}
 		if(XModifier.isStatic(modifier)){
-			if(name.equals("<staticInit>")){
+			if(name.equals("<static>")){
 				modifier |= STATICCONSTRUCTORMODIFIER;
 				XChecks.checkModifier(declaringClass, modifier, STATICCONSTRUCTORMODIFIER);
 			}else{

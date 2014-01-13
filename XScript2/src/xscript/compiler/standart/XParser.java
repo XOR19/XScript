@@ -14,6 +14,7 @@ import xscript.compiler.token.XTokenKind;
 import xscript.compiler.tree.XTree;
 import xscript.compiler.tree.XTree.XAnnotation;
 import xscript.compiler.tree.XTree.XArrayInitialize;
+import xscript.compiler.tree.XTree.XAssert;
 import xscript.compiler.tree.XTree.XBlock;
 import xscript.compiler.tree.XTree.XBreak;
 import xscript.compiler.tree.XTree.XCase;
@@ -1123,6 +1124,10 @@ public class XParser {
 			}
 			statement = makeInnerStatement();
 			return new XReturn(endLineBlock(), statement);
+		case ASSERT:
+			nextToken();
+			statement = makeInnerStatement();
+			return new XAssert(endLineBlock(), statement);
 		case IF:
 			nextToken();
 			expected(XTokenKind.LGROUP);

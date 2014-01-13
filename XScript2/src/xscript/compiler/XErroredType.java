@@ -43,4 +43,9 @@ public class XErroredType extends XVarType {
 		return new XClassPtrErrored(className);
 	}
 
+	@Override
+	public XVarType[] getXVarTypes() {
+		return null;
+	}
+
 }

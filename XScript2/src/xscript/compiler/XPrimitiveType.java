@@ -62,5 +62,10 @@ public class XPrimitiveType extends XKnownType {
 	public XClassPtr getXClassPtr() {
 		return new XClassPtrClass(xClass.getName());
 	}
+
+	@Override
+	public XVarType[] getXVarTypes() {
+		return new XVarType[]{this};
+	}
 	
 }

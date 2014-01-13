@@ -14,7 +14,7 @@ public abstract class XTree{
 		FOR, IF, RETURN, THROW, VARDECLS, GROUP, SYNCHRONIZED, CONST, METHODCALL, 
 		NEW, OPERATOR, OPERATORSUFFIXPREFIX, 
 		INDEX, IFOPERATOR, CAST, LAMBDA, TRY, CATCH, NEWARRAY, ARRAYINITIALIZE, 
-		FOREACH, LABLE, SWITCH, CASE, THIS, SUPER, INSTANCEOF;
+		FOREACH, LABLE, SWITCH, CASE, THIS, SUPER, INSTANCEOF, ASSERT;
 	}
 	
 	public static class XError extends XTree{
@@ -1095,6 +1095,27 @@ public abstract class XTree{
 		@Override
 		public void accept(XVisitor v) {
 			v.visitCase(this);
+		}
+		
+	}
+	
+	public static class XAssert extends XStatement{
+
+		public XStatement statement;
+		
+		public XAssert(XLineDesk line, XStatement statement) {
+			super(line);
+			this.statement = statement;
+		}
+
+		@Override
+		public XTag getTag() {
+			return XTag.ASSERT;
+		}
+
+		@Override
+		public void accept(XVisitor v) {
+			v.visitAssert(this);
 		}
 		
 	}

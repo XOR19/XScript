@@ -84,5 +84,10 @@ public class XSingleType extends XKnownType {
 		}
 		return varType;
 	}
+
+	@Override
+	public XVarType[] getXVarTypes() {
+		return new XVarType[]{this};
+	}
 	
 }

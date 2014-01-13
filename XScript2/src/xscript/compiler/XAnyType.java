@@ -43,4 +43,9 @@ public class XAnyType extends XVarType {
 		return null;
 	}
 
+	@Override
+	public XVarType[] getXVarTypes() {
+		return null;
+	}
+
 }

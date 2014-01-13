@@ -19,7 +19,7 @@ public class XMultibleType extends XVarType {
 	public XClass[] getXClasses() {
 		XClass[] c = new XClass[classes.length];
 		for(int i=0; i<c.length; i++){
-			c[i] = classes[i].getXClasses()[0];
+			c[i] = classes[i].getXClass();
 		}
 		return c;
 	}
@@ -51,6 +51,11 @@ public class XMultibleType extends XVarType {
 	@Override
 	public XClassPtr getXClassPtr() {
 		return null;
+	}
+
+	@Override
+	public XVarType[] getXVarTypes() {
+		return classes;
 	}
 	
 }

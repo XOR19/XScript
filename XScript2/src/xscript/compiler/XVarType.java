@@ -80,6 +80,8 @@ public abstract class XVarType {
 	@Override
 	public abstract boolean equals(Object other);
 
+	public abstract XVarType[] getXVarTypes();
+	
 	public boolean canCastTo(XVarType varTypeFor){
 		if(equals(varTypeFor)){
 			return true;
@@ -91,9 +93,10 @@ public abstract class XVarType {
 		if(ca==null){
 			return false;
 		}
-		for(XClass c:ca){
-			XVarType vt = getSuperClass(c.getName());
-			if(vt==null || !varTypeFor.equals(vt)){
+		XVarType[] classes = varTypeFor.getXVarTypes();
+		for(int i=0; i<ca.length; i++){
+			XVarType vt = getSuperClass(ca[i].getName());
+			if(vt==null || !classes[i].equals(vt)){
 				return false;
 			}
 		}

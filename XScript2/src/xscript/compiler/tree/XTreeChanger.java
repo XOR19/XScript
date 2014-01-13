@@ -4,6 +4,7 @@ import java.util.List;
 
 import xscript.compiler.tree.XTree.XAnnotation;
 import xscript.compiler.tree.XTree.XArrayInitialize;
+import xscript.compiler.tree.XTree.XAssert;
 import xscript.compiler.tree.XTree.XBlock;
 import xscript.compiler.tree.XTree.XBreak;
 import xscript.compiler.tree.XTree.XCase;
@@ -313,6 +314,11 @@ public class XTreeChanger implements XVisitor {
 	public void visitInstanceof(XInstanceof xInstanceof) {
 		xInstanceof.statement = visitTree(xInstanceof.statement);
 		xInstanceof.type = visitTree(xInstanceof.type);
+	}
+
+	@Override
+	public void visitAssert(XAssert xAssert) {
+		xAssert.statement = visitTree(xAssert.statement);
 	}
 
 }

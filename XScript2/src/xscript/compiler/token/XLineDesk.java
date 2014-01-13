@@ -2,6 +2,8 @@ package xscript.compiler.token;
 
 public class XLineDesk {
 
+	public static final XLineDesk NULL = new XLineDesk(0, 0, 0, 0);
+	
 	public int startLine;
 	public int startLinePos;
 	public int endLine;

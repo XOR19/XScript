@@ -10,6 +10,7 @@ import xscript.compiler.token.XLineDesk;
 import xscript.compiler.tree.XTree;
 import xscript.compiler.tree.XTree.XAnnotation;
 import xscript.compiler.tree.XTree.XArrayInitialize;
+import xscript.compiler.tree.XTree.XAssert;
 import xscript.compiler.tree.XTree.XBlock;
 import xscript.compiler.tree.XTree.XBreak;
 import xscript.compiler.tree.XTree.XCase;
@@ -421,6 +422,7 @@ public class XStatementCompiler implements XVisitor {
 		varAccess.tree = xType;
 		if(xType.array>0 || xType.typeParam!=null){
 			varAccess.declaringClass = getVarTypeForThis(xType, true);
+			varAccess.isStatic = true;
 		}else{
 			String rname = xType.name.name;
 			int s=-1;
@@ -588,7 +590,7 @@ public class XStatementCompiler implements XVisitor {
 										codeGens = new XCodeGen[0];
 									}
 									possibleMethods.applyTypes(types);
-									makeCall2(possibleMethods, mc, codeGens, true);
+									makeCall2(possibleMethods, mc, codeGens, true, false);
 									selvInvokeOk = false;
 								}else{
 									if(sp.equals(methodCompiler.getDeclaringClassVarType())){
@@ -619,7 +621,7 @@ public class XStatementCompiler implements XVisitor {
 													codeGens = new XCodeGen[0];
 												}
 												possibleMethods.applyTypes(types);
-												makeCall2(possibleMethods, mc, codeGens, true);
+												makeCall2(possibleMethods, mc, codeGens, true, false);
 												selvInvoke = true;
 											}
 										}else{
@@ -945,11 +947,12 @@ public class XStatementCompiler implements XVisitor {
 	public void visitMethodCall(XMethodCall xMethodCall) {
 		XVarAccess varAccess = visitVarAccess(xMethodCall.method);
 		addInstructions(varAccess.codeGen);
+		boolean addThis = false;
 		if(varAccess.variable!=null){
 			addInstruction(new XInstructionReadLocal(varAccess.variable.id), xMethodCall);
 		}else{
 			if(varAccess.declaringClass==null){
-				addInstruction(new XInstructionReadLocal(0), xMethodCall);
+				addThis = true;
 			}
 		}
 		XVarType varType;
@@ -982,11 +985,11 @@ public class XStatementCompiler implements XVisitor {
 		}
 		possibleMethods.applyTypes(types);
 		possibleMethods.applyReturn(returnExpected);
-		setReturn(makeCall(possibleMethods, xMethodCall, codeGens), xMethodCall);
+		setReturn(makeCall2(possibleMethods, xMethodCall, codeGens, false, addThis), xMethodCall);
 	}
 	
 	private XVarType makeCall(XMethodSearch possibleMethods, XTree tree, XCodeGen[] codeGens) {
-		return makeCall2(possibleMethods, tree, codeGens, false);
+		return makeCall2(possibleMethods, tree, codeGens, false, false);
 	}
 
 	private XClassPtr[] makeMethodGenerics(XCompilerMethod method, XMethodSearch possibleMethods, XTree tree){
@@ -1031,7 +1034,7 @@ public class XStatementCompiler implements XVisitor {
 		}
 	}
 	
-	private XVarType makeCall2(XMethodSearch possibleMethods, XTree tree, XCodeGen[] codeGens, boolean constructorCall) {
+	private XVarType makeCall2(XMethodSearch possibleMethods, XTree tree, XCodeGen[] codeGens, boolean constructorCall, boolean loadThis) {
 		XCompilerMethod m = possibleMethods.getMethod();
 		if(m==null){
 			if(possibleMethods.isEmpty()){
@@ -1041,6 +1044,10 @@ public class XStatementCompiler implements XVisitor {
 			}
 			return new XErroredType();
 		}
+		boolean shouldBeStatic = loadThis && xscript.runtime.XModifier.isStatic(methodCompiler.getModifier());
+		if(!xscript.runtime.XModifier.isStatic(m.method.getModifier()) && loadThis){
+			addInstruction(new XInstructionReadLocal(0), tree);
+		}
 		for(int i=0; i<codeGens.length; i++){
 			addInstructions(codeGens[i]);
 			makeAutoCast(possibleMethods.getTypes()[i], m.params[i], tree);
@@ -1049,12 +1056,12 @@ public class XStatementCompiler implements XVisitor {
 		if(generics!=null){
 			if(xscript.runtime.XModifier.isStatic(m.method.getModifier())){
 				addInstruction(new XInstructionInvokeStatic(m.method, generics), tree);
-				if(!possibleMethods.shouldBeStatic()){
+				if(!possibleMethods.shouldBeStatic() && !loadThis){
 					addInstruction(new XInstructionOPop(), tree);
 					compilerError(XMessageLevel.WARNING, "static.access", tree.line, possibleMethods.getDesk());
 				}
 			}else{
-				if(possibleMethods.shouldBeStatic()){
+				if(possibleMethods.shouldBeStatic() || shouldBeStatic){
 					compilerError(XMessageLevel.ERROR, "non.static.access", tree.line, possibleMethods.getDesk());
 				}
 				if(possibleMethods.specialInvoke()){
@@ -1266,6 +1273,10 @@ public class XStatementCompiler implements XVisitor {
 						}
 						varAccess.declaringClass = declaringClass;
 					}
+				}
+				if(rv.field!=null && xscript.runtime.XModifier.isStatic(methodCompiler.getModifier()) && !xscript.runtime.XModifier.isStatic(rv.field.getModifier())){
+					compilerError(XMessageLevel.ERROR, "non.static.access", tree.line, rv.field);
+					rv.field=null;
 				}
 			}
 		}else if(varAccess.name!=null){
@@ -2354,7 +2365,31 @@ public class XStatementCompiler implements XVisitor {
 		shouldNeverCalled();
 	}
 
+	@Override
+	public void visitAssert(XAssert xAssert) {
+		XField field = methodCompiler.getDeclaringClass().getField("$assertionsDisabled");
+		addInstruction(new XInstructionGetStaticField(field), xAssert);
+		XInstructionDumyIf overjump = new XInstructionDumyIf();
+		addInstruction(overjump, xAssert);
+		XStatementCompiler sc = visitTree(xAssert.statement, getPrimitiveType(XPrimitive.BOOL));
+		addInstructions(sc);
+		XInstructionDumyNIf end = new XInstructionDumyNIf();
+		addInstruction(end, xAssert);
+		XClassPtr cp = new XClassPtrClass("xscript.lang.AssertionError");
+		addInstruction(new XInstructionNew(cp), xAssert);
+		addInstruction(new XInstructionODup(), xAssert);
+		XClass c = cp.getXClassNonNull(methodCompiler.getDeclaringClass().getVirtualMachine());
+		XMethod m = c.getMethod("<init>()void");
+		addInstruction(new XInstructionInvokeSpecial(m, new XClassPtr[0]), xAssert);
+		addInstruction(new XInstructionThrow(), xAssert);
+		addInstruction(overjump.target = end.target = new XInstructionDumyDelete(), xAssert);
+	}
+	
 	private void setReturn(XVarType returnType, XTree tree){
+		if(returnType instanceof XErroredType){
+			this.returnType = returnType;
+			return;
+		}
 		if(returnType!=null && returnType.getPrimitiveID()==XPrimitive.VOID){
 			returnType = null;
 		}

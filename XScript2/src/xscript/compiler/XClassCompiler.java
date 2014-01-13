@@ -11,6 +11,7 @@ import xscript.compiler.token.XLineDesk;
 import xscript.compiler.tree.XTree;
 import xscript.compiler.tree.XTree.XAnnotation;
 import xscript.compiler.tree.XTree.XArrayInitialize;
+import xscript.compiler.tree.XTree.XAssert;
 import xscript.compiler.tree.XTree.XBlock;
 import xscript.compiler.tree.XTree.XBreak;
 import xscript.compiler.tree.XTree.XCase;
@@ -45,6 +46,7 @@ import xscript.compiler.tree.XTree.XStatement;
 import xscript.compiler.tree.XTree.XSuper;
 import xscript.compiler.tree.XTree.XSwitch;
 import xscript.compiler.tree.XTree.XSynchronized;
+import xscript.compiler.tree.XTree.XTag;
 import xscript.compiler.tree.XTree.XThis;
 import xscript.compiler.tree.XTree.XThrow;
 import xscript.compiler.tree.XTree.XTry;
@@ -53,6 +55,7 @@ import xscript.compiler.tree.XTree.XTypeParam;
 import xscript.compiler.tree.XTree.XVarDecl;
 import xscript.compiler.tree.XTree.XVarDecls;
 import xscript.compiler.tree.XTree.XWhile;
+import xscript.compiler.tree.XTreeSearch;
 import xscript.compiler.tree.XVisitor;
 import xscript.runtime.XRuntimeException;
 import xscript.runtime.XVirtualMachine;
@@ -90,6 +93,8 @@ public class XClassCompiler extends XClass implements XVisitor {
 	private boolean errored;
 	
 	private boolean visitConstructor;
+	
+	private boolean hasAssertions;
 	
 	protected XClassCompiler(XVirtualMachine virtualMachine, String name, XMessageList messages, XImportHelper importHelper, XPackage p) {
 		super(virtualMachine, name, p);
@@ -280,6 +285,28 @@ public class XClassCompiler extends XClass implements XVisitor {
 					methodList.add(m);
 					addChild(m);
 				}
+				if(hasAssertions){
+					fieldList.add(new XField(this, xscript.runtime.XModifier.STATIC, "$assertionsDisabled", new XClassPtrClass("bool"), new xscript.runtime.XAnnotation[0]));
+					if(staticInit == null){
+						staticInit = new ArrayList<XTree.XStatement>();
+					}
+					XIdent var = new XIdent(XLineDesk.NULL, "$assertionsDisabled");
+					List<XType> typeParam = new ArrayList<XType>();
+					for(int i=0; i<genericInfos.length; i++){
+						typeParam.add(new XType(XLineDesk.NULL, new XIdent(XLineDesk.NULL, genericInfos[i].getName()), null, 0));
+					}
+					XType type = new XType(XLineDesk.NULL, new XIdent(XLineDesk.NULL, getName()), typeParam, 0);
+					XOperatorStatement classAcc = new XOperatorStatement(XLineDesk.NULL, type, XOperator.ELEMENT, new XIdent(XLineDesk.NULL, "class")); 
+					XOperatorStatement name = new XOperatorStatement(XLineDesk.NULL, classAcc, XOperator.ELEMENT, new XIdent(XLineDesk.NULL, "desiredAssertionStatus")); 
+					XMethodCall call = new XMethodCall(XLineDesk.NULL, name, null, null);
+					staticInit.add(0, new XOperatorStatement(XLineDesk.NULL, var, XOperator.LET, call));
+				}
+				if(staticInit != null){
+					XMethodDecl staticMethodDecl = new XMethodDecl(XLineDesk.NULL, new XModifier(XLineDesk.NULL, xscript.runtime.XModifier.STATIC), 
+							"<static>", null, new XType(XLineDesk.NULL, new XIdent(XLineDesk.NULL, "void"), null, 0), null, null,
+							new XBlock(XLineDesk.NULL, staticInit), null, false);
+					staticMethodDecl.accept(this);
+				}
 				annotations = new xscript.runtime.XAnnotation[0];
 				methods = methodList.toArray(new XMethod[methodList.size()]);
 				fields = fieldList.toArray(new XField[fieldList.size()]);
@@ -461,6 +488,11 @@ public class XClassCompiler extends XClass implements XVisitor {
 			for(XClassPtr cp:classes){
 				resolveClassGeneric(cp, method);
 			}
+			if(!hasAssertions && xMethodDecl.block!=null){
+				XTreeSearch s = new XTreeSearch(XTag.ASSERT);
+				xMethodDecl.block.accept(s);
+				hasAssertions = !s.getFounds().isEmpty();
+			}
 		}catch(XRuntimeException e){
 			compilerError(XMessageLevel.ERROR, "intern", xMethodDecl.line, e.getMessage());
 		}
@@ -488,10 +520,6 @@ public class XClassCompiler extends XClass implements XVisitor {
 	public void visitBlock(XBlock xBlock) {
 		if(staticInit==null){
 			staticInit = new ArrayList<XTree.XStatement>();
-			XMethodDecl staticMethodDecl = new XMethodDecl(xBlock.line, new XModifier(xBlock.line, xscript.runtime.XModifier.STATIC), 
-					"<static>", null, new XType(xBlock.line, new XIdent(xBlock.line, "void"), null, 0), null, null,
-					new XBlock(xBlock.line, staticInit), null, false);
-			staticMethodDecl.accept(this);
 		}
 		staticInit.add(xBlock);
 	}
@@ -648,6 +676,11 @@ public class XClassCompiler extends XClass implements XVisitor {
 	
 	@Override
 	public void visitInstanceof(XInstanceof xInstanceof) {
+		shouldNeverCalled();
+	}
+	
+	@Override
+	public void visitAssert(XAssert xAssert) {
 		shouldNeverCalled();
 	}
 	

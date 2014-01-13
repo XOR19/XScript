@@ -4,6 +4,7 @@ import java.util.List;
 
 import xscript.compiler.tree.XTree.XAnnotation;
 import xscript.compiler.tree.XTree.XArrayInitialize;
+import xscript.compiler.tree.XTree.XAssert;
 import xscript.compiler.tree.XTree.XBlock;
 import xscript.compiler.tree.XTree.XBreak;
 import xscript.compiler.tree.XTree.XCase;
@@ -365,6 +366,11 @@ public class XTreePrinter implements XVisitor {
 	public void visitInstanceof(XInstanceof xInstanceof) {
 		accept("statement", xInstanceof.statement);
 		accept("type", xInstanceof.type);
+	}
+
+	@Override
+	public void visitAssert(XAssert xAssert) {
+		accept("assert", xAssert.statement);
 	}
 
 }

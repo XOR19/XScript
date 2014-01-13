@@ -3,9 +3,10 @@ package xscript.compiler;
 import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XGenericInfo;
 import xscript.runtime.genericclass.XClassPtr;
+import xscript.runtime.genericclass.XClassPtrClass;
 import xscript.runtime.genericclass.XClassPtrClassGeneric;
 
-public class XMultibleTypeClassGeneric extends XMultibleType {
+public class XMultibleTypeClassGeneric extends XMultibleTypeGeneric {
 
 	private XClass c;
 	private int id;
@@ -22,6 +23,10 @@ public class XMultibleTypeClassGeneric extends XMultibleType {
 			return new XVarType[]{XVarType.getVarTypeFor(c.getVirtualMachine().getClassProvider().getXClass("xscript.lang.Object"), new XVarType[0])};
 		}
 		XClassPtr[] cp = info.getTypeParams();
+		if(cp.length==0){
+			cp = new XClassPtr[1];
+			cp[0] = new XClassPtrClass("xscript.lang.Object");
+		}
 		XVarType[] a = new XVarType[cp.length];
 		for(int i=0; i<a.length; i++){
 			a[i] = XVarType.getVarTypeFor(cp[i], c.getVirtualMachine(), null, null);

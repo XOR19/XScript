@@ -8,6 +8,10 @@ public class Test:Iterable<Int>{
 		
 	}
 	
+	static{
+		s();
+	}
+	
 	public void test(){
 		for(Object e:this){
 			e.toString();
@@ -19,24 +23,12 @@ public class Test:Iterable<Int>{
 		t = test();
 	}
 	
-	public <G> G test(){
+	public static <G> G test(){
 		return null;
 	}
 	
-	public static class Inner{
-	
-		public int i;
-	
-		public class Inner2{
-			
-			public int i;
-			
-			private void m(){
-				Inner2.this.i = Inner.this.i;
-			}
-			
-		}
-	
+	public static void s(){
+		Object o = test();
 	}
 	
 }

@@ -2,6 +2,7 @@ package xscript.compiler.tree;
 
 import xscript.compiler.tree.XTree.XAnnotation;
 import xscript.compiler.tree.XTree.XArrayInitialize;
+import xscript.compiler.tree.XTree.XAssert;
 import xscript.compiler.tree.XTree.XBlock;
 import xscript.compiler.tree.XTree.XBreak;
 import xscript.compiler.tree.XTree.XCase;
@@ -131,5 +132,7 @@ public interface XVisitor {
 	public void visitSuper(XSuper xSuper);
 
 	public void visitInstanceof(XInstanceof xInstanceof);
+
+	public void visitAssert(XAssert xAssert);
 
 }
