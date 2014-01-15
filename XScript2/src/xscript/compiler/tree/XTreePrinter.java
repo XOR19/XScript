@@ -12,6 +12,7 @@ import xscript.compiler.tree.XTree.XCast;
 import xscript.compiler.tree.XTree.XCatch;
 import xscript.compiler.tree.XTree.XClassDecl;
 import xscript.compiler.tree.XTree.XClassFile;
+import xscript.compiler.tree.XTree.XCompiledPart;
 import xscript.compiler.tree.XTree.XConstant;
 import xscript.compiler.tree.XTree.XContinue;
 import xscript.compiler.tree.XTree.XDo;
@@ -371,6 +372,11 @@ public class XTreePrinter implements XVisitor {
 	@Override
 	public void visitAssert(XAssert xAssert) {
 		accept("assert", xAssert.statement);
+	}
+
+	@Override
+	public void visitCompiled(XCompiledPart xCompiledPart) {
+		
 	}
 
 }

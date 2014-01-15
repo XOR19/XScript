@@ -31,4 +31,22 @@ public class Test:Iterable<Int>{
 		Object o = test();
 	}
 	
+	public class Inner{
+		
+		public Inner(){}
+	
+		public Inner(int i):Inner(){}
+	
+	}
+	
+	public class Inner2:Inner{
+	
+		public Inner2(){}
+	
+		public Inner2(int i):Inner(i){}
+		
+		public Inner2(int i, int z):Inner2(i){}
+		
+	}
+	
 }

@@ -3,6 +3,7 @@ package xscript.compiler;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 
 import xscript.compiler.message.XMessageLevel;
@@ -19,6 +20,7 @@ import xscript.compiler.tree.XTree.XCast;
 import xscript.compiler.tree.XTree.XCatch;
 import xscript.compiler.tree.XTree.XClassDecl;
 import xscript.compiler.tree.XTree.XClassFile;
+import xscript.compiler.tree.XTree.XCompiledPart;
 import xscript.compiler.tree.XTree.XConstant;
 import xscript.compiler.tree.XTree.XContinue;
 import xscript.compiler.tree.XTree.XDo;
@@ -68,6 +70,14 @@ import xscript.runtime.genericclass.XClassPtrClass;
 import xscript.runtime.genericclass.XClassPtrClassGeneric;
 import xscript.runtime.genericclass.XClassPtrGeneric;
 import xscript.runtime.genericclass.XClassPtrMethodGeneric;
+import xscript.runtime.instruction.XInstructionGetStaticField;
+import xscript.runtime.instruction.XInstructionInvokeDynamic;
+import xscript.runtime.instruction.XInstructionLoadConstClass;
+import xscript.runtime.instruction.XInstructionLoadConstInt;
+import xscript.runtime.instruction.XInstructionNewArray;
+import xscript.runtime.instruction.XInstructionODup;
+import xscript.runtime.instruction.XInstructionOPop;
+import xscript.runtime.instruction.XInstructionSetStaticField;
 import xscript.runtime.method.XMethod;
 
 public class XClassCompiler extends XClass implements XVisitor {
@@ -95,6 +105,10 @@ public class XClassCompiler extends XClass implements XVisitor {
 	private boolean visitConstructor;
 	
 	private boolean hasAssertions;
+	
+	private List<String> enumNames = new ArrayList<String>();
+	
+	private HashMap<String, Integer> syntheticNames = new HashMap<String, Integer>();
 	
 	protected XClassCompiler(XVirtualMachine virtualMachine, String name, XMessageList messages, XImportHelper importHelper, XPackage p) {
 		super(virtualMachine, name, p);
@@ -210,6 +224,61 @@ public class XClassCompiler extends XClass implements XVisitor {
 		importHelper.addImport(this, xImport);
 	}
 	
+	private boolean isNameForFieldOcupied(String name){
+		for(int i=0; i<fieldList.size(); i++){
+			if(fieldList.get(i).getSimpleName().equals(name)){
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	private XField addSyntheticField(int modifier, String name, XClassPtr type){
+		String sname = "$"+name;
+		if(isNameForFieldOcupied(sname)){
+			int i=0;
+			while(isNameForFieldOcupied(sname+"_"+i))i++;
+			sname+="_"+i;
+			syntheticNames.put(name, i);
+		}
+		XField field = new XField(this, modifier | xscript.runtime.XModifier.SYNTHETIC, sname, type, new xscript.runtime.XAnnotation[0]);
+		fieldList.add(field);
+		addChild(field);
+		return field;
+	}
+	
+	public XField getSyntheticField(String name){
+		Integer id = syntheticNames.get(name);
+		if(id==null){
+			name = "$"+name;
+		}else{
+			name = "$"+name+"_"+id;
+		}
+		for(int i=0; i<fields.length; i++){
+			if(fields[i].getSimpleName().equals(name)){
+				if(xscript.runtime.XModifier.isSynthetic(fields[i].getModifier()))
+					return fields[i];
+				return null;
+			}
+		}
+		return null;
+	}
+	
+	public XField getSyntheticFieldAndParents(String name) {
+		XField field = getSyntheticField(name);
+		if(field!=null)
+			return field;
+		for(int i=0; i<superClasses.length; i++){
+			XClass sc = superClasses[i].getXClassNonNull(virtualMachine);
+			if(sc instanceof XClassCompiler){
+				field = ((XClassCompiler)sc).getSyntheticFieldAndParents(name);
+				if(field!=null)
+					return field;
+			}
+		}
+		return null;
+	}
+	
 	@Override
 	public void visitClassDecl(XClassDecl xClassDef) {
 		if(innerClasses){
@@ -237,6 +306,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 						genericInfos[i] = new XGenericInfo(typeParam.name, ptr, typeParam.isSuper);
 					}
 				}
+				boolean extendsOtherOuter = false;
 				if(xClassDef.superClasses==null){
 					if(getName().equals("xscript.lang.Object")){
 						superClasses = new XClassPtr[0];
@@ -249,63 +319,99 @@ public class XClassCompiler extends XClass implements XVisitor {
 					}
 				}else{
 					superClasses = getGenericClasses(xClassDef.superClasses, null);
-				}
-				modifier = xClassDef.modifier==null?0:xClassDef.modifier.modifier;
-				methodList = new ArrayList<XMethod>();
-				fieldList = new ArrayList<XField>();
-				if(parent!=null && parent.getClass() != XPackage.class){
-					XField f = new XField(this, xscript.runtime.XModifier.PRIVATE | xscript.runtime.XModifier.FINAL, "outer$", new XClassPtrClass(getParent().getName()), new xscript.runtime.XAnnotation[0]);
-					fieldList.add(f);
-					addChild(f);
-				}
-				visitTree(xClassDef.defs);
-				if(!visitConstructor){
-					XClassPtr[] params;
-					xscript.runtime.XAnnotation[][] paramAnnotations;
-					if(getOuterClass()==null){
-						params = new XClassPtr[0];
-						paramAnnotations = new xscript.runtime.XAnnotation[0][];
-					}else{
-						params = new XClassPtr[1];
-						paramAnnotations = new xscript.runtime.XAnnotation[1][0];
-						XClass outer = getOuterClass();
-						String name = outer.getName();
-						if(outer.getGenericParams()>0){
-							XClassPtr generics[] = new XClassPtr[outer.getGenericParams()];
-							for(int i=0; i<generics.length; i++){
-								generics[i] = new XClassPtrClassGeneric(name, outer.getGenericInfo(i).getName());
+					for(XClassPtr superClass:superClasses){
+						XClass c = superClass.getXClassNonNull(getVirtualMachine());
+						if(c.getOuterClass()!=null && !xscript.runtime.XModifier.isStatic(c.getModifier())){
+							if(getOuterClass()!=null && !xscript.runtime.XModifier.isStatic(modifier)){
+								if(c.getOuterClass()==getOuterClass()){
+									extendsOtherOuter = true;
+								}else{
+									compilerError(XMessageLevel.ERROR, "cant.extend.inner.class", xClassDef.line, c.getName());
+								}
+							}else{
+								compilerError(XMessageLevel.ERROR, "cant.extend.inner.class", xClassDef.line, c.getName());
 							}
-							params[0] = new XClassPtrGeneric(name, generics);
-						}else{
-							params[0] = new XClassPtrClass(name);
 						}
 					}
-					XMethod  m = new XMethodCompiler(this, xscript.runtime.XModifier.PUBLIC, "<init>", new XClassPtrClass("void"), 
-							new xscript.runtime.XAnnotation[0], params, paramAnnotations, new XClassPtr[0], new XGenericInfo[0], null, importHelper);
-					methodList.add(m);
-					addChild(m);
 				}
+				modifier = xClassDef.modifier==null?0:xClassDef.modifier.modifier;
+				if(isEnum()){
+					modifier |= xscript.runtime.XModifier.STATIC;
+				}
+				methodList = new ArrayList<XMethod>();
+				fieldList = new ArrayList<XField>();
+				visitTree(xClassDef.defs);
+				if(!visitConstructor){
+					XMethodDecl decl = new XMethodDecl(XLineDesk.NULL, new XModifier(XLineDesk.NULL, xscript.runtime.XModifier.PUBLIC), 
+							"<init>", null, new XType(XLineDesk.NULL, new XIdent(XLineDesk.NULL, "void"), null, 0), null, null, null, null, false);
+					decl.accept(this);
+				}
+				XCodeGen assertionCodeGen = null;
 				if(hasAssertions){
-					fieldList.add(new XField(this, xscript.runtime.XModifier.STATIC, "$assertionsDisabled", new XClassPtrClass("bool"), new xscript.runtime.XAnnotation[0]));
 					if(staticInit == null){
 						staticInit = new ArrayList<XTree.XStatement>();
 					}
-					XIdent var = new XIdent(XLineDesk.NULL, "$assertionsDisabled");
-					List<XType> typeParam = new ArrayList<XType>();
-					for(int i=0; i<genericInfos.length; i++){
-						typeParam.add(new XType(XLineDesk.NULL, new XIdent(XLineDesk.NULL, genericInfos[i].getName()), null, 0));
-					}
-					XType type = new XType(XLineDesk.NULL, new XIdent(XLineDesk.NULL, getName()), typeParam, 0);
-					XOperatorStatement classAcc = new XOperatorStatement(XLineDesk.NULL, type, XOperator.ELEMENT, new XIdent(XLineDesk.NULL, "class")); 
-					XOperatorStatement name = new XOperatorStatement(XLineDesk.NULL, classAcc, XOperator.ELEMENT, new XIdent(XLineDesk.NULL, "desiredAssertionStatus")); 
-					XMethodCall call = new XMethodCall(XLineDesk.NULL, name, null, null);
-					staticInit.add(0, new XOperatorStatement(XLineDesk.NULL, var, XOperator.LET, call));
+					assertionCodeGen = new XCodeGen();
+					staticInit.add(0, new XCompiledPart(XLineDesk.NULL, assertionCodeGen));
 				}
 				if(staticInit != null){
 					XMethodDecl staticMethodDecl = new XMethodDecl(XLineDesk.NULL, new XModifier(XLineDesk.NULL, xscript.runtime.XModifier.STATIC), 
 							"<static>", null, new XType(XLineDesk.NULL, new XIdent(XLineDesk.NULL, "void"), null, 0), null, null,
 							new XBlock(XLineDesk.NULL, staticInit), null, false);
 					staticMethodDecl.accept(this);
+				}
+				if(isEnum()){
+					XClassPtr array = new XClassPtrGeneric("xscript.lang.Array", new XClassPtr[]{new XClassPtrClass(getName())});
+					XField field = addSyntheticField(xscript.runtime.XModifier.PRIVATE | xscript.runtime.XModifier.FINAL | xscript.runtime.XModifier.STATIC,
+							"values", array);
+					if(staticInit != null){
+						XCodeGen codeGen = new XCodeGen();
+						codeGen.addInstruction(new XInstructionNewArray(array, enumNames.size()), 0);
+						XMethod method = getVirtualMachine().getClassProvider().getXClass("xscript.lang.Array").getMethod("operator[](int, T)T");
+						for(int i=0; i<enumNames.size(); i++){
+							codeGen.addInstruction(new XInstructionODup(), 0);
+							codeGen.addInstruction(new XInstructionLoadConstInt(i), 0);
+							codeGen.addInstruction(new XInstructionGetStaticField(fieldList.get(i)), 0);
+							codeGen.addInstruction(new XInstructionInvokeDynamic(method, new XClassPtr[0]), 0);
+							codeGen.addInstruction(new XInstructionOPop(), 0);
+						}
+						codeGen.addInstruction(new XInstructionSetStaticField(field), 0);
+						codeGen.addInstruction(new XInstructionOPop(), 0);
+						staticInit.add(new XCompiledPart(XLineDesk.NULL, codeGen));
+					}
+				}else if(getOuterClass()!=null && !xscript.runtime.XModifier.isStatic(modifier) && !extendsOtherOuter){
+					XClass outer = getOuterClass();
+					String name = outer.getName();
+					XClassPtr type;
+					if(outer.getGenericParams()>0){
+						XClassPtr generics[] = new XClassPtr[outer.getGenericParams()];
+						for(int i=0; i<generics.length; i++){
+							generics[i] = new XClassPtrClassGeneric(name, outer.getGenericInfo(i).getName());
+						}
+						type = new XClassPtrGeneric(name, generics);
+					}else{
+						type = new XClassPtrClass(name);
+					}
+					addSyntheticField(xscript.runtime.XModifier.PROTECTED | xscript.runtime.XModifier.FINAL, "outer", type);
+				}
+				if(hasAssertions){
+					String name = getName();
+					XClassPtr type;
+					if(getGenericParams()>0){
+						XClassPtr generics[] = new XClassPtr[getGenericParams()];
+						for(int i=0; i<generics.length; i++){
+							generics[i] = new XClassPtrClassGeneric(name, getGenericInfo(i).getName());
+						}
+						type = new XClassPtrGeneric(name, generics);
+					}else{
+						type = new XClassPtrClass(name);
+					}
+					addSyntheticField(xscript.runtime.XModifier.PROTECTED | xscript.runtime.XModifier.FINAL, "outer", type);
+					XField field = addSyntheticField(xscript.runtime.XModifier.PRIVATE | xscript.runtime.XModifier.FINAL | xscript.runtime.XModifier.STATIC, "assertionsDisabled", new XClassPtrClass("bool"));
+					assertionCodeGen.addInstruction(new XInstructionLoadConstClass(type), 0);
+					XMethod m = getVirtualMachine().getClassProvider().getXClass("xscript.lang.Class").getMethod("desiredAssertionStatus()bool");
+					assertionCodeGen.addInstruction(new XInstructionInvokeDynamic(m, new XClassPtr[0]), 0);
+					assertionCodeGen.addInstruction(new XInstructionSetStaticField(field), 0);
 				}
 				annotations = new xscript.runtime.XAnnotation[0];
 				methods = methodList.toArray(new XMethod[methodList.size()]);
@@ -431,11 +537,19 @@ public class XClassCompiler extends XClass implements XVisitor {
 		classes.add(returnType);
 		xscript.runtime.XAnnotation[] annotations = new xscript.runtime.XAnnotation[0];
 		XClassPtr[] paramTypes;
-		if(xMethodDecl.paramTypes==null){
-			if(xMethodDecl.name.equals("<init>") && getOuterClass()!=null){
+		int size = xMethodDecl.paramTypes==null?0:xMethodDecl.paramTypes.size();
+		int ss = 0;
+		if(xMethodDecl.name.equals("<init>")){
+			if(isEnum()){
+				ss = 2;
+				paramTypes = new XClassPtr[size+2];
+				paramTypes[0] = new XClassPtrClass("xscript.lang.String");
+				paramTypes[1] = new XClassPtrClass("int");
+			}else if(getOuterClass()!=null && !xscript.runtime.XModifier.isStatic(modifier)){
+				ss = 1;
+				paramTypes = new XClassPtr[size+1];
 				XClass outer = getOuterClass();
 				String name = outer.getName();
-				paramTypes = new XClassPtr[1];
 				if(outer.getGenericParams()>0){
 					XClassPtr generics[] = new XClassPtr[outer.getGenericParams()];
 					for(int i=0; i<generics.length; i++){
@@ -446,32 +560,15 @@ public class XClassCompiler extends XClass implements XVisitor {
 					paramTypes[0] = new XClassPtrClass(name);
 				}
 			}else{
-				paramTypes = new XClassPtr[0];
+				paramTypes = new XClassPtr[size];
 			}
 		}else{
-			int s;
-			if(xMethodDecl.name.equals("<init>") && getOuterClass()!=null){
-				s = 1;
-				paramTypes = new XClassPtr[xMethodDecl.paramTypes.size()+1];
-				XClass outer = getOuterClass();
-				String name = outer.getName();
-				paramTypes = new XClassPtr[1];
-				if(outer.getGenericParams()>0){
-					XClassPtr generics[] = new XClassPtr[outer.getGenericParams()];
-					for(int i=0; i<generics.length; i++){
-						generics[i] = new XClassPtrClassGeneric(name, outer.getGenericInfo(i).getName());
-					}
-					paramTypes[0] = new XClassPtrGeneric(name, generics);
-				}else{
-					paramTypes[0] = new XClassPtrClass(name);
-				}
-			}else{
-				s = 0;
-				paramTypes = new XClassPtr[xMethodDecl.paramTypes.size()];
-			}
-			for(int i=s; i<paramTypes.length; i++){
-				paramTypes[i] = getGenericClass(xMethodDecl.paramTypes.get(i).type, genericInfos);
-				classes.add(paramTypes[i]);
+			paramTypes = new XClassPtr[size];
+		}
+		if(xMethodDecl.paramTypes!=null){
+			for(int i=0; i<size; i++){
+				paramTypes[i+ss] = getGenericClass(xMethodDecl.paramTypes.get(i).type, genericInfos);
+				classes.add(paramTypes[i+ss]);
 			}
 		}
 		if(xMethodDecl.name.equals("<init>")){
@@ -591,7 +688,32 @@ public class XClassCompiler extends XClass implements XVisitor {
 
 	@Override
 	public void visitNew(XNew xNew) {
-		shouldNeverCalled();
+		if(isEnum()){
+			if(staticInit==null){
+				staticInit = new ArrayList<XTree.XStatement>();
+			}
+			XClassPtr type;
+			String name = getName();
+			if(getGenericParams()>0){
+				XClassPtr generics[] = new XClassPtr[getGenericParams()];
+				for(int i=0; i<generics.length; i++){
+					generics[i] = new XClassPtrClassGeneric(name, getGenericInfo(i).getName());
+				}
+				type = new XClassPtrGeneric(name, generics);
+			}else{
+				type = new XClassPtrClass(name);
+			}
+			fieldList.add(new XField(this, xscript.runtime.XModifier.STATIC | xscript.runtime.XModifier.FINAL | 
+					xscript.runtime.XModifier.PUBLIC, xNew.type.name.name, type, new xscript.runtime.XAnnotation[0]));
+			XIdent left = new XIdent(xNew.line, xNew.type.name.name);
+			xNew.params.add(0, new XConstant(xNew.line, new XConstantValue(enumNames.size())));
+			xNew.params.add(0, new XConstant(xNew.line, new XConstantValue(xNew.type.name.name)));
+			XNew right = new XNew(xNew.line, new XType(xNew.line, new XIdent(xNew.line, getName()), null, 0), xNew.params, xNew.classDecl);
+			staticInit.add(new XOperatorStatement(xNew.line, left, XOperator.LET, right));
+			enumNames.add(xNew.type.name.name);
+		}else{
+			shouldNeverCalled();
+		}
 	}
 
 	@Override
@@ -681,6 +803,11 @@ public class XClassCompiler extends XClass implements XVisitor {
 	
 	@Override
 	public void visitAssert(XAssert xAssert) {
+		shouldNeverCalled();
+	}
+	
+	@Override
+	public void visitCompiled(XCompiledPart xCompiledPart) {
 		shouldNeverCalled();
 	}
 	

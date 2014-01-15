@@ -13,7 +13,6 @@ import xscript.runtime.genericclass.XClassPtr;
 import xscript.runtime.genericclass.XClassPtrClass;
 import xscript.runtime.genericclass.XClassPtrClassGeneric;
 import xscript.runtime.genericclass.XClassPtrGeneric;
-import xscript.runtime.instruction.XInstructionInvokeConstructor;
 import xscript.runtime.method.XMethod;
 
 public class XMethodCompiler extends XMethod {
@@ -39,30 +38,9 @@ public class XMethodCompiler extends XMethod {
 		if(!isConstructor() && (xMethodDecl.block==null || xscript.runtime.XModifier.isAbstract(modifier) || xscript.runtime.XModifier.isNative(modifier)))
 			return;
 		classes = new ArrayList<XClass>();
-		XCodeGen codeGen = null;
-		if(isConstructor() && xMethodDecl==null){
-			codeGen = new XCodeGen();
-			List<XVarType> superClasses = getDeclaringClassVarType().getDirectSuperClasses();
-			for(XVarType superClass:superClasses){
-				XMethodSearch search = new XMethodSearch(getDeclaringClass().getVirtualMachine(), superClass, false, "<init>", true, false);
-				search.applyTypes(new XVarType[0]);
-				search.applyReturn(XVarType.getVarTypeFor(getDeclaringClass().getVirtualMachine().getClassProvider().getXClass("void"), null));
-				XCompilerMethod m = search.getMethod();
-				if(m==null){
-					if(search.isEmpty()){
-						compilerError(XMessageLevel.ERROR, "nomethodfor", new XLineDesk(0, 0, 0, 0), search.getDesk());
-					}else{
-						compilerError(XMessageLevel.ERROR, "toomanymethodfor", new XLineDesk(0, 0, 0, 0), search.getDesk());
-					}
-				}else{
-					codeGen.addInstruction(new XInstructionInvokeConstructor(m.method, new XClassPtr[0]), 0);
-				}
-			}
-		}else{
-			XStatementCompiler statementCompiler = new XStatementCompiler(null, null, this);
-			xMethodDecl.accept(statementCompiler);
-			codeGen = statementCompiler.getCodeGen();
-		}
+		XStatementCompiler statementCompiler = new XStatementCompiler(null, null, this);
+		xMethodDecl.accept(statementCompiler);
+		XCodeGen codeGen = statementCompiler.getCodeGen();
 		classes = null;
 		System.out.println(getName());
 		codeGen.generateFinalCode();
@@ -114,6 +92,10 @@ public class XMethodCompiler extends XMethod {
 			ptr = new XClassPtrClass(name);
 		}
 		return XVarType.getVarTypeFor(ptr, c.getVirtualMachine(), null, null);
+	}
+
+	public XClassCompiler getDeclaringClassCompiler() {
+		return (XClassCompiler)getDeclaringClass();
 	}
 	
 }

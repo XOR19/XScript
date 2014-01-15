@@ -18,6 +18,7 @@ import xscript.compiler.tree.XTree.XCast;
 import xscript.compiler.tree.XTree.XCatch;
 import xscript.compiler.tree.XTree.XClassDecl;
 import xscript.compiler.tree.XTree.XClassFile;
+import xscript.compiler.tree.XTree.XCompiledPart;
 import xscript.compiler.tree.XTree.XConstant;
 import xscript.compiler.tree.XTree.XContinue;
 import xscript.compiler.tree.XTree.XDo;
@@ -530,6 +531,16 @@ public class XStatementCompiler implements XVisitor {
 		return new XMethodSearch(methodCompiler.getDeclaringClass().getVirtualMachine(), varType, shouldBeStatic, name, specialInvoke, lookIntoParents);
 	}
 	
+	public String getSyntheticVarName(String name){
+		String sname = "$"+name;
+		if(getVariable(sname)!=null){
+			int i = 0;
+			while(getVariable(sname+"_"+i)!=null)i++;
+			sname+="_"+i;
+		}
+		return sname;
+	}
+	
 	@Override
 	public void visitMethodDecl(XMethodDecl xMethodDecl) {
 		if(parent==null){
@@ -542,8 +553,36 @@ public class XStatementCompiler implements XVisitor {
 				addInstruction(variable.start = new XInstructionDumyDelete(), xMethodDecl);
 				addVariable(variable);
 			}
-			addInstructions(visitTree(xMethodDecl.paramTypes));
-			if(methodCompiler.isConstructor()){
+			XClassCompiler decl = methodCompiler.getDeclaringClassCompiler();
+			if(methodCompiler.isConstructor() && !xscript.runtime.XModifier.isStatic(methodCompiler.getModifier())){
+				int enumNameID = 0;
+				int enumOrdinalID = 0;
+				int outerID = 0;
+				if(decl.isEnum()){
+					XVariable variable = new XVariable();
+					variable.modifier = xscript.runtime.XModifier.FINAL | xscript.runtime.XModifier.SYNTHETIC;
+					variable.type = getVarTypeForName("xscript.lang.String");
+					variable.name = getSyntheticVarName("name");
+					addInstruction(variable.start = new XInstructionDumyDelete(), xMethodDecl);
+					addVariable(variable);
+					enumNameID = variable.id;
+					variable = new XVariable();
+					variable.modifier = xscript.runtime.XModifier.FINAL | xscript.runtime.XModifier.SYNTHETIC;
+					variable.type = getPrimitiveType(XPrimitive.INT);
+					variable.name = getSyntheticVarName("ordinal");
+					addInstruction(variable.start = new XInstructionDumyDelete(), xMethodDecl);
+					addVariable(variable);
+					enumOrdinalID = variable.id;
+				}else if(decl.getOuterClass()!=null && !xscript.runtime.XModifier.isStatic(decl.getModifier())){
+					XVariable variable = new XVariable();
+					variable.modifier = xscript.runtime.XModifier.FINAL | xscript.runtime.XModifier.SYNTHETIC;
+					variable.type = getVarTypeForName(decl.getOuterClass().getName());
+					variable.name = getSyntheticVarName("outer");
+					addInstruction(variable.start = new XInstructionDumyDelete(), xMethodDecl);
+					addVariable(variable);
+					outerID = variable.id;
+				}
+				addInstructions(visitTree(xMethodDecl.paramTypes));
 				List<XVarType> superClasses = methodCompiler.getDeclaringClassVarType().getDirectSuperClasses();
 				boolean selvInvokeOk = true;
 				boolean selvInvoke = false;
@@ -554,6 +593,10 @@ public class XStatementCompiler implements XVisitor {
 							XVarAccess varAccess = visitClassAccess(mc.method);
 							if(varAccess.isStatic && varAccess.declaringClass!=null && varAccess.variable==null && varAccess.name==null){
 								XVarType sp = varAccess.declaringClass;
+								if(sp.getXClass().getName().equals("xscript.lang.Enum")){
+									compilerError(XMessageLevel.ERROR, "method.enumconstructor.not.allowed", mc.line);
+									continue;
+								}
 								ListIterator<XVarType> i = superClasses.listIterator();
 								boolean found = false;
 								while(i.hasNext()){
@@ -566,6 +609,12 @@ public class XStatementCompiler implements XVisitor {
 								if(found){
 									if(selvInvoke){
 										compilerError(XMessageLevel.ERROR, "allready.selvinvoked", mc.line);
+									}
+									if(selvInvokeOk && decl.isEnum()){
+										XClass e = decl.getVirtualMachine().getClassProvider().getXClass("xscript.lang.Enum");
+										addInstruction(new XInstructionReadLocal(enumNameID), xMethodDecl);
+										addInstruction(new XInstructionReadLocal(enumOrdinalID), xMethodDecl);
+										addInstruction(new XInstructionInvokeConstructor(e.getMethod("<init>(xscript.lang.String, int)void"), new XClassPtr[0]), xMethodDecl);
 									}
 									XMethodSearch possibleMethods = searchMethod(sp, false, "<init>", true, false);
 									if(mc.typeParam!=null){
@@ -589,8 +638,24 @@ public class XStatementCompiler implements XVisitor {
 										types = new XVarType[0];
 										codeGens = new XCodeGen[0];
 									}
-									possibleMethods.applyTypes(types);
-									makeCall2(possibleMethods, mc, codeGens, true, false);
+									XVarType[] realTypes;
+									XCodeGen[] realCodeGens;
+									if(decl.getOuterClass()!=null && !xscript.runtime.XModifier.isStatic(decl.getModifier())){
+										realTypes = new XVarType[types.length+1];
+										realCodeGens = new XCodeGen[codeGens.length+1];
+										realTypes[0] = getVarTypeForName(decl.getOuterClass().getName());
+										realCodeGens[0] = new XCodeGen();
+										realCodeGens[0].addInstruction(new XInstructionReadLocal(outerID), mc.line.startLine);
+										for(int j=0; j<types.length; j++){
+											realTypes[j+1] = types[j];
+											realCodeGens[j+1] = codeGens[j];
+										}
+									}else{
+										realTypes = types;
+										realCodeGens = codeGens;
+									}
+									possibleMethods.applyTypes(realTypes);
+									makeCall2(possibleMethods, mc, realCodeGens, true, false);
 									selvInvokeOk = false;
 								}else{
 									if(sp.equals(methodCompiler.getDeclaringClassVarType())){
@@ -620,8 +685,37 @@ public class XStatementCompiler implements XVisitor {
 													types = new XVarType[0];
 													codeGens = new XCodeGen[0];
 												}
-												possibleMethods.applyTypes(types);
-												makeCall2(possibleMethods, mc, codeGens, true, false);
+												XVarType[] realTypes;
+												XCodeGen[] realCodeGens;
+												if(decl.isEnum()){
+													realTypes = new XVarType[types.length+2];
+													realCodeGens = new XCodeGen[codeGens.length+2];
+													realTypes[0] = getVarTypeForName("xscript.lang.String");
+													realCodeGens[0] = new XCodeGen();
+													realCodeGens[0].addInstruction(new XInstructionReadLocal(enumNameID), mc.line.startLine);
+													realTypes[1] = getPrimitiveType(XPrimitive.INT);
+													realCodeGens[1] = new XCodeGen();
+													realCodeGens[1].addInstruction(new XInstructionReadLocal(enumOrdinalID), mc.line.startLine);
+													for(int j=0; j<types.length; j++){
+														realTypes[j+2] = types[j];
+														realCodeGens[j+2] = codeGens[j];
+													}
+												}else if(decl.getOuterClass()!=null && !xscript.runtime.XModifier.isStatic(decl.getModifier())){
+													realTypes = new XVarType[types.length+1];
+													realCodeGens = new XCodeGen[codeGens.length+1];
+													realTypes[0] = getVarTypeForName(decl.getOuterClass().getName());
+													realCodeGens[0] = new XCodeGen();
+													realCodeGens[0].addInstruction(new XInstructionReadLocal(outerID), mc.line.startLine);
+													for(int j=0; j<types.length; j++){
+														realTypes[j+1] = types[j];
+														realCodeGens[j+1] = codeGens[j];
+													}
+												}else{
+													realTypes = types;
+													realCodeGens = codeGens;
+												}
+												possibleMethods.applyTypes(realTypes);
+												makeCall2(possibleMethods, mc, realCodeGens, true, false);
 												selvInvoke = true;
 											}
 										}else{
@@ -640,9 +734,22 @@ public class XStatementCompiler implements XVisitor {
 					}
 				}
 				if(!selvInvoke){
+					if(selvInvokeOk && decl.isEnum()){
+						XClass e = decl.getVirtualMachine().getClassProvider().getXClass("xscript.lang.Enum");
+						addInstruction(new XInstructionReadLocal(enumNameID), xMethodDecl);
+						addInstruction(new XInstructionReadLocal(enumOrdinalID), xMethodDecl);
+						addInstruction(new XInstructionInvokeConstructor(e.getMethod("<init>(xscript.lang.String, int)void"), new XClassPtr[0]), xMethodDecl);
+					}
 					for(XVarType superClass:superClasses){
+						if(superClass.getXClass().getName().equals("xscript.lang.Enum"))
+							continue;
 						XMethodSearch search = searchMethod(superClass, false, "<init>", true, false);
-						search.applyTypes(new XVarType[0]);
+						if(superClass.getXClass().getOuterClass()!=null && !xscript.runtime.XModifier.isStatic(superClass.getXClass().getModifier())){
+							search.applyTypes(new XVarType[]{getVarTypeForName(superClass.getXClass().getOuterClass().getName())});
+							addInstruction(new XInstructionReadLocal(outerID), xMethodDecl);
+						}else{
+							search.applyTypes(new XVarType[0]);
+						}
 						search.applyReturn(getPrimitiveType(XPrimitive.VOID));
 						XCompilerMethod m = search.getMethod();
 						if(m==null){
@@ -655,9 +762,20 @@ public class XStatementCompiler implements XVisitor {
 							codeGen.addInstruction(new XInstructionInvokeConstructor(m.method, new XClassPtr[0]), xMethodDecl.line.startLine);
 						}
 					}
+					if(decl.getOuterClass()!=null && !xscript.runtime.XModifier.isStatic(decl.getModifier())){
+						XField field = decl.getSyntheticField("outer");
+						if(field!=null){
+							addInstruction(new XInstructionReadLocal(outerID), xMethodDecl);
+							addInstruction(new XInstructionSetLocalField(0, field), xMethodDecl);
+						}
+					}
 				}
+			}else{
+				addInstructions(visitTree(xMethodDecl.paramTypes));
 			}
-			addInstructions(visitTree(xMethodDecl.block, null));
+			if(xMethodDecl.block!=null){
+				addInstructions(visitTree(xMethodDecl.block, null));
+			}
 			finalizeVars(xMethodDecl);
 		}else{
 			shouldNeverCalled();
@@ -1276,8 +1394,8 @@ public class XStatementCompiler implements XVisitor {
 			rv.variable = getVariable(varAccess.name);
 			if(rv.variable==null){
 				int outer = 0;
-				XClass cc;
-				XClass c=cc=methodCompiler.getDeclaringClass();
+				XClassCompiler cc;
+				XClass c=cc=methodCompiler.getDeclaringClassCompiler();
 				rv.field = c.getFieldAndParents(varAccess.name);
 				while(rv.field==null && c!=null){
 					if(xscript.runtime.XModifier.isStatic(c.getModifier()))
@@ -1313,13 +1431,13 @@ public class XStatementCompiler implements XVisitor {
 							varAccess.codeGen = new XCodeGen();
 						}
 						outer--;
-						XField field = cc.getFieldAndParents("outer$");
+						XField field = cc.getSyntheticFieldAndParents("outer");
 						XVarType declaringClass = methodCompiler.getDeclaringClassVarType();
 						declaringClass = getVarTypeForFieldType(field, declaringClass);
 						varAccess.codeGen.addInstruction(new XInstructionGetLocalField(0, field), tree.line.startLine);
 						while(outer>0){
-							cc = cc.getOuterClass();
-							field = cc.getFieldAndParents("outer$");
+							cc = (XClassCompiler) cc.getOuterClass();
+							field = cc.getSyntheticFieldAndParents("outer");
 							declaringClass = getVarTypeForFieldType(field, declaringClass);
 							varAccess.codeGen.addInstruction(new XInstructionGetField(field), tree.line.startLine);
 							outer--;
@@ -1373,7 +1491,7 @@ public class XStatementCompiler implements XVisitor {
 					varAccess.codeGen = new XCodeGen();
 					varAccess.isStatic = false;
 					XClass c = getXClassFor(varAccess.declaringClass.getXClassPtr());
-					XClass cc = methodCompiler.getDeclaringClass();
+					XClassCompiler cc = methodCompiler.getDeclaringClassCompiler();
 					if(cc==c){
 						this.varAccess = new XVarAccess();
 						this.varAccess.name = "this";
@@ -1381,17 +1499,17 @@ public class XStatementCompiler implements XVisitor {
 						setReturn(varAccess.declaringClass, xOperatorStatement);
 					}else{
 						if(!xscript.runtime.XModifier.isStatic(cc.getModifier())){
-							XField field = cc.getFieldAndParents("outer$");
+							XField field = cc.getSyntheticFieldAndParents("outer");
 							varAccess.codeGen.addInstruction(new XInstructionGetLocalField(0, field), xOperatorStatement.line.startLine);
-							cc = cc.getOuterClass();
+							cc = (XClassCompiler) cc.getOuterClass();
 							while(cc!=c){
 								if(cc==null)
 									break;
 								if(xscript.runtime.XModifier.isStatic(cc.getModifier()))
 									break;
-								field = cc.getFieldAndParents("outer$");
+								field = cc.getSyntheticFieldAndParents("outer");
 								varAccess.codeGen.addInstruction(new XInstructionGetField(field), xOperatorStatement.line.startLine);
-								cc = cc.getOuterClass();
+								cc = (XClassCompiler) cc.getOuterClass();
 							}
 						}
 						this.varAccess = varAccess;
@@ -2420,7 +2538,7 @@ public class XStatementCompiler implements XVisitor {
 
 	@Override
 	public void visitAssert(XAssert xAssert) {
-		XField field = methodCompiler.getDeclaringClass().getField("$assertionsDisabled");
+		XField field = methodCompiler.getDeclaringClassCompiler().getSyntheticField("assertionsDisabled");
 		addInstruction(new XInstructionGetStaticField(field), xAssert);
 		XInstructionDumyIf overjump = new XInstructionDumyIf();
 		addInstruction(overjump, xAssert);
@@ -2436,6 +2554,12 @@ public class XStatementCompiler implements XVisitor {
 		addInstruction(new XInstructionInvokeSpecial(m, new XClassPtr[0]), xAssert);
 		addInstruction(new XInstructionThrow(), xAssert);
 		addInstruction(overjump.target = end.target = new XInstructionDumyDelete(), xAssert);
+	}
+	
+	@Override
+	public void visitCompiled(XCompiledPart xCompiledPart) {
+		codeGen = xCompiledPart.codeGen;
+		setReturn(null, xCompiledPart);
 	}
 	
 	private void setReturn(XVarType returnType, XTree tree){

@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class XModifier {
-
+	
 	public static final String PUBLIC_NAME = "public"; //$NON-NLS-1$
 	public static final String PRIVATE_NAME = "private"; //$NON-NLS-1$
 	public static final String PROTECTED_NAME = "protected"; //$NON-NLS-1$
@@ -15,6 +15,9 @@ public class XModifier {
 	public static final String NATIVE_NAME = "native"; //$NON-NLS-1$
 	public static final String SYNCHRONIZED_NAME = "synchronized"; //$NON-NLS-1$
 	public static final String VARARGS_NAME = "varargs"; //$NON-NLS-1$
+	public static final String SYNTHETIC_NAME = "synthetic"; //$NON-NLS-1$
+	public static final String VOLATILE_NAME = "volatile"; //$NON-NLS-1$
+	public static final String TRANSIENT_NAME = "transient"; //$NON-NLS-1$
 	
 	public static final int PUBLIC = 1;
 	public static final int PRIVATE = 2;
@@ -25,6 +28,9 @@ public class XModifier {
 	public static final int NATIVE = 64;
 	public static final int SYNCHRONIZED = 128;
 	public static final int VARARGS = 256;
+	public static final int SYNTHETIC = 512;
+	public static final int VOLATILE = 1024;
+	public static final int TRANSIENT = 2048;
 	
 	private static final HashMap<String, Integer> map = new HashMap<String, Integer>();
 
@@ -38,6 +44,9 @@ public class XModifier {
 		map.put(NATIVE_NAME, NATIVE);
 		map.put(SYNCHRONIZED_NAME, SYNCHRONIZED);
 		map.put(VARARGS_NAME, VARARGS);
+		map.put(SYNTHETIC_NAME, SYNTHETIC);
+		map.put(VOLATILE_NAME, VOLATILE);
+		map.put(TRANSIENT_NAME, TRANSIENT);
 	}
 
 	public static boolean isPublic(int modifier) {
@@ -75,6 +84,18 @@ public class XModifier {
 	public static boolean isVarargs(int modifier) {
 		return (modifier & VARARGS) != 0;
 	}
+	
+	public static boolean isSynthetic(int modifier) {
+		return (modifier & SYNTHETIC) != 0;
+	}
+	
+	public static boolean isVolatile(int modifier) {
+		return (modifier & VOLATILE) != 0;
+	}
+	
+	public static boolean isTransient(int modifier) {
+		return (modifier & TRANSIENT) != 0;
+	}
 
 	public static String[] getModifiers(int modifier) {
 		List<String> list = new ArrayList<String>();
@@ -104,6 +125,15 @@ public class XModifier {
 		}
 		if (isVarargs(modifier)) {
 			list.add(VARARGS_NAME);
+		}
+		if (isSynthetic(modifier)) {
+			list.add(SYNTHETIC_NAME);
+		}
+		if (isVolatile(modifier)) {
+			list.add(VOLATILE_NAME);
+		}
+		if (isTransient(modifier)) {
+			list.add(TRANSIENT_NAME);
 		}
 		return list.toArray(new String[list.size()]);
 	}

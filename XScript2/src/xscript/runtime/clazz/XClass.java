@@ -223,6 +223,8 @@ public class XClass extends XPackage{
 	public XField getField(String name){
 		for(int i=0; i<fields.length; i++){
 			if(fields[i].getSimpleName().equals(name)){
+				if(!XModifier.isSynthetic(fields[i].getModifier()))
+					return null;
 				return fields[i];
 			}
 		}
@@ -232,7 +234,8 @@ public class XClass extends XPackage{
 	public XField getFieldAndParents(String name){
 		for(int i=0; i<fields.length; i++){
 			if(fields[i].getSimpleName().equals(name)){
-				return fields[i];
+				if(!XModifier.isSynthetic(fields[i].getModifier()))
+					return fields[i];
 			}
 		}
 		for(int i=0; i<superClasses.length; i++){

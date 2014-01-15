@@ -2,6 +2,7 @@ package xscript.compiler.tree;
 
 import java.util.List;
 
+import xscript.compiler.XCodeGen;
 import xscript.compiler.XConstantValue;
 import xscript.compiler.XOperator;
 import xscript.compiler.token.XLineDesk;
@@ -14,7 +15,7 @@ public abstract class XTree{
 		FOR, IF, RETURN, THROW, VARDECLS, GROUP, SYNCHRONIZED, CONST, METHODCALL, 
 		NEW, OPERATOR, OPERATORSUFFIXPREFIX, 
 		INDEX, IFOPERATOR, CAST, LAMBDA, TRY, CATCH, NEWARRAY, ARRAYINITIALIZE, 
-		FOREACH, LABLE, SWITCH, CASE, THIS, SUPER, INSTANCEOF, ASSERT;
+		FOREACH, LABLE, SWITCH, CASE, THIS, SUPER, INSTANCEOF, ASSERT, COMPILED;
 	}
 	
 	public static class XError extends XTree{
@@ -1116,6 +1117,27 @@ public abstract class XTree{
 		@Override
 		public void accept(XVisitor v) {
 			v.visitAssert(this);
+		}
+		
+	}
+	
+	public static class XCompiledPart extends XStatement{
+		
+		public XCodeGen codeGen;
+		
+		public XCompiledPart(XLineDesk line, XCodeGen codeGen) {
+			super(line);
+			this.codeGen = codeGen;
+		}
+
+		@Override
+		public XTag getTag() {
+			return XTag.COMPILED;
+		}
+
+		@Override
+		public void accept(XVisitor v) {
+			v.visitCompiled(this);
 		}
 		
 	}

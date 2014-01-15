@@ -82,6 +82,7 @@ public final class XChecks {
 	public static void checkModifier(XClass xClass, int modifier, int okModifier){
 		final int ACCESS = XModifier.PUBLIC | XModifier.PRIVATE | XModifier.PROTECTED;
 		int notOkModifier = ~okModifier & modifier;
+		notOkModifier = notOkModifier & ~XModifier.SYNTHETIC;
 		if(notOkModifier!=0){
 			throw new XRuntimeException("Illegal modifier %s in %s, only allowed %s", XModifier.toString(notOkModifier), xClass, XModifier.toString(okModifier));
 		}

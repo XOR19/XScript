@@ -1466,7 +1466,7 @@ public class XParser {
 	public XTree classAndInterfaceBodyDecl(boolean isInterface, String className){
 		XModifier modifier = makeModifier();
 		if(token.kind==XTokenKind.CLASS || token.kind==XTokenKind.INTERFACE || token.kind==XTokenKind.ENUM || token.kind==XTokenKind.ANNOTATION){
-			return classDecl(modifier);
+			return makeClassDecl(modifier);
 		}
 		if(token.kind==XTokenKind.LBRAKET && xscript.runtime.XModifier.isStatic(modifier.modifier)){
 			if(modifier.annotations!=null){

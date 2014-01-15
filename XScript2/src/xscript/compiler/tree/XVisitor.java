@@ -10,6 +10,7 @@ import xscript.compiler.tree.XTree.XCast;
 import xscript.compiler.tree.XTree.XCatch;
 import xscript.compiler.tree.XTree.XClassDecl;
 import xscript.compiler.tree.XTree.XClassFile;
+import xscript.compiler.tree.XTree.XCompiledPart;
 import xscript.compiler.tree.XTree.XConstant;
 import xscript.compiler.tree.XTree.XContinue;
 import xscript.compiler.tree.XTree.XDo;
@@ -134,5 +135,7 @@ public interface XVisitor {
 	public void visitInstanceof(XInstanceof xInstanceof);
 
 	public void visitAssert(XAssert xAssert);
+
+	public void visitCompiled(XCompiledPart xCompiledPart);
 
 }

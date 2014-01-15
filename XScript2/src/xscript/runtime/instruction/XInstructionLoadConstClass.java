@@ -3,6 +3,7 @@ package xscript.runtime.instruction;
 import java.io.IOException;
 
 import xscript.runtime.XVirtualMachine;
+import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XInputStream;
 import xscript.runtime.clazz.XOutputStream;
 import xscript.runtime.genericclass.XClassPtr;
@@ -23,6 +24,7 @@ public class XInstructionLoadConstClass extends XInstruction {
 	
 	@Override
 	public void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
+		XClass c = xClass.getXClass(vm, methodExecutor.getDeclaringClass(), methodExecutor).getXClass();
 		//TODO
 	}
 

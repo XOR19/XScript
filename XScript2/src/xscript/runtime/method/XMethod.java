@@ -337,7 +337,7 @@ public class XMethod extends XPackage {
 	}
 
 	public boolean isConstructor() {
-		return XModifier.isStatic(modifier)?name.equals("<staticInit>"):name.equals("<init>");
+		return XModifier.isStatic(modifier)?name.equals("<static>"):name.equals("<init>");
 	}
 	
 	public String getRealName(){

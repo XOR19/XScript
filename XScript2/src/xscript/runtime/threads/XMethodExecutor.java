@@ -7,6 +7,7 @@ import xscript.runtime.XModifier;
 import xscript.runtime.XRuntimeException;
 import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XPrimitive;
+import xscript.runtime.genericclass.XClassPtr;
 import xscript.runtime.genericclass.XGenericClass;
 import xscript.runtime.instruction.XInstruction;
 import xscript.runtime.method.XCatchInfo;
@@ -283,6 +284,10 @@ public class XMethodExecutor implements XGenericMethodProvider {
 	}
 
 	public XGenericClass getLocalType(int local) {
+		XClassPtr cp = method.getLocalType(programPointer-1, local);
+		if(cp!=null){
+			return cp.getXClass(method.getDeclaringClass().getVirtualMachine(), declaringClass, this);
+		}
 		return null;
 	}
 	
