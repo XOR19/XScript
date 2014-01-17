@@ -3,6 +3,8 @@ package xscript.compiler;
 import java.util.ArrayList;
 import java.util.List;
 
+import xscript.compiler.dumyinstruction.XInstructionDumyJump;
+import xscript.compiler.dumyinstruction.XInstructionDumyJumpTargetResolver;
 import xscript.compiler.tree.XTree;
 
 public class XJump {

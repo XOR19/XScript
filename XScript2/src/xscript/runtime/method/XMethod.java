@@ -32,6 +32,7 @@ public class XMethod extends XPackage {
 	public static final int CONSTRUCTORMODIFIER = XModifier.PRIVATE | XModifier.PROTECTED | XModifier.PUBLIC | XModifier.VARARGS;
 	public static final int STATICCONSTRUCTORMODIFIER = XModifier.STATIC | XModifier.FINAL | XModifier.PRIVATE;
 	
+	protected List<XClass> classes = new ArrayList<XClass>();
 	protected String desk;
 	protected int modifier;
 	protected XClassPtr returnType;
@@ -187,7 +188,9 @@ public class XMethod extends XPackage {
 	
 	@Override
 	public void addChild(XPackage child) {
-		throw new UnsupportedOperationException();
+		if(getClass()==XMethod.class)
+			throw new UnsupportedOperationException();
+		super.addChild(child);
 	}
 	
 	public int getModifier(){
@@ -438,6 +441,13 @@ public class XMethod extends XPackage {
 			outputStream.writeShort(maxObjectStackSize);
 			outputStream.writeShort(maxLocalSize);
 		}
+		
+		outputStream.writeShort(classes.size());
+		for(XClass c:classes){
+			outputStream.writeUTF(c.getSimpleName());
+			c.save(outputStream);
+		}
+		
 	}
 
 	public XGenericInfo getGenericInfo(int genericID) {
@@ -494,6 +504,16 @@ public class XMethod extends XPackage {
 
 	public XClassPtr[] getThrows() {
 		return mThrows;
+	}
+
+	public void loadInnerClasses(XInputStream inputStream) throws IOException {
+		int childs = inputStream.readUnsignedShort();
+		for(int i=0; i<childs; i++){
+			XClass c = new XClass(getDeclaringClass().getVirtualMachine(), inputStream.readUTF(), this);
+			super.addChild(c);
+			classes.add(c);
+			c.load(inputStream);
+		}
 	}
 	
 }

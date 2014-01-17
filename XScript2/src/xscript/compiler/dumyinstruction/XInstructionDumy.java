@@ -1,8 +1,9 @@
-package xscript.compiler;
+package xscript.compiler.dumyinstruction;
 
 import java.io.IOException;
 import java.util.List;
 
+import xscript.compiler.XCodeGen;
 import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XOutputStream;
 import xscript.runtime.instruction.XInstruction;

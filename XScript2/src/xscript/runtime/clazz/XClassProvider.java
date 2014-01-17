@@ -82,6 +82,7 @@ public class XClassProvider {
 		}
 		if(xClass==null)
 			throw new XRuntimeException("Class %s not found", name);
+		xClass.onRequest();
 		//if(xClass.getState()==XClass.STATE_ERRORED){
 		//	throw new XRuntimeException("Class %s errored", name);
 		//}

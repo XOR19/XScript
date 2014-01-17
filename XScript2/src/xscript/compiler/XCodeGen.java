@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
+import xscript.compiler.dumyinstruction.XInstructionDumy;
+import xscript.compiler.dumyinstruction.XInstructionDumyDelete;
+import xscript.compiler.dumyinstruction.XInstructionDumyJump;
 import xscript.runtime.instruction.XInstruction;
 import xscript.runtime.instruction.XInstructionVarJump;
 import xscript.runtime.method.XCatchEntry;
@@ -12,10 +15,15 @@ import xscript.runtime.method.XLocalEntry;
 
 public class XCodeGen {
 
-	private List<XInstruction> instructions = new ArrayList<XInstruction>();
-	private List<Integer> lines = new ArrayList<Integer>();
-	private List<XTryHandle> tryHandles = new ArrayList<XTryHandle>();
-	private List<XVariable> variables = new ArrayList<XVariable>();
+	protected List<XInstruction> instructions = new ArrayList<XInstruction>();
+	protected List<Integer> lines = new ArrayList<Integer>();
+	protected List<XTryHandle> tryHandles = new ArrayList<XTryHandle>();
+	protected List<XVariable> variables = new ArrayList<XVariable>();
+	
+	public void addInstruction(int pos, XInstruction instruction, int line){
+		instructions.add(pos, instruction);
+		lines.add(pos, line);
+	}
 	
 	public void addInstruction(XInstruction instruction, int line){
 		instructions.add(instruction);

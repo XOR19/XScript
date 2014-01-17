@@ -1,10 +1,11 @@
-package xscript.compiler;
+package xscript.compiler.dumyinstruction;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
+import xscript.compiler.XCodeGen;
 import xscript.runtime.instruction.XInstruction;
 import xscript.runtime.instruction.XInstructionBinSwitch;
 import xscript.runtime.instruction.XInstructionTableSwitch;

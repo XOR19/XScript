@@ -55,7 +55,7 @@ public class XClass extends XPackage{
 	
 	protected int state;
 	
-	protected XClass(XVirtualMachine virtualMachine, String name, XPackage p) {
+	public XClass(XVirtualMachine virtualMachine, String name, XPackage p) {
 		super(name);
 		state = STATE_CREATED;
 		this.virtualMachine = virtualMachine;
@@ -223,7 +223,7 @@ public class XClass extends XPackage{
 	public XField getField(String name){
 		for(int i=0; i<fields.length; i++){
 			if(fields[i].getSimpleName().equals(name)){
-				if(!XModifier.isSynthetic(fields[i].getModifier()))
+				if(XModifier.isSynthetic(fields[i].getModifier()))
 					return null;
 				return fields[i];
 			}
@@ -232,14 +232,12 @@ public class XClass extends XPackage{
 	}
 	
 	public XField getFieldAndParents(String name){
-		for(int i=0; i<fields.length; i++){
-			if(fields[i].getSimpleName().equals(name)){
-				if(!XModifier.isSynthetic(fields[i].getModifier()))
-					return fields[i];
-			}
+		XField field = getField(name);
+		if(field!=null){
+			return field;
 		}
 		for(int i=0; i<superClasses.length; i++){
-			XField field = superClasses[i].getXClassNonNull(virtualMachine).getFieldAndParents(name);
+			field = superClasses[i].getXClassNonNull(virtualMachine).getFieldAndParents(name);
 			if(field!=null)
 				return field;
 		}
@@ -255,7 +253,7 @@ public class XClass extends XPackage{
 		return null;
 	}
 
-	protected void load(XInputStream inputStream) throws IOException {
+	public void load(XInputStream inputStream) throws IOException {
 		if(state==STATE_CREATED){
 			try{
 				state = STATE_LOADING;
@@ -281,7 +279,6 @@ public class XClass extends XPackage{
 					superClasses[i] = XClassPtr.load(inputStream);
 					canBeDiamondExtender[i] = true;
 				}
-				checkDiamonds(new HashMap<XClass, XClass>());
 				genericInfos = new XGenericInfo[inputStream.readUnsignedByte()];
 				for(int i=0; i<genericInfos.length; i++){
 					genericInfos[i] = new XGenericInfo(virtualMachine, inputStream);
@@ -295,6 +292,7 @@ public class XClass extends XPackage{
 				for(int i=0; i<superClasses.length; i++){
 					superClasses[i].getXClassNonNull(virtualMachine);
 				}
+				checkDiamonds(new HashMap<XClass, XClass>());
 				fields = new XField[inputStream.readUnsignedShort()];
 				for(int i=0; i<fields.length; i++){
 					super.addChild(fields[i] = new XField(this, inputStream));
@@ -302,6 +300,7 @@ public class XClass extends XPackage{
 				methods = new XMethod[inputStream.readUnsignedShort()];
 				for(int i=0; i<methods.length; i++){
 					super.addChild(methods[i] = new XMethod(this, inputStream));
+					methods[i].loadInnerClasses(inputStream);
 					if(methods[i].isConstructor() && !XModifier.isStatic(methods[i].getModifier())){
 						XClass[] superClasses = methods[i].getExplizitSuperInvokes();
 						for(int j=0; j<superClasses.length; j++){
@@ -517,5 +516,7 @@ public class XClass extends XPackage{
 		out += "}";
 		return out;
 	}
+
+	public void onRequest() {}
 	
 }

@@ -4,7 +4,7 @@ import java.util.HashMap;
 
 public class XPackage {
 
-	protected final String name;
+	protected String name;
 	protected XPackage parent;
 	protected HashMap<String, XPackage> childs = new HashMap<String, XPackage>();
 	
@@ -64,6 +64,10 @@ public class XPackage {
 
 	public XPackage getParent() {
 		return parent;
+	}
+	
+	public void remove(String name){
+		childs.remove(name);
 	}
 	
 }

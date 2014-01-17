@@ -33,6 +33,8 @@ public class XCompiler extends XVirtualMachine{
 	
 	private List<XClassCompiler> classes2Compile1 = new ArrayList<XClassCompiler>();
 	
+	private List<XClassCompiler> classes2Compile2 = new ArrayList<XClassCompiler>();
+	
 	private HashMap<XClassCompiler, XSourceProvider> classes2Save = new HashMap<XClassCompiler, XSourceProvider>();
 	
 	private List<XSourceProvider> sourceProviders = new ArrayList<XSourceProvider>();
@@ -65,6 +67,18 @@ public class XCompiler extends XVirtualMachine{
 			treeChangers.add(treeChanger);
 	}
 	
+	private void compile1(){
+		while(!classes2Compile1.isEmpty()){
+			XClassCompiler cc = classes2Compile1.remove(0);
+			try{
+				cc.gen();
+			}catch(Throwable e){
+				e.printStackTrace();
+				postMessage(XMessageLevel.ERROR, cc.getName(), "errored", new XLineDesk(0, 0, 0, 0), e.getMessage());
+			}
+		}
+	}
+	
 	public void compile(){
 		while(!classes2Compile.isEmpty()){
 			String name = classes2Compile.remove(0);
@@ -74,14 +88,17 @@ public class XCompiler extends XVirtualMachine{
 				e.printStackTrace();
 				postMessage(XMessageLevel.ERROR, name, "errored", new XLineDesk(0, 0, 0, 0), e.getMessage());
 			}
+			compile1();
+		}
+		while(!classes2Compile2.isEmpty()){
+			XClassCompiler cc = classes2Compile2.remove(0);
 			try{
-				while(!classes2Compile1.isEmpty()){
-					classes2Compile1.remove(0).gen();
-				}
+				cc.onRequest();
 			}catch(Throwable e){
 				e.printStackTrace();
-				postMessage(XMessageLevel.ERROR, name, "errored", new XLineDesk(0, 0, 0, 0), e.getMessage());
+				postMessage(XMessageLevel.ERROR, cc.getName(), "errored", new XLineDesk(0, 0, 0, 0), e.getMessage());
 			}
+			compile1();
 		}
 		for(XSourceProvider sp:sourceProviders){
 			sp.startSave();
@@ -157,7 +174,6 @@ public class XCompiler extends XVirtualMachine{
 				tree.accept(visitor);
 			}
 			tree.accept(classCompiler);
-			compiler.classes2Compile1.add(classCompiler);
 		}
 		
 	}
@@ -180,6 +196,14 @@ public class XCompiler extends XVirtualMachine{
 		if(!predefStaticIndirectImports.contains(name)){
 			predefStaticIndirectImports.add(name);
 		}
+	}
+	
+	protected void toCompile(XClassCompiler xClassCompiler) {
+		classes2Compile1.add(xClassCompiler);
+	}
+	
+	protected void childToCompile(XClassCompiler xClassCompiler) {
+		classes2Compile2.add(xClassCompiler);
 	}
 	
 }

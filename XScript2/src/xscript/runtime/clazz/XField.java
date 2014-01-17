@@ -15,10 +15,10 @@ public class XField extends XPackage {
 	public static final int STATICALLOWEDMODIFIFER = XModifier.FINAL | XModifier.PRIVATE | XModifier.PROTECTED | XModifier.PUBLIC | XModifier.STATIC;
 	public static final int ALLOWEDMODIFIFER = XModifier.FINAL | XModifier.PRIVATE | XModifier.PROTECTED | XModifier.PUBLIC;
 	
-	private int modifier;
-	private XClassPtr type;
-	private XAnnotation[] annotations;
-	private int index;
+	protected int modifier;
+	protected XClassPtr type;
+	protected XAnnotation[] annotations;
+	protected int index;
 	
 	public XField(XClass declaringClass, XInputStream inputStream) throws IOException {
 		super(inputStream.readUTF());
@@ -39,20 +39,31 @@ public class XField extends XPackage {
 	}
 
 	public XField(XClass declaringClass, int modifier, String name, XClassPtr type, XAnnotation[] annotations) {
+		this(declaringClass, modifier, name, type, annotations, true);
+	}
+	
+	protected XField(XClass declaringClass, int modifier, String name, XClassPtr type, XAnnotation[] annotations, boolean getIndex) {
 		super(name);
 		parent = declaringClass;
 		this.modifier = modifier;
 		this.annotations = annotations;
 		this.type = type;
-		if(XModifier.isStatic(modifier)){
-			declaringClass.getStaticFieldIndex(getSizeInObject());
-			XChecks.checkModifier(declaringClass, modifier, STATICALLOWEDMODIFIFER);
-		}else{
-			declaringClass.getFieldIndex(getSizeInObject());
-			XChecks.checkModifier(declaringClass, modifier, ALLOWEDMODIFIFER);
+		if(getIndex){
+			getIndex();
 		}
 	}
 
+	protected void getIndex(){
+		XClass declaringClass = getDeclaringClass();
+		if(XModifier.isStatic(modifier)){
+			index = declaringClass.getStaticFieldIndex(getSizeInObject());
+			XChecks.checkModifier(declaringClass, modifier, STATICALLOWEDMODIFIFER);
+		}else{
+			index = declaringClass.getFieldIndex(getSizeInObject());
+			XChecks.checkModifier(declaringClass, modifier, ALLOWEDMODIFIFER);
+		}
+	}
+	
 	@Override
 	public void addChild(XPackage child) {
 		throw new UnsupportedOperationException();

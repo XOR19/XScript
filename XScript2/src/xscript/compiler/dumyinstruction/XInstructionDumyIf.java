@@ -1,4 +1,4 @@
-package xscript.compiler;
+package xscript.compiler.dumyinstruction;
 
 import xscript.runtime.instruction.XInstruction;
 import xscript.runtime.instruction.XInstructionIf;

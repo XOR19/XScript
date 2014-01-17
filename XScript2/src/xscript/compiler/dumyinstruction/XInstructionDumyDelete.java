@@ -1,7 +1,8 @@
-package xscript.compiler;
+package xscript.compiler.dumyinstruction;
 
 import java.util.List;
 
+import xscript.compiler.XCodeGen;
 import xscript.runtime.instruction.XInstruction;
 
 public class XInstructionDumyDelete extends XInstructionDumy {

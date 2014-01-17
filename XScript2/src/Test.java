@@ -23,7 +23,11 @@ public class Test {
 		compiler.printMessages(new XMessageFormatter());
 		
 		XVirtualMachine vm = new XVirtualMachine(new XZipClassLoader(new File(f, "rt.zip")), 1024);
-		XClass c = vm.getClassProvider().getXClass("test.Test.Inner2");
+		XClass c = vm.getClassProvider().getXClass("test.Test");
+		System.out.println(c.dump());
+		c = vm.getClassProvider().getXClass("test.Test.<init>()void.A");
+		System.out.println(c.dump());
+		c = vm.getClassProvider().getXClass("test.Test.<init>()void.B");
 		System.out.println(c.dump());
 		/*XStandartTreeMaker maker = new XStandartTreeMaker();
 		XTree tree = maker.makeTree("public class A {public void A(A.c...b){a=1<4?a:b;}}", new XMessagePrinter());

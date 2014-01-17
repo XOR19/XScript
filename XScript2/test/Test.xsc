@@ -2,50 +2,26 @@ package test;
 
 public class Test:Iterable<Int>{
 	
-	public int[] i;
+	int y;
 	
 	public Test(){
 		
-	}
-	
-	static{
-		s();
-	}
-	
-	public void test(){
-		for(Object e:this){
-			e.toString();
+		int outer;
+		
+		class A{
+			
+			public A(){
+				int b = y;
+				int z = outer;
+			}
+			
 		}
-		gen(i);
-	}
-	
-	public <T> void gen(T t){
-		t = test();
-	}
-	
-	public static <G> G test(){
-		return null;
-	}
-	
-	public static void s(){
-		Object o = test();
-	}
-	
-	public class Inner{
 		
-		public Inner(){}
-	
-		public Inner(int i):Inner(){}
-	
-	}
-	
-	public class Inner2:Inner{
-	
-		public Inner2(){}
-	
-		public Inner2(int i):Inner(i){}
+		class B:A{
 		
-		public Inner2(int i, int z):Inner2(i){}
+			
+		
+		}
 		
 	}
 	

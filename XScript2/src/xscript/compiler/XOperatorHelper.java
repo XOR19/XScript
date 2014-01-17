@@ -2,6 +2,7 @@ package xscript.compiler;
 
 import java.util.EnumMap;
 
+import xscript.compiler.dumyinstruction.XInstructionDumyDelete;
 import xscript.runtime.instruction.XInstruction;
 import xscript.runtime.instruction.XInstructionAddDouble;
 import xscript.runtime.instruction.XInstructionAddFloat;
