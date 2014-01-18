@@ -11,6 +11,16 @@ import xscript.runtime.clazz.XWrapper;
 import xscript.runtime.genericclass.XGenericClass;
 import xscript.runtime.genericclass.XGenericMethodProviderImp;
 import xscript.runtime.method.XMethod;
+import xscript.runtime.nativeclass.XLangArray;
+import xscript.runtime.nativeclass.XLangArrayBool;
+import xscript.runtime.nativeclass.XLangArrayByte;
+import xscript.runtime.nativeclass.XLangArrayChar;
+import xscript.runtime.nativeclass.XLangArrayDouble;
+import xscript.runtime.nativeclass.XLangArrayFloat;
+import xscript.runtime.nativeclass.XLangArrayInt;
+import xscript.runtime.nativeclass.XLangArrayLong;
+import xscript.runtime.nativeclass.XLangArrayShort;
+import xscript.runtime.nativeclass.XLangObject;
 import xscript.runtime.object.XObject;
 import xscript.runtime.threads.XMethodExecutor;
 import xscript.runtime.threads.XThread;
@@ -23,6 +33,16 @@ public class XNativeProvider {
 	
 	public XNativeProvider(XVirtualMachine virtualMachine) {
 		this.virtualMachine = virtualMachine;
+		XLangArray.registerNatives(this);
+		XLangArrayBool.registerNatives(this);
+		XLangArrayByte.registerNatives(this);
+		XLangArrayChar.registerNatives(this);
+		XLangArrayDouble.registerNatives(this);
+		XLangArrayFloat.registerNatives(this);
+		XLangArrayInt.registerNatives(this);
+		XLangArrayLong.registerNatives(this);
+		XLangArrayShort.registerNatives(this);
+		XLangObject.registerNatives(this);
 	}
 
 	public void call(XThread thread, XMethodExecutor methodExecutor, XMethod method, XGenericClass[] generics, long[] params) {

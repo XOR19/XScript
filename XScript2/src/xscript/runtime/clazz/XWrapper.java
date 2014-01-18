@@ -1,6 +1,5 @@
 package xscript.runtime.clazz;
 
-import xscript.runtime.XChecks;
 import xscript.runtime.genericclass.XGenericClass;
 import xscript.runtime.object.XObject;
 import xscript.runtime.object.XObjectProvider;
@@ -8,11 +7,13 @@ import xscript.runtime.object.XObjectProvider;
 public class XWrapper {
 
 	public static Object getJavaObject(XObjectProvider objectProvider, XGenericClass genericClass, long value){
-		switch(XPrimitive.getPrimitiveID(genericClass.getXClass())){
+		return getJavaObject(objectProvider, XPrimitive.getPrimitiveID(genericClass.getXClass()), value);
+	}
+	
+	public static Object getJavaObject(XObjectProvider objectProvider, int primitive, long value){
+		switch(primitive){
 		case XPrimitive.OBJECT:
-			XObject obj = objectProvider.getObject(value);
-			XChecks.checkCast(obj.getXClass(), genericClass);
-			return obj;
+			return objectProvider.getObject(value);
 		case XPrimitive.BOOL:
 			return value!=0;
 		case XPrimitive.BYTE:
@@ -34,27 +35,98 @@ public class XWrapper {
 	}
 	
 	public static long getXObject(XObjectProvider objectProvider, XGenericClass genericClass, Object value){
-		switch(XPrimitive.getPrimitiveID(genericClass.getXClass())){
+		return getXObject(objectProvider, XPrimitive.getPrimitiveID(genericClass.getXClass()), value);
+	}
+	
+	public static long getXObject(XObjectProvider objectProvider, int primitive, Object value){
+		switch(primitive){
 		case XPrimitive.OBJECT:
 			return objectProvider.getPointer((XObject)value);
 		case XPrimitive.BOOL:
-			return (Boolean)value?-1:0;
+			return castToBoolean(value)?-1:0;
 		case XPrimitive.BYTE:
-			return (Byte)value;
+			return castToByte(value);
 		case XPrimitive.CHAR:
-			return (Character)value;
+			return castToChar(value);
 		case XPrimitive.SHORT:
-			return (Short)value;
+			return castToShort(value);
 		case XPrimitive.INT:
-			return (Integer)value;
+			return castToInt(value);
 		case XPrimitive.LONG:
-			return (Long)value;
+			return castToLong(value);
 		case XPrimitive.FLOAT:
-			return Float.floatToIntBits((Float)value);
+			return Float.floatToIntBits(castToFloat(value));
 		case XPrimitive.DOUBLE:
-			return Double.doubleToLongBits((Double)value);
+			return Double.doubleToLongBits(castToDouble(value));
 		}
 		return 0;
+	}
+	
+	public static boolean castToBoolean(Object obj){
+		return (Boolean)obj;
+	}
+	
+	public static char castToChar(Object obj){
+		return (Character)obj;
+	}
+	
+	public static byte castToByte(Object obj){
+		return (Byte)obj;
+	}
+	
+	public static short castToShort(Object obj){
+		if(obj instanceof Byte){
+			return (Byte)obj;
+		}
+		return (Short)obj;
+	}
+	
+	public static int castToInt(Object obj){
+		if(obj instanceof Byte){
+			return (Byte)obj;
+		}else if(obj instanceof Short){
+			return (Short)obj;
+		}
+		return (Integer)obj;
+	}
+	
+	public static long castToLong(Object obj){
+		if(obj instanceof Byte){
+			return (Byte)obj;
+		}else if(obj instanceof Short){
+			return (Short)obj;
+		}else if(obj instanceof Integer){
+			return (Integer)obj;
+		}
+		return (Long)obj;
+	}
+	
+	public static float castToFloat(Object obj){
+		if(obj instanceof Byte){
+			return (Byte)obj;
+		}else if(obj instanceof Short){
+			return (Short)obj;
+		}else if(obj instanceof Integer){
+			return (Integer)obj;
+		}else if(obj instanceof Long){
+			return (Long)obj;
+		}
+		return (Float)obj;
+	}
+	
+	public static double castToDouble(Object obj){
+		if(obj instanceof Byte){
+			return (Byte)obj;
+		}else if(obj instanceof Short){
+			return (Short)obj;
+		}else if(obj instanceof Integer){
+			return (Integer)obj;
+		}else if(obj instanceof Long){
+			return (Long)obj;
+		}else if(obj instanceof Float){
+			return (Float)obj;
+		}
+		return (Double)obj;
 	}
 	
 }

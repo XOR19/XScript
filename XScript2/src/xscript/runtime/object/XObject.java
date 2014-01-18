@@ -7,13 +7,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-import xscript.runtime.XCasts;
 import xscript.runtime.XModifier;
 import xscript.runtime.XRuntimeException;
 import xscript.runtime.XSet;
 import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XField;
-import xscript.runtime.clazz.XPrimitive;
+import xscript.runtime.clazz.XWrapper;
 import xscript.runtime.genericclass.XClassPtr;
 import xscript.runtime.genericclass.XGenericClass;
 import xscript.runtime.threads.XThread;
@@ -217,92 +216,19 @@ public class XObject implements Map<Object, Object>, Callable<Callable<Map<Strin
 	@Override
 	public Object put(Object name, Object value) {
 		Object old;
+		XObjectProvider objProv = xClass.getXClass().getVirtualMachine().getObjectProvider();
 		if(name instanceof String){
 			XField field = getField((String)name);
-			switch(field.getTypePrimitive()){
-			case XPrimitive.BOOL:
-				old = field.get(this)!=0;
-				field.set(this, XCasts.castToBoolean(value)?-1:0);
-				break;
-			case XPrimitive.BYTE:
-				old = (byte)field.get(this);
-				field.set(this, XCasts.castToByte(value));
-				break;
-			case XPrimitive.CHAR:
-				old = (char)field.get(this);
-				field.set(this, XCasts.castToChar(value));
-				break;
-			case XPrimitive.SHORT:
-				old = (short)field.get(this);
-				field.set(this, XCasts.castToShort(value));
-				break;
-			case XPrimitive.INT:
-				old = (int)field.get(this);
-				field.set(this, XCasts.castToInt(value));
-				break;
-			case XPrimitive.LONG:
-				old = (long)field.get(this);
-				field.set(this, XCasts.castToLong(value));
-				break;
-			case XPrimitive.FLOAT:
-				old = Float.intBitsToFloat((int)field.get(this));
-				field.set(this, Float.floatToIntBits(XCasts.castToFloat(value)));
-				break;
-			case XPrimitive.DOUBLE:
-				old = Double.longBitsToDouble((long)field.get(this));
-				field.set(this, Double.doubleToLongBits(XCasts.castToDouble(value)));
-				break;
-			case XPrimitive.OBJECT:
-				XObjectProvider objProvider = xClass.getXClass().getVirtualMachine().getObjectProvider();
-				old = objProvider.getObject((long)field.get(this));
-				field.set(this, objProvider.getPointer((XObject)value));
-				break;
-			default:
-				return null;
-			}
+			int primitive = field.getTypePrimitive();
+			old = XWrapper.getJavaObject(objProv, primitive, field.get(this));
+			long l = XWrapper.getXObject(objProv, primitive, value);
+			field.set(this, l);
 		}else{
-			int index = XCasts.castToInt(name);
-			switch(getXClass().getXClass().getArrayPrimitive()){
-			case XPrimitive.BOOL:
-				old = getArrayElement(index)!=0?-1:0;
-				setArrayElement(index, XCasts.castToBoolean(value)?-1:0);
-				break;
-			case XPrimitive.BYTE:
-				old = (byte)getArrayElement(index);
-				setArrayElement(index, XCasts.castToByte(value));
-				break;
-			case XPrimitive.CHAR:
-				old = (char)getArrayElement(index);
-				setArrayElement(index, XCasts.castToChar(value));
-				break;
-			case XPrimitive.SHORT:
-				old = (short)getArrayElement(index);
-				setArrayElement(index, XCasts.castToShort(value));
-				break;
-			case XPrimitive.INT:
-				old = (int)getArrayElement(index);
-				setArrayElement(index, XCasts.castToInt(value));
-				break;
-			case XPrimitive.LONG:
-				old = (long)getArrayElement(index);
-				setArrayElement(index, XCasts.castToLong(value));
-				break;
-			case XPrimitive.FLOAT:
-				old = Float.intBitsToFloat((int)getArrayElement(index));
-				setArrayElement(index, Float.floatToIntBits(XCasts.castToFloat(value)));
-				break;
-			case XPrimitive.DOUBLE:
-				old = Double.longBitsToDouble((long)getArrayElement(index));
-				setArrayElement(index, Double.doubleToLongBits(XCasts.castToDouble(value)));
-				break;
-			case XPrimitive.OBJECT:
-				XObjectProvider objProvider = xClass.getXClass().getVirtualMachine().getObjectProvider();
-				old = objProvider.getObject((long)getArrayElement(index));
-				setArrayElement(index, objProvider.getPointer((XObject)value));
-				break;
-			default:
-				return null;
-			}
+			int index = XWrapper.castToInt(name);
+			int primitive = getXClass().getXClass().getArrayPrimitive();
+			old = XWrapper.getJavaObject(objProv, primitive, getArrayElement(index));
+			long l = XWrapper.getXObject(objProv, primitive, value);
+			setArrayElement(index, l);
 		}
 		return old;
 	}
@@ -336,29 +262,9 @@ public class XObject implements Map<Object, Object>, Callable<Callable<Map<Strin
 	}
 	
 	private Object getFieldValue(XField field){
-		switch(field.getTypePrimitive()){
-		case XPrimitive.BOOL:
-			return field.get(this)!=0;
-		case XPrimitive.BYTE:
-			return (byte)field.get(this);
-		case XPrimitive.CHAR:
-			return (char)field.get(this);
-		case XPrimitive.SHORT:
-			return (short)field.get(this);
-		case XPrimitive.INT:
-			return (int)field.get(this);
-		case XPrimitive.LONG:
-			return (long)field.get(this);
-		case XPrimitive.FLOAT:
-			return Float.intBitsToFloat((int)field.get(this));
-		case XPrimitive.DOUBLE:
-			return Double.longBitsToDouble((long)field.get(this));
-		case XPrimitive.OBJECT:
-			XObjectProvider objProvider = xClass.getXClass().getVirtualMachine().getObjectProvider();
-			return objProvider.getObject((long)field.get(this));
-		default:
-			return null;
-		}
+		XObjectProvider objProv = xClass.getXClass().getVirtualMachine().getObjectProvider();
+		int primitive = field.getTypePrimitive();
+		return XWrapper.getJavaObject(objProv, primitive, field.get(this));
 	}
 	
 	private List<String> getKeys(){

@@ -12,6 +12,7 @@ import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XClassLoader;
 import xscript.runtime.clazz.XClassProvider;
 import xscript.runtime.clazz.XPrimitive;
+import xscript.runtime.clazz.XWrapper;
 import xscript.runtime.genericclass.XGenericClass;
 import xscript.runtime.genericclass.XGenericMethodProviderImp;
 import xscript.runtime.method.XMethod;
@@ -215,7 +216,7 @@ public class XVirtualMachine implements Map<String, Map<String, Object>>, Invoca
 			XGenericClass generic = makeGenericClass(name);
 			long obj;
 			if(generic.getXClass().isArray()){
-				obj = getObjectProvider().createArray(generic, XCasts.castToInt(args[0]));
+				obj = getObjectProvider().createArray(generic, XWrapper.castToInt(args[0]));
 			}else if(generic.getXClass().getName().equals("xscript.lang.String")){
 				obj = getObjectProvider().createString((String)args[0]);
 			}else{
@@ -252,41 +253,8 @@ public class XVirtualMachine implements Map<String, Map<String, Object>>, Invoca
 			}
 			XGenericClass[] paramtypes = method.getParams(xThis==null?null:xThis.getXClass(), new XGenericMethodProviderImp(method, generics));
 			for(int k=0; k<args.length; k++){
-				long l;
-				switch(XPrimitive.getPrimitiveID(paramtypes[k].getXClass())){
-				case XPrimitive.BOOL:
-					l = XCasts.castToBoolean(args[k])?-1:0;
-					break;
-				case XPrimitive.BYTE:
-					l = XCasts.castToByte(args[k]);
-					break;
-				case XPrimitive.CHAR:
-					l = XCasts.castToChar(args[k]);
-					break;
-				case XPrimitive.SHORT:
-					l = XCasts.castToShort(args[k]);
-					break;
-				case XPrimitive.INT:
-					l = XCasts.castToInt(args[k]);
-					break;
-				case XPrimitive.LONG:
-					l = XCasts.castToLong(args[k]);
-					break;
-				case XPrimitive.FLOAT:
-					l = Float.floatToIntBits(XCasts.castToFloat(args[k]));
-					break;
-				case XPrimitive.DOUBLE:
-					l = Double.doubleToLongBits(XCasts.castToDouble(args[k]));
-					break;
-				case XPrimitive.OBJECT:
-					XObject obj = (XObject)args[k];
-					l = getObjectProvider().getPointer(obj);
-					XChecks.checkCast(obj.getXClass(), paramtypes[k]);
-					break;
-				default:
-					l=0;
-					break;
-				}
+				int primitive = XPrimitive.getPrimitiveID(paramtypes[k].getXClass());
+				long l = XWrapper.getXObject(objectProvider, primitive, args[k]);
 				params[k+j] = l;
 			}
 			getThreadProvider().interrupt(name, null, method, generics, params);
