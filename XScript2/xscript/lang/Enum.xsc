@@ -11,4 +11,12 @@ public class Enum<E>{
 		this.ordinal = ordinal;
 	}
 
+	public final int ordinal(){
+		return ordinal;
+	}
+	
+	public String name(){
+		return name;
+	}
+	
 }

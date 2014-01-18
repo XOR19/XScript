@@ -1,28 +1,24 @@
 package test;
 
-public class Test:Iterable<Int>{
+public class Test{
 	
-	int y;
+	enum E{
+		E1, E2, E3
+	}
 	
-	public Test(){
-		
-		int outer;
-		
-		class A{
-			
-			public A(){
-				int b = y;
-				int z = outer;
-			}
-			
+	public void doSomething(String e){
+		int i;
+		switch(e){
+		case "v1":
+			i=1;
+			break;
+		case "2":
+			i=2;
+			break;
+		case "v3":
+			i=3;
+			break;
 		}
-		
-		class B:A{
-		
-			
-		
-		}
-		
 	}
 	
 }

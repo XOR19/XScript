@@ -80,6 +80,11 @@ public class XObjectProvider {
 		// TODO Auto-generated method stub
 		return 0;
 	}
+
+	public String getString(XObject obj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 	
 	
 	

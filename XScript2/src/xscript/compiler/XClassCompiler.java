@@ -223,7 +223,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 					compilerError(XMessageLevel.ERROR, "duplicatedclass", decl.line, decl.name);
 				}else{
 					addChild(compiler);
-					registerClass(decl);
+					compiler.registerClass(decl);
 				}
 			}
 		}
@@ -245,8 +245,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 						compilerError(XMessageLevel.ERROR, "duplicatedclass", decl.line, decl.name);
 					}
 				}else{
-					classDecl = decl;
-					registerClasses(decl.defs);
+					registerClass(decl);
 					gotFirst = true;
 				}
 			}
@@ -280,7 +279,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 			XClassDecl xClassDef = classDecl;
 			classDecl = null;
 			if(!xClassDef.name.equals(getSimpleName())){
-				compilerError(XMessageLevel.ERROR, "wrongclassname", xClassDef.line, getSimpleName());
+				compilerError(XMessageLevel.ERROR, "wrongclassname", xClassDef.line, getSimpleName(), xClassDef.name);
 			}
 			if(xClassDef.typeParam==null){
 				genericInfos = new XGenericInfo[0];
@@ -584,6 +583,15 @@ public class XClassCompiler extends XClass implements XVisitor {
 	}
 	
 	@Override
+	public int getEnumIndex() {
+		if(!isEnum())
+			throw new XRuntimeException("This is not a enum");
+		if(state!=STATE_TOGEN && state!=STATE_ISGEN)
+			throw new XRuntimeException("You can't get a enum index now");
+		return enumCount ++;
+	}
+	
+	@Override
 	public void visitMethodDecl(XMethodDecl xMethodDecl) {
 		int modifier;
 		if(xMethodDecl.modifier==null){
@@ -796,7 +804,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 				type = new XClassPtrClass(name);
 			}
 			fieldList.add(new XField(this, xscript.runtime.XModifier.STATIC | xscript.runtime.XModifier.FINAL | 
-					xscript.runtime.XModifier.PUBLIC, xNew.type.name.name, type, new xscript.runtime.XAnnotation[0]));
+					xscript.runtime.XModifier.PUBLIC | XField.ENUMFIELD, xNew.type.name.name, type, new xscript.runtime.XAnnotation[0]));
 			XIdent left = new XIdent(xNew.line, xNew.type.name.name);
 			xNew.params.add(0, new XConstant(xNew.line, new XConstantValue(enumNames.size())));
 			xNew.params.add(0, new XConstant(xNew.line, new XConstantValue(xNew.type.name.name)));
@@ -949,6 +957,10 @@ public class XClassCompiler extends XClass implements XVisitor {
 			}
 		}
 		return list;
+	}
+	
+	public int enumOrdinal(String name){
+		return enumNames.indexOf(name);
 	}
 	
 }

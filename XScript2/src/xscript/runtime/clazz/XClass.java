@@ -48,6 +48,7 @@ public class XClass extends XPackage{
 	protected int staticFieldCount;
 	protected int fieldCount;
 	protected int methodCount;
+	protected int enumCount;
 	
 	protected int objectFieldCount;
 	
@@ -401,6 +402,14 @@ public class XClass extends XPackage{
 		return methodCount++;
 	}
 
+	public int getEnumIndex() {
+		if(!isEnum())
+			throw new XRuntimeException("This is not a enum");
+		if(state!=STATE_LOADING)
+			throw new XRuntimeException("You can't get a enum index now");
+		return enumCount ++;
+	}
+	
 	public int getState() {
 		return state;
 	}

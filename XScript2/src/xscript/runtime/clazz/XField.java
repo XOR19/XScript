@@ -12,13 +12,16 @@ import xscript.runtime.object.XObject;
 
 public class XField extends XPackage {
 
-	public static final int STATICALLOWEDMODIFIFER = XModifier.FINAL | XModifier.PRIVATE | XModifier.PROTECTED | XModifier.PUBLIC | XModifier.STATIC;
+	public static final int ENUMFIELD = 4096;
+	
+	public static final int STATICALLOWEDMODIFIFER = XModifier.FINAL | XModifier.PRIVATE | XModifier.PROTECTED | XModifier.PUBLIC | XModifier.STATIC | ENUMFIELD;
 	public static final int ALLOWEDMODIFIFER = XModifier.FINAL | XModifier.PRIVATE | XModifier.PROTECTED | XModifier.PUBLIC;
 	
 	protected int modifier;
 	protected XClassPtr type;
 	protected XAnnotation[] annotations;
 	protected int index;
+	protected int enumID = -1;
 	
 	public XField(XClass declaringClass, XInputStream inputStream) throws IOException {
 		super(inputStream.readUTF());
@@ -31,6 +34,9 @@ public class XField extends XPackage {
 		(type = XClassPtr.load(inputStream)).getXClass(declaringClass.getVirtualMachine());
 		if(XModifier.isStatic(modifier)){
 			declaringClass.getStaticFieldIndex(getSizeInObject());
+			if((modifier & ENUMFIELD)!=0){
+				enumID = declaringClass.getEnumIndex();
+			}
 			XChecks.checkModifier(declaringClass, modifier, STATICALLOWEDMODIFIFER);
 		}else{
 			declaringClass.getFieldIndex(getSizeInObject());
@@ -53,10 +59,17 @@ public class XField extends XPackage {
 		}
 	}
 
+	public int getEnumID(){
+		return enumID;
+	}
+	
 	protected void getIndex(){
 		XClass declaringClass = getDeclaringClass();
 		if(XModifier.isStatic(modifier)){
 			index = declaringClass.getStaticFieldIndex(getSizeInObject());
+			if((modifier & ENUMFIELD)!=0){
+				enumID = declaringClass.getEnumIndex();
+			}
 			XChecks.checkModifier(declaringClass, modifier, STATICALLOWEDMODIFIFER);
 		}else{
 			index = declaringClass.getFieldIndex(getSizeInObject());

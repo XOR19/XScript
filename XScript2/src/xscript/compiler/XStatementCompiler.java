@@ -14,6 +14,7 @@ import xscript.compiler.dumyinstruction.XInstructionDumyJumpTargetResolver;
 import xscript.compiler.dumyinstruction.XInstructionDumyNIf;
 import xscript.compiler.dumyinstruction.XInstructionDumyReadLocal;
 import xscript.compiler.dumyinstruction.XInstructionDumySetLocalField;
+import xscript.compiler.dumyinstruction.XInstructionDumyStringSwitch;
 import xscript.compiler.dumyinstruction.XInstructionDumySwitch;
 import xscript.compiler.dumyinstruction.XInstructionDumyTryStart;
 import xscript.compiler.dumyinstruction.XInstructionDumyWriteLocal;
@@ -362,7 +363,7 @@ public class XStatementCompiler implements XVisitor {
 			}
 		}
 		if(parent!=null){
-			addBreak(jump, xBreak, any);
+			parent.addBreak(jump, xBreak, any);
 			return;
 		}
 		if(any)
@@ -384,7 +385,7 @@ public class XStatementCompiler implements XVisitor {
 			}
 		}
 		if(parent!=null){
-			addContinue(jump, xContinue, any);
+			parent.addContinue(jump, xContinue, any);
 			return;
 		}
 		if(any)
@@ -2607,44 +2608,115 @@ public class XStatementCompiler implements XVisitor {
 	public void visitSwitch(XSwitch xSwitch) {
 		XStatementCompiler sc = visitTree(xSwitch.statement, XAnyType.type);
 		addInstructions(sc);
+		XClass enumClass = null;
+		boolean stringSwitch = false;
+		if(sc.returnType.getPrimitiveID()==XPrimitive.OBJECT){
+			if(sc.returnType.getXClass().isEnum()){
+				enumClass = sc.returnType.getXClass();
+				XClass c = methodCompiler.getDeclaringClass().getVirtualMachine().getClassProvider().getXClass("xscript.lang.Enum");
+				XMethod m = c.getMethod("ordinal()int");
+				addInstruction(new XInstructionInvokeDynamic(m, new XClassPtr[0]), xSwitch);
+			}else if(sc.returnType.getXClass().getName().equals("xscript.lang.String")){
+				stringSwitch = true;
+			}else{
+				compilerError(XMessageLevel.ERROR, "wrong.type.for.switch", xSwitch.line, sc.returnType);
+			}
+		}
 		breaks = new ArrayList<XInstructionDumyJump>();
-		XInstructionDumySwitch s = new XInstructionDumySwitch();
-		addInstruction(s, xSwitch);
-		for(XCase c:xSwitch.cases){
-			if(c.key==null){
-				XInstructionDumyDelete dd = new XInstructionDumyDelete();
-				if(s.table.containsKey(null)){
-					compilerError(XMessageLevel.ERROR, "duplicated.default", c.line);
-				}else{
-					s.table.put(null, dd);
-				}
-				addInstruction(dd, c);
-				addInstructions(visitTree(c.block));
-			}else if(c.key instanceof XConstant){
-				XConstantValue val = ((XConstant)c.key).value;
-				if(val.getType()!=Integer.class){
-					compilerError(XMessageLevel.ERROR, "case.only.int", c.line);
-				}else{
+		if(stringSwitch){
+			XInstructionDumyStringSwitch s = new XInstructionDumyStringSwitch();
+			addInstruction(s, xSwitch);
+			for(XCase c:xSwitch.cases){
+				if(c.key==null){
 					XInstructionDumyDelete dd = new XInstructionDumyDelete();
-					if(s.table.containsKey(val.getInt())){
-						compilerError(XMessageLevel.ERROR, "duplicated.case", c.line, val.getInt());
+					if(s.table.containsKey(null)){
+						compilerError(XMessageLevel.ERROR, "duplicated.default", c.line);
 					}else{
-						s.table.put(val.getInt(), dd);
+						s.table.put(null, dd);
 					}
 					addInstruction(dd, c);
 					addInstructions(visitTree(c.block));
+				}else if(c.key instanceof XConstant){
+					XConstantValue val = ((XConstant)c.key).value;
+					if(val.getType()!=String.class){
+						compilerError(XMessageLevel.ERROR, "case.only.string", c.line);
+					}else{
+						XInstructionDumyDelete dd = new XInstructionDumyDelete();
+						if(s.table.containsKey(val.getString())){
+							compilerError(XMessageLevel.ERROR, "duplicated.case", c.line, val.getString());
+						}else{
+							s.table.put(val.getString(), dd);
+						}
+						addInstruction(dd, c);
+						addInstructions(visitTree(c.block));
+					}
+				}else{
+					compilerError(XMessageLevel.ERROR, "case.not.constant", c.line);
 				}
-			}else{
-				compilerError(XMessageLevel.ERROR, "case.not.constant", c.line);
 			}
-		}
-		XInstructionDumyDelete breakTarget = new XInstructionDumyDelete();
-		if(!s.table.containsKey(null)){
-			s.table.put(null, breakTarget);
-		}
-		addInstruction(breakTarget, xSwitch);
-		for(XInstructionDumyJump bbreak:breaks){
-			bbreak.target = breakTarget;
+			XInstructionDumyDelete breakTarget = new XInstructionDumyDelete();
+			if(!s.table.containsKey(null)){
+				s.table.put(null, breakTarget);
+			}
+			addInstruction(breakTarget, xSwitch);
+			for(XInstructionDumyJump bbreak:breaks){
+				bbreak.target = breakTarget;
+			}
+		}else{
+			XInstructionDumySwitch s = new XInstructionDumySwitch();
+			addInstruction(s, xSwitch);
+			for(XCase c:xSwitch.cases){
+				if(c.key==null){
+					XInstructionDumyDelete dd = new XInstructionDumyDelete();
+					if(s.table.containsKey(null)){
+						compilerError(XMessageLevel.ERROR, "duplicated.default", c.line);
+					}else{
+						s.table.put(null, dd);
+					}
+					addInstruction(dd, c);
+					addInstructions(visitTree(c.block));
+				}else if(enumClass==null && c.key instanceof XConstant){
+					XConstantValue val = ((XConstant)c.key).value;
+					if(val.getType()!=Integer.class){
+						compilerError(XMessageLevel.ERROR, "case.only.int", c.line);
+					}else{
+						XInstructionDumyDelete dd = new XInstructionDumyDelete();
+						if(s.table.containsKey(val.getInt())){
+							compilerError(XMessageLevel.ERROR, "duplicated.case", c.line, val.getInt());
+						}else{
+							s.table.put(val.getInt(), dd);
+						}
+						addInstruction(dd, c);
+						addInstructions(visitTree(c.block));
+					}
+				}else if(enumClass!=null && c.key instanceof XType){
+					XVarAccess va = visitVarAccess(c.key);
+					XClass enumC = va.declaringClass.getXClass();
+					if(enumClass!=enumC){
+						compilerError(XMessageLevel.ERROR, "types.not.equal", c.line, enumClass, enumC);
+					}else if(enumC instanceof XClassCompiler){
+						int id = ((XClassCompiler)enumC).getField(va.name).getEnumID();
+						XInstructionDumyDelete dd = new XInstructionDumyDelete();
+						if(s.table.containsKey(id)){
+							compilerError(XMessageLevel.ERROR, "duplicated.case", c.line, id);
+						}else{
+							s.table.put(id, dd);
+						}
+						addInstruction(dd, c);
+						addInstructions(visitTree(c.block));
+					}
+				}else{
+					compilerError(XMessageLevel.ERROR, "case.not.constant", c.line);
+				}
+			}
+			XInstructionDumyDelete breakTarget = new XInstructionDumyDelete();
+			if(!s.table.containsKey(null)){
+				s.table.put(null, breakTarget);
+			}
+			addInstruction(breakTarget, xSwitch);
+			for(XInstructionDumyJump bbreak:breaks){
+				bbreak.target = breakTarget;
+			}
 		}
 	}
 
