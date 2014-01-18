@@ -257,7 +257,7 @@ public class XVirtualMachine implements Map<String, Map<String, Object>>, Invoca
 				long l = XWrapper.getXObject(objectProvider, primitive, args[k]);
 				params[k+j] = l;
 			}
-			getThreadProvider().interrupt(name, null, method, generics, params);
+			getThreadProvider().start(name, method, generics, params);
 		}
 		return null;
 	}
