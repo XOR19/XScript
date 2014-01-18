@@ -674,7 +674,8 @@ public class XStatementCompiler implements XVisitor {
 									}
 									XVarType[] realTypes;
 									XCodeGen[] realCodeGens;
-									if(decl.getOuterClass()!=null && !xscript.runtime.XModifier.isStatic(decl.getModifier())){
+									XClass xsc = sp.getXClass();
+									if(xsc.getOuterClass()!=null && !xscript.runtime.XModifier.isStatic(xsc.getModifier())){
 										realTypes = new XVarType[types.length+1];
 										realCodeGens = new XCodeGen[codeGens.length+1];
 										realTypes[0] = getVarTypeForName(decl.getOuterClass().getName());
@@ -684,15 +685,22 @@ public class XStatementCompiler implements XVisitor {
 											realTypes[j+1] = types[j];
 											realCodeGens[j+1] = codeGens[j];
 										}
-									}else if(decl.getOuterMethod()!=null && !xscript.runtime.XModifier.isStatic(decl.getModifier())){
-										realTypes = new XVarType[types.length+1];
-										realCodeGens = new XCodeGen[codeGens.length+1];
+									}else if(xsc.getOuterMethod()!=null && !xscript.runtime.XModifier.isStatic(xsc.getModifier())){
+										List<XSyntheticField> vars = ((XClassCompiler)xsc).getSyntheticVars();
+										int params = vars.size()+1;
+										realTypes = new XVarType[types.length+params];
+										realCodeGens = new XCodeGen[codeGens.length+params];
 										realTypes[0] = getVarTypeForName(decl.getOuterMethod().getDeclaringClass().getName());
 										realCodeGens[0] = new XCodeGen();
 										realCodeGens[0].addInstruction(new XInstructionDumyReadLocal(outerID), mc.line.startLine);
+										for(int j=1; j<params; j++){
+											realTypes[j] = getVarTypeFor(vars.get(j-1).getType(), xsc, methodCompiler.getDeclaringClassVarType().getSuperClass(xsc.getName()));
+											realCodeGens[j] = new XCodeGen();
+											
+										}
 										for(int j=0; j<types.length; j++){
-											realTypes[j+1] = types[j];
-											realCodeGens[j+1] = codeGens[j];
+											realTypes[j+params] = types[j];
+											realCodeGens[j+params] = codeGens[j];
 										}
 									}else{
 										realTypes = types;
@@ -802,8 +810,16 @@ public class XStatementCompiler implements XVisitor {
 							search.applyTypes(new XVarType[]{getVarTypeForName(superClass.getXClass().getOuterClass().getName())});
 							addInstruction(new XInstructionDumyReadLocal(outerID), xMethodDecl);
 						}else if(superClass.getXClass().getOuterMethod()!=null && !xscript.runtime.XModifier.isStatic(superClass.getXClass().getModifier())){
-							search.applyTypes(new XVarType[]{getVarTypeForName(superClass.getXClass().getOuterMethod().getDeclaringClass().getName())});
+							List<XSyntheticField> vars = ((XClassCompiler)superClass.getXClass()).getSyntheticVars();
+							int params = vars.size()+1;
+							XVarType[] types = new XVarType[params];
+							types[0] = getVarTypeForName(decl.getOuterMethod().getDeclaringClass().getName());
 							addInstruction(new XInstructionDumyReadLocal(outerID), xMethodDecl);
+							for(int j=1; j<params; j++){
+								types[j] = getVarTypeFor(vars.get(j-1).getType(), superClass.getXClass(), methodCompiler.getDeclaringClassVarType().getSuperClass(superClass.getXClass().getName()));
+								
+							}
+							search.applyTypes(types);
 						}else{
 							search.applyTypes(new XVarType[0]);
 						}

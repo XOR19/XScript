@@ -1,8 +1,15 @@
 package xscript.runtime.clazz;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-public class XPackage {
+import xscript.runtime.XSet;
+
+public class XPackage implements Map<String, Object> {
 
 	protected String name;
 	protected XPackage parent;
@@ -68,6 +75,104 @@ public class XPackage {
 	
 	public void remove(String name){
 		childs.remove(name);
+	}
+
+	@Override
+	public void clear() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean containsKey(Object key) {
+		return childs.containsKey(key);
+	}
+
+	@Override
+	public boolean containsValue(Object value) {
+		return childs.containsValue(value);
+	}
+
+	@Override
+	public Set<Entry<String, Object>> entrySet() {
+		List<Entry<String, Object>> entries = new ArrayList<Entry<String, Object>>();
+		for(Entry<String, XPackage> e:childs.entrySet()){
+			entries.add(new PackageEntry(e));
+		}
+		return new XSet<Entry<String,Object>>(entries);
+	}
+
+	private static class PackageEntry implements Entry<String, Object>{
+
+		private Entry<String, ? extends Object> e;
+		
+		public PackageEntry(Entry<String, ? extends Object> e){
+			this.e = e;
+		}
+		
+		@Override
+		public String getKey() {
+			return e.getKey();
+		}
+
+		@Override
+		public Object getValue() {
+			return e.getValue();
+		}
+
+		@Override
+		public Object setValue(Object value) {
+			throw new UnsupportedOperationException();
+		}
+		
+	}
+	
+	@Override
+	public Object get(Object key) {
+		return childs.get(key);
+	}
+
+	@Override
+	public boolean isEmpty() {
+		return childs.isEmpty();
+	}
+
+	@Override
+	public Set<String> keySet() {
+		return new XSet<String>(new ArrayList<String>(childs.keySet()));
+	}
+
+	@Override
+	public Map<String, Map<String, ?>> put(String key, Object value) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void putAll(Map<? extends String, ? extends Object> m) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Map<String, Map<String, ?>> remove(Object key) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public int size() {
+		return childs.size();
+	}
+
+	@Override
+	public Collection<Object> values() {
+		return new XSet<Object>(new ArrayList<Object>(childs.values()));
+	}
+
+	public void addChildClasses(List<XClass> classes) {
+		if(this instanceof XClass){
+			classes.add((XClass) this);
+		}
+		for(XPackage p:childs.values()){
+			p.addChildClasses(classes);
+		}
 	}
 	
 }

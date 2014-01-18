@@ -1,7 +1,6 @@
 package xscript.runtime.instruction;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 
 import xscript.runtime.XRuntimeException;
 import xscript.runtime.XVirtualMachine;
@@ -168,24 +167,145 @@ public abstract class XInstruction {
 	
 	public static XInstruction load(XInputStream inputStream) throws IOException {
 		int instruction = inputStream.readUnsignedByte();
-		Class<? extends XInstruction> c = instructions[instruction];
-		if(c==null){
-			throw new XRuntimeException("Unknow instruction %s", instruction);
+		switch(instruction){
+		case 0: return new XInstructionAddDouble(inputStream);
+		case 1: return new XInstructionAddFloat(inputStream);
+		case 2: return new XInstructionAddInt(inputStream);
+		case 3: return new XInstructionAddLong(inputStream);
+		case 4: return new XInstructionAndBool(inputStream);
+		case 5: return new XInstructionAndInt(inputStream);
+		case 6: return new XInstructionAndLong(inputStream);
+		case 7: return new XInstructionI2B(inputStream);
+		case 8: return new XInstructionBEqDouble(inputStream);
+		case 9: return new XInstructionBEqFloat(inputStream);
+		case 10: return new XInstructionBEqInt(inputStream);
+		case 11: return new XInstructionBEqLong(inputStream);
+		case 12: return new XInstructionBigDouble(inputStream);
+		case 13: return new XInstructionBigFloat(inputStream);
+		case 14: return new XInstructionBigInt(inputStream);
+		case 15: return new XInstructionBigLong(inputStream);
+		case 16: return new XInstructionBinSwitch(inputStream);
+		case 17: return new XInstructionCheckCast(inputStream);
+		case 18: return new XInstructionCheckNull(inputStream);
+		case 19: return new XInstructionCompBool(inputStream);
+		case 20: return new XInstructionCompDouble(inputStream);
+		case 21: return new XInstructionCompFloat(inputStream);
+		case 22: return new XInstructionCompInt(inputStream);
+		case 23: return new XInstructionCompLong(inputStream);
+		case 24: return new XInstructionD2F(inputStream);
+		case 25: return new XInstructionD2I(inputStream);
+		case 26: return new XInstructionD2L(inputStream);
+		case 27: return new XInstructionDivDouble(inputStream);
+		case 28: return new XInstructionDivFloat(inputStream);
+		case 29: return new XInstructionDivInt(inputStream);
+		case 30: return new XInstructionDivLong(inputStream);
+		case 31: return new XInstructionDup(inputStream);
+		case 32: return new XInstructionEqBool(inputStream);
+		case 33: return new XInstructionEqDouble(inputStream);
+		case 34: return new XInstructionEqFloat(inputStream);
+		case 35: return new XInstructionEqInt(inputStream);
+		case 36: return new XInstructionEqLong(inputStream);
+		case 37: return new XInstructionEqObject(inputStream);
+		case 38: return new XInstructionF2D(inputStream);
+		case 39: return new XInstructionF2I(inputStream);
+		case 40: return new XInstructionF2L(inputStream);
+		case 41: return new XInstructionGetField(inputStream);
+		case 42: return new XInstructionGetLocalField(inputStream);
+		case 43: return new XInstructionGetStaticField(inputStream);
+		case 44: return new XInstructionI2D(inputStream);
+		case 45: return new XInstructionI2F(inputStream);
+		case 46: return new XInstructionI2L(inputStream);
+		case 47: return new XInstructionIf(inputStream);
+		case 48: return new XInstructionInstanceof(inputStream);
+		case 49: return new XInstructionInvokeDynamic(inputStream);
+		case 50: return new XInstructionInvokeSpecial(inputStream);
+		case 51: return new XInstructionInvokeStatic(inputStream);
+		case 52: return new XInstructionJump(inputStream);
+		case 53: return new XInstructionL2D(inputStream);
+		case 54: return new XInstructionL2F(inputStream);
+		case 55: return new XInstructionL2I(inputStream);
+		case 56: return new XInstructionLoadConstBool(inputStream);
+		case 57: return new XInstructionLoadConstDouble(inputStream);
+		case 58: return new XInstructionLoadConstFloat(inputStream);
+		case 59: return new XInstructionLoadConstInt(inputStream);
+		case 60: return new XInstructionLoadConstLong(inputStream);
+		case 61: return new XInstructionLoadConstNull(inputStream);
+		case 62: return new XInstructionLoadConstString(inputStream);
+		case 63: return new XInstructionModDouble(inputStream);
+		case 64: return new XInstructionModFloat(inputStream);
+		case 65: return new XInstructionModInt(inputStream);
+		case 66: return new XInstructionModLong(inputStream);
+		case 67: return new XInstructionMonitorEnter(inputStream);
+		case 68: return new XInstructionMonitorExit(inputStream);
+		case 69: return new XInstructionMulDouble(inputStream);
+		case 70: return new XInstructionMulFloat(inputStream);
+		case 71: return new XInstructionMulInt(inputStream);
+		case 72: return new XInstructionMulLong(inputStream);
+		case 73: return new XInstructionNegDouble(inputStream);
+		case 74: return new XInstructionNegFloat(inputStream);
+		case 75: return new XInstructionNegInt(inputStream);
+		case 76: return new XInstructionNegLong(inputStream);
+		case 77: return new XInstructionNEqBool(inputStream);
+		case 78: return new XInstructionNEqDouble(inputStream);
+		case 79: return new XInstructionNEqFloat(inputStream);
+		case 80: return new XInstructionNEqInt(inputStream);
+		case 81: return new XInstructionNEqLong(inputStream);
+		case 82: return new XInstructionNEqObject(inputStream);
+		case 83: return new XInstructionNew(inputStream);
+		case 84: return new XInstructionNewArray(inputStream);
+		case 85: return new XInstructionNIf(inputStream);
+		case 86: return new XInstructionNop(inputStream);
+		case 87: return new XInstructionNotBool(inputStream);
+		case 88: return new XInstructionNotInt(inputStream);
+		case 89: return new XInstructionNotLong(inputStream);
+		case 90: return new XInstructionODup(inputStream);
+		case 91: return new XInstructionOPop(inputStream);
+		case 92: return new XInstructionOrBool(inputStream);
+		case 93: return new XInstructionOrInt(inputStream);
+		case 94: return new XInstructionOrLong(inputStream);
+		case 95: return new XInstructionOToTop(inputStream);
+		case 96: return new XInstructionPop(inputStream);
+		case 97: return new XInstructionPowDouble(inputStream);
+		case 98: return new XInstructionPowFloat(inputStream);
+		case 99: return new XInstructionPowInt(inputStream);
+		case 100: return new XInstructionPowLong(inputStream);
+		case 101: return new XInstructionReadLocal(inputStream);
+		case 102: return new XInstructionReturn(inputStream);
+		case 103: return new XInstructionI2S(inputStream);
+		case 104: return new XInstructionSEqDouble(inputStream);
+		case 105: return new XInstructionSEqFloat(inputStream);
+		case 106: return new XInstructionSEqInt(inputStream);
+		case 107: return new XInstructionSEqLong(inputStream);
+		case 108: return new XInstructionSetField(inputStream);
+		case 109: return new XInstructionSetLocalField(inputStream);
+		case 110: return new XInstructionSetStaticField(inputStream);
+		case 111: return new XInstructionShlInt(inputStream);
+		case 112: return new XInstructionShlLong(inputStream);
+		case 113: return new XInstructionShrInt(inputStream);
+		case 114: return new XInstructionShrLong(inputStream);
+		case 115: return new XInstructionSmaDouble(inputStream);
+		case 116: return new XInstructionSmaFloat(inputStream);
+		case 117: return new XInstructionSmaInt(inputStream);
+		case 118: return new XInstructionSmaLong(inputStream);
+		case 119: return new XInstructionSubDouble(inputStream);
+		case 120: return new XInstructionSubFloat(inputStream);
+		case 121: return new XInstructionSubInt(inputStream);
+		case 122: return new XInstructionSubLong(inputStream);
+		case 123: return new XInstructionTableSwitch(inputStream);
+		case 124: return new XInstructionThrow(inputStream);
+		case 125: return new XInstructionToTop(inputStream);
+		case 126: return new XInstructionVarJump(inputStream);
+		case 127: return new XInstructionWriteLocal(inputStream);
+		case 128: return new XInstructionXorInt(inputStream);
+		case 129: return new XInstructionXorLong(inputStream);
+		case 130: return new XInstructionSetReturn(inputStream);
+		case 131: return new XInstructionSwap(inputStream);
+		case 132: return new XInstructionOSwap(inputStream);
+		case 133: return new XInstructionStackSizeSave(inputStream);
+		case 134: return new XInstructionLoadConstClass(inputStream);
+		case 135: return new XInstructionInvokeConstructor(inputStream);
 		}
-		try {
-			return c.getConstructor(XInputStream.class).newInstance(inputStream);
-		} catch (InvocationTargetException e) {
-			Throwable e1 = e.getTargetException();
-			if(e1 instanceof IOException){
-				throw (IOException)e1;
-			}else if(e1 instanceof RuntimeException){
-				throw (RuntimeException)e1;
-			}
-			throw new XRuntimeException(e1, "Error while creating instruction %s", instruction);
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new XRuntimeException(e, "Error while creating instruction %s", instruction);
-		} 
+		throw new XRuntimeException("Unknow instruction %s", instruction);
 	}
 	
 	public static void save(XOutputStream outputStream, XInstruction instruction) throws IOException{

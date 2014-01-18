@@ -518,5 +518,9 @@ public class XClass extends XPackage{
 	}
 
 	public void onRequest() {}
+
+	public XField[] getFields() {
+		return fields;
+	}
 	
 }

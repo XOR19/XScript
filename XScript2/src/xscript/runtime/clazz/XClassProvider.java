@@ -44,7 +44,7 @@ public class XClassProvider {
 		return p;
 	}
 	
-	public XClass getXClass(String name) {
+	public XPackage getPackage(String name) {
 		XPackage xPackage = rootPackage.getChild(name);
 		if(xPackage==null){
 			rec++;
@@ -66,27 +66,28 @@ public class XClassProvider {
 			}
 			rec--;
 		}
-		XClass xClass = null;
-		if(xPackage instanceof XClass){
-			xClass = (XClass)xPackage;
-		}else if(xPackage instanceof XClassMaker){
-			xClass = ((XClassMaker)xPackage).makeClass(xPackage.getParent());
+		if(xPackage instanceof XClassMaker){
+			XClass xClass = ((XClassMaker)xPackage).makeClass(xPackage.getParent());
 			xPackage.getParent().overridePackage(xPackage.getSimpleName(), xClass);
 			((XClassMaker)xPackage).onReplaced(xClass);
+			xClass.onRequest();
 			xPackage = rootPackage.getChild(name);
-			if(xPackage instanceof XClass){
-				xClass = (XClass)xPackage;
-			}else{
-				xClass = null;
-			}
 		}
-		if(xClass==null)
-			throw new XRuntimeException("Class %s not found", name);
-		xClass.onRequest();
+		if(xPackage instanceof XClass){
+			((XClass) xPackage).onRequest();
+		}
+		return xPackage;
+	}
+	
+	public XClass getXClass(String name) {
+		XPackage xPackage = getPackage(name);
+		if(xPackage instanceof XClass){
+			return (XClass) xPackage;
+		}
+		throw new XRuntimeException("Class %s not found", name);
 		//if(xClass.getState()==XClass.STATE_ERRORED){
 		//	throw new XRuntimeException("Class %s errored", name);
 		//}
-		return xClass;
 	}
 	
 	private void postLoad(){
@@ -182,6 +183,12 @@ public class XClassProvider {
 
 	public boolean existsClass(String className) {
 		return rootPackage.getChild(className) instanceof XClass;
+	}
+
+	public List<XClass> getAllLoadedClasses() {
+		List<XClass> classes = new ArrayList<XClass>();
+		rootPackage.addChildClasses(classes);
+		return classes;
 	}
 	
 }

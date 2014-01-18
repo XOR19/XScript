@@ -98,8 +98,6 @@ public class XClassCompiler extends XClass implements XVisitor {
 	
 	private HashMap<String, XSyntheticField> syntheticVars;
 	
-	private List<XSyntheticField> syntheticVarList;
-	
 	private List<XStatement> staticInit;
 	
 	private List<XStatement> init;
@@ -347,7 +345,6 @@ public class XClassCompiler extends XClass implements XVisitor {
 			fieldList = new ArrayList<XField>();
 			syntheticFields = new HashMap<String, XSyntheticField>();
 			syntheticVars = new HashMap<String, XSyntheticField>();
-			syntheticVarList = new ArrayList<XSyntheticField>();
 			visitTree(xClassDef.defs);
 			if(!visitConstructor){
 				XMethodDecl decl = new XMethodDecl(XLineDesk.NULL, new XModifier(XLineDesk.NULL, xscript.runtime.XModifier.PUBLIC), 
@@ -461,7 +458,6 @@ public class XClassCompiler extends XClass implements XVisitor {
 	private XSyntheticField addSyntheticVar(int modifier, String name, XClassPtr type){
 		XSyntheticField field = new XSyntheticField(this, modifier | xscript.runtime.XModifier.SYNTHETIC, name, type, new xscript.runtime.XAnnotation[0]);
 		syntheticVars.put(name, field);
-		syntheticVarList.add(field);
 		field.checkName(this);
 		addChild(field);
 		return field;
@@ -945,7 +941,14 @@ public class XClassCompiler extends XClass implements XVisitor {
 	}
 
 	public List<XSyntheticField> getSyntheticVars() {
-		return syntheticVarList;
+		List<XSyntheticField> list = new ArrayList<XSyntheticField>(syntheticVars.values());
+		for(XClassPtr superClass:superClasses){
+			XClass c = superClass.getXClassNonNull(getVirtualMachine());
+			if(c instanceof XClassCompiler){
+				list.addAll(((XClassCompiler) c).getSyntheticVars());
+			}
+		}
+		return list;
 	}
 	
 }

@@ -10,6 +10,7 @@ import xscript.compiler.tree.XTree.XType;
 import xscript.runtime.XAnnotation;
 import xscript.runtime.XModifier;
 import xscript.runtime.clazz.XClass;
+import xscript.runtime.clazz.XField;
 import xscript.runtime.clazz.XGenericInfo;
 import xscript.runtime.clazz.XPrimitive;
 import xscript.runtime.genericclass.XClassPtr;
@@ -95,12 +96,15 @@ public class XMethodCompiler extends XMethod {
 				}
 				if(!selvInvoke){
 					for(int j=0; j<numVars; j++){
-						codeGen.addInstruction(last+1+j*3, new XInstructionReadLocal(j+2), 0);
-						codeGen.addInstruction(last+1+j*3+1, new XInstructionSetLocalField(0, syntheticVars.get(j)), 0);
-						if(syntheticVars.get(j).getTypePrimitive()==XPrimitive.OBJECT){
-							codeGen.addInstruction(last+1+j*3+2, new XInstructionOPop(), 0);
-						}else{
-							codeGen.addInstruction(last+1+j*3+2, new XInstructionPop(), 0);
+						XField f = syntheticVars.get(j);
+						if(f.getDeclaringClass()==getDeclaringClass()){
+							codeGen.addInstruction(last+1+j*3, new XInstructionReadLocal(j+2), 0);
+							codeGen.addInstruction(last+1+j*3+1, new XInstructionSetLocalField(0, f), 0);
+							if(f.getTypePrimitive()==XPrimitive.OBJECT){
+								codeGen.addInstruction(last+1+j*3+2, new XInstructionOPop(), 0);
+							}else{
+								codeGen.addInstruction(last+1+j*3+2, new XInstructionPop(), 0);
+							}
 						}
 					}
 				}
