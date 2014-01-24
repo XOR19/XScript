@@ -2,11 +2,12 @@ package xscript.compiler;
 
 import java.util.List;
 
+import xscript.compiler.classtypes.XVarType;
 import xscript.compiler.dumyinstruction.XInstructionDumyInvokeConstructor;
 import xscript.compiler.message.XMessageLevel;
 import xscript.compiler.token.XLineDesk;
-import xscript.compiler.tree.XTree.XMethodDecl;
-import xscript.compiler.tree.XTree.XType;
+import xscript.compiler.tree.XTree.XTreeMethodDecl;
+import xscript.compiler.tree.XTree.XTreeType;
 import xscript.runtime.XAnnotation;
 import xscript.runtime.XModifier;
 import xscript.runtime.clazz.XClass;
@@ -27,7 +28,7 @@ import xscript.runtime.method.XMethod;
 
 public class XMethodCompiler extends XMethod {
 
-	private XMethodDecl xMethodDecl;
+	private XTreeMethodDecl xMethodDecl;
 	
 	private XImportHelper importHelper;
 	
@@ -36,7 +37,7 @@ public class XMethodCompiler extends XMethod {
 	public XMethodCompiler(XClass declaringClass, int modifier, String name,
 			XClassPtr returnType, xscript.runtime.XAnnotation[] annotations,
 			XClassPtr[] params, xscript.runtime.XAnnotation[][] paramAnnotations,
-			XClassPtr[] mThrows, XGenericInfo[] genericInfos, XMethodDecl xMethodDecl, 
+			XClassPtr[] mThrows, XGenericInfo[] genericInfos, XTreeMethodDecl xMethodDecl, 
 			XImportHelper importHelper) {
 		super(declaringClass, modifier, name, returnType, annotations, params,
 				paramAnnotations, mThrows, genericInfos);
@@ -54,16 +55,19 @@ public class XMethodCompiler extends XMethod {
 	}
 	
 	public void change(){
-		if(codeGen!=null){
+		if(codeGen!=null && isConstructor()){
 			XClassCompiler c = (XClassCompiler) getDeclaringClass();
-			if(c.getOuterMethod()!=null){
+			if(!XModifier.isStatic(modifier) && c.getOuterMethod()!=null){
 				List<XSyntheticField> syntheticVars = c.getSyntheticVars();
 				int numVars = syntheticVars.size();
 				XClassPtr[] params = new XClassPtr[this.params.length+numVars];
 				XAnnotation[][] annotations = new XAnnotation[params.length][];
-				params[0] = this.params[0];
-				annotations[0] = paramAnnotations[0];
-				int i=1;
+				int i=0;
+				if(!XModifier.isStatic(c.getOuterMethod().getModifier())){
+					params[0] = this.params[0];
+					annotations[0] = paramAnnotations[0];
+					i=1;
+				}
 				for(XSyntheticField f:syntheticVars){
 					params[i] = f.getType();
 					annotations[i] = new XAnnotation[0];
@@ -166,7 +170,7 @@ public class XMethodCompiler extends XMethod {
 		}
 	}
 	
-	private XClassPtr getGenericClass1(XClassCompiler xClassCompiler, XType type, XMethod method, XGenericInfo[] extra, boolean doError) {
+	private XClassPtr getGenericClass1(XClassCompiler xClassCompiler, XTreeType type, XMethod method, XGenericInfo[] extra, boolean doError) {
 		for(int i=1; i<9; i++){
 			if(XPrimitive.getName(i).equals(type.name.name)){
 				return new XClassPtrClass(type.name.name);
@@ -202,7 +206,7 @@ public class XMethodCompiler extends XMethod {
 		}
 	}
 	
-	public XClassPtr getGenericClass(XClassCompiler xClassCompiler, XType type, XMethod method, XGenericInfo[] extra, boolean doError) {
+	public XClassPtr getGenericClass(XClassCompiler xClassCompiler, XTreeType type, XMethod method, XGenericInfo[] extra, boolean doError) {
 		XClassPtr classPtr = getGenericClass1(xClassCompiler, type, method, extra, doError);
 		if(classPtr==null){
 			if(getDeclaringClass().getOuterMethod()==null){
@@ -225,7 +229,7 @@ public class XMethodCompiler extends XMethod {
 		return classPtr;
 	}
 	
-	public XClassPtr getGenericClass(XType type, boolean doError){
+	public XClassPtr getGenericClass(XTreeType type, boolean doError){
 		return getGenericClass((XClassCompiler)getDeclaringClass(), type, this, genericInfos, doError);
 	}
 

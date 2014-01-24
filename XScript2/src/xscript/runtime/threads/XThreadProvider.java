@@ -76,6 +76,10 @@ public class XThreadProvider {
 				}
 			}while(thread.getThreadState()==XThreadState.RUNNING);
 		}
+		activeThreadID++;
+		if(activeThreadID>=threads.size()){
+			activeThreadID = 0;
+		}
 		return thread;
 	}
 	

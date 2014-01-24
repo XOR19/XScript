@@ -8,15 +8,15 @@ import xscript.compiler.XOperator;
 import xscript.compiler.message.XMessageLevel;
 import xscript.compiler.message.XMessageList;
 import xscript.compiler.token.XLineDesk;
-import xscript.compiler.tree.XTree.XCast;
-import xscript.compiler.tree.XTree.XConstant;
-import xscript.compiler.tree.XTree.XFor;
-import xscript.compiler.tree.XTree.XGroup;
-import xscript.compiler.tree.XTree.XIf;
-import xscript.compiler.tree.XTree.XIfOperator;
-import xscript.compiler.tree.XTree.XOperatorPrefixSuffix;
-import xscript.compiler.tree.XTree.XOperatorStatement;
-import xscript.compiler.tree.XTree.XWhile;
+import xscript.compiler.tree.XTree.XTreeCast;
+import xscript.compiler.tree.XTree.XTreeConstant;
+import xscript.compiler.tree.XTree.XTreeFor;
+import xscript.compiler.tree.XTree.XTreeGroup;
+import xscript.compiler.tree.XTree.XTreeIf;
+import xscript.compiler.tree.XTree.XTreeIfOperator;
+import xscript.compiler.tree.XTree.XTreeOperatorPrefixSuffix;
+import xscript.compiler.tree.XTree.XTreeOperatorStatement;
+import xscript.compiler.tree.XTree.XTreeWhile;
 
 public class XTreeMakeEasy extends XTreeChanger implements XMessageListSetter {
 
@@ -50,11 +50,11 @@ public class XTreeMakeEasy extends XTreeChanger implements XMessageListSetter {
 	}
 	
 	@Override
-	public void visitOperator(XOperatorStatement xOperatorStatement) {
+	public void visitOperator(XTreeOperatorStatement xOperatorStatement) {
 		super.visitOperator(xOperatorStatement);
-		if(xOperatorStatement.left instanceof XConstant && xOperatorStatement.right instanceof XConstant){
-			XConstantValue left = ((XConstant)xOperatorStatement.left).value;
-			XConstantValue right = ((XConstant)xOperatorStatement.right).value;
+		if(xOperatorStatement.left instanceof XTreeConstant && xOperatorStatement.right instanceof XTreeConstant){
+			XConstantValue left = ((XTreeConstant)xOperatorStatement.left).value;
+			XConstantValue right = ((XTreeConstant)xOperatorStatement.right).value;
 			try{
 				XConstantValue value = xOperatorStatement.operator.calc(left, right);
 				if((xOperatorStatement.operator==XOperator.OR && left.getBool())||(xOperatorStatement.operator==XOperator.AND && !left.getBool())){
@@ -68,18 +68,18 @@ public class XTreeMakeEasy extends XTreeChanger implements XMessageListSetter {
 		if(xOperatorStatement.operator==XOperator.COPY){
 			List<XOperator> op = new ArrayList<XOperator>();
 			op.add(XOperator.COPYS);
-			if(!(xOperatorStatement.right instanceof XConstant)){
-				xOperatorStatement.right = new XOperatorPrefixSuffix(xOperatorStatement.line, op, xOperatorStatement.right, null);
+			if(!(xOperatorStatement.right instanceof XTreeConstant)){
+				xOperatorStatement.right = new XTreeOperatorPrefixSuffix(xOperatorStatement.line, op, xOperatorStatement.right, null);
 			}
 			xOperatorStatement.operator=XOperator.LET;
 		}
 	}
 
 	@Override
-	public void visitOperatorPrefixSuffix(XOperatorPrefixSuffix xOperatorPrefixSuffix) {
+	public void visitOperatorPrefixSuffix(XTreeOperatorPrefixSuffix xOperatorPrefixSuffix) {
 		super.visitOperatorPrefixSuffix(xOperatorPrefixSuffix);
-		if(xOperatorPrefixSuffix.statement instanceof XConstant){
-			XConstantValue value = ((XConstant)xOperatorPrefixSuffix.statement).value;
+		if(xOperatorPrefixSuffix.statement instanceof XTreeConstant){
+			XConstantValue value = ((XTreeConstant)xOperatorPrefixSuffix.statement).value;
 			if(xOperatorPrefixSuffix.prefix!=null){
 				for(XOperator op: xOperatorPrefixSuffix.prefix){
 					value = op.calc(value, null);
@@ -95,10 +95,10 @@ public class XTreeMakeEasy extends XTreeChanger implements XMessageListSetter {
 	}
 
 	@Override
-	public void visitWhile(XWhile xWhile) {
+	public void visitWhile(XTreeWhile xWhile) {
 		super.visitWhile(xWhile);
-		if(xWhile.doWhile instanceof XConstant){
-			XConstantValue value = ((XConstant)xWhile.doWhile).value;
+		if(xWhile.doWhile instanceof XTreeConstant){
+			XConstantValue value = ((XTreeConstant)xWhile.doWhile).value;
 			if(!value.getBool()){
 				message(XMessageLevel.WARNING, "deadcode", xWhile.block.line);
 				setReplace(null);
@@ -107,10 +107,10 @@ public class XTreeMakeEasy extends XTreeChanger implements XMessageListSetter {
 	}
 
 	@Override
-	public void visitFor(XFor xFor) {
+	public void visitFor(XTreeFor xFor) {
 		super.visitFor(xFor);
-		if(xFor.doWhile instanceof XConstant){
-			XConstantValue value = ((XConstant)xFor.doWhile).value;
+		if(xFor.doWhile instanceof XTreeConstant){
+			XConstantValue value = ((XTreeConstant)xFor.doWhile).value;
 			if(!value.getBool()){
 				message(XMessageLevel.WARNING, "deadcode", xFor.block.line);
 				setReplace(null);
@@ -119,10 +119,10 @@ public class XTreeMakeEasy extends XTreeChanger implements XMessageListSetter {
 	}
 
 	@Override
-	public void visitIf(XIf xIf) {
+	public void visitIf(XTreeIf xIf) {
 		super.visitIf(xIf);
-		if(xIf.iif instanceof XConstant){
-			XConstantValue value = ((XConstant)xIf.iif).value;
+		if(xIf.iif instanceof XTreeConstant){
+			XConstantValue value = ((XTreeConstant)xIf.iif).value;
 			if(value.getBool()){
 				if(xIf.block2!=null)
 					message(XMessageLevel.WARNING, "deadcode", xIf.block2.line);
@@ -135,18 +135,18 @@ public class XTreeMakeEasy extends XTreeChanger implements XMessageListSetter {
 	}
 
 	@Override
-	public void visitGroup(XGroup xGroup) {
+	public void visitGroup(XTreeGroup xGroup) {
 		super.visitGroup(xGroup);
-		if(xGroup.statement instanceof XConstant){
-			replaceWith(xGroup, ((XConstant)xGroup.statement).value);
+		if(xGroup.statement instanceof XTreeConstant){
+			replaceWith(xGroup, ((XTreeConstant)xGroup.statement).value);
 		}
 	}
 
 	@Override
-	public void visitIfOperator(XIfOperator xIfOperator) {
+	public void visitIfOperator(XTreeIfOperator xIfOperator) {
 		super.visitIfOperator(xIfOperator);
-		if(xIfOperator.left instanceof XConstant){
-			XConstantValue value = ((XConstant)xIfOperator.left).value;
+		if(xIfOperator.left instanceof XTreeConstant){
+			XConstantValue value = ((XTreeConstant)xIfOperator.left).value;
 			if(value.getBool()){
 				message(XMessageLevel.WARNING, "deadcode", xIfOperator.right.line);
 				setReplace(xIfOperator.statement);
@@ -158,11 +158,11 @@ public class XTreeMakeEasy extends XTreeChanger implements XMessageListSetter {
 	}
 
 	@Override
-	public void visitCast(XCast xCast) {
+	public void visitCast(XTreeCast xCast) {
 		super.visitCast(xCast);
-		if(xCast.statement instanceof XConstant){
+		if(xCast.statement instanceof XTreeConstant){
 			if(xCast.type.typeParam==null && xCast.type.array==0){
-				XConstantValue value = ((XConstant)xCast.statement).value;
+				XConstantValue value = ((XTreeConstant)xCast.statement).value;
 				Class<?> c = null;
 				if(xCast.type.name.name.equals("bool")){
 					c = Boolean.class;
@@ -188,7 +188,7 @@ public class XTreeMakeEasy extends XTreeChanger implements XMessageListSetter {
 	}
 
 	private void replaceWith(XTree tree, XConstantValue value){
-		setReplace(new XConstant(tree.line, value));
+		setReplace(new XTreeConstant(tree.line, value));
 	}
 	
 	private void setReplace(XTree replace){

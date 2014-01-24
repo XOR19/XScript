@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
+import xscript.compiler.classtypes.XErroredType;
+import xscript.compiler.classtypes.XKnownType;
+import xscript.compiler.classtypes.XSingleType;
+import xscript.compiler.classtypes.XVarType;
 import xscript.runtime.XModifier;
 import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XClass;

@@ -2,14 +2,15 @@ package xscript.compiler;
 
 import java.util.List;
 
-import xscript.compiler.tree.XTree.XVarDecl;
+import xscript.compiler.classtypes.XVarType;
+import xscript.compiler.tree.XTree.XTreeVarDecl;
 import xscript.runtime.instruction.XInstruction;
 import xscript.runtime.method.XLocalEntry;
 
 
 public class XVariable {
 
-	public XVarDecl varDecl;
+	public XTreeVarDecl varDecl;
 	
 	public int modifier;
 	

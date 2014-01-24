@@ -1,5 +1,6 @@
 package xscript.compiler;
 
+import xscript.compiler.classtypes.XVarType;
 import xscript.compiler.tree.XTree;
 import xscript.runtime.clazz.XPackage;
 

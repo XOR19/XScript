@@ -1,5 +1,6 @@
 package xscript.compiler;
 
+import xscript.compiler.token.XLineDesk;
 import xscript.runtime.XAnnotation;
 import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XPackage;
@@ -7,12 +8,12 @@ import xscript.runtime.genericclass.XClassPtr;
 
 public class XSyntheticField extends XFieldCompiler {
 
-private String rName;
+	private String rName;
 	
 	private int i = 1;
 	
-	public XSyntheticField(XClass declaringClass, int modifier, String name, XClassPtr type, XAnnotation[] annotations) {
-		super(declaringClass, modifier, "$"+name, type, annotations, false);
+	public XSyntheticField(XClass declaringClass, int modifier, String name, XClassPtr type, XAnnotation[] annotations, XLineDesk declLine) {
+		super(declaringClass, modifier, "$"+name, type, annotations, declLine, false);
 		rName = name;
 	}
 
@@ -34,4 +35,8 @@ private String rName;
 		parent.addChild(this);
 	}
 
+	public String getRealName(){
+		return rName;
+	}
+	
 }

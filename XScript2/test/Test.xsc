@@ -2,23 +2,15 @@ package test;
 
 public class Test{
 	
-	enum E{
-		E1, E2, E3
-	}
-	
-	public void doSomething(String e){
-		int i;
-		switch(e){
-		case "v1":
-			i=1;
-			break;
-		case "2":
-			i=2;
-			break;
-		case "v3":
-			i=3;
-			break;
+	public void test(){
+		int i = 0;
+		class I{
+			public void a(){
+				int j = i;
+			}
 		}
+		new I();
+		
 	}
 	
 }

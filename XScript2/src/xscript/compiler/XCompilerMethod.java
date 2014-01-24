@@ -1,5 +1,6 @@
 package xscript.compiler;
 
+import xscript.compiler.classtypes.XVarType;
 import xscript.runtime.method.XMethod;
 
 public class XCompilerMethod {

@@ -1,4 +1,4 @@
-package xscript.compiler;
+package xscript.compiler.classtypes;
 
 import java.io.IOException;
 import java.util.List;

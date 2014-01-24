@@ -1,4 +1,4 @@
-package xscript.compiler;
+package xscript.compiler.classtypes;
 
 import java.util.List;
 

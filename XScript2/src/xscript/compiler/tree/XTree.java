@@ -18,9 +18,9 @@ public abstract class XTree{
 		FOREACH, LABLE, SWITCH, CASE, THIS, SUPER, INSTANCEOF, ASSERT, COMPILED;
 	}
 	
-	public static class XError extends XTree{
+	public static class XTreeError extends XTree{
 
-		public XError(XLineDesk line) {
+		public XTreeError(XLineDesk line) {
 			super(line);
 		}
 
@@ -36,15 +36,15 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XClassFile extends XTree{
+	public static class XTreeClassFile extends XTree{
 
-		public List<XAnnotation> packAnnotations;
+		public List<XTreeAnnotation> packAnnotations;
 		
-		public XIdent packID;
+		public XTreeIdent packID;
 		
 		public List<XTree> defs;
 		
-		public XClassFile(XLineDesk line, List<XAnnotation> packAnnotations, XIdent packID, List<XTree> defs) {
+		public XTreeClassFile(XLineDesk line, List<XTreeAnnotation> packAnnotations, XTreeIdent packID, List<XTree> defs) {
 			super(line);
 			this.packAnnotations = packAnnotations;
 			this.packID = packID;
@@ -63,7 +63,7 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XImport extends XTree{
+	public static class XTreeImport extends XTree{
 		
 		public String iimport;
 
@@ -71,7 +71,7 @@ public abstract class XTree{
 		
 		public boolean staticImport;
 		
-		public XImport(XLineDesk lineDesk, String iimport, boolean indirect, boolean staticImport) {
+		public XTreeImport(XLineDesk lineDesk, String iimport, boolean indirect, boolean staticImport) {
 			super(lineDesk);
 			this.iimport = iimport;
 			this.indirect = indirect;
@@ -90,19 +90,19 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XClassDecl extends XStatement{
+	public static class XTreeClassDecl extends XTreeStatement{
 
-		public XModifier modifier;
+		public XTreeModifier modifier;
 		
 		public String name;
 		
-		public List<XTypeParam> typeParam;
+		public List<XTreeTypeParam> typeParam;
 		
-		public List<XType> superClasses;
+		public List<XTreeType> superClasses;
 		
 		public List<XTree> defs;
 		
-		public XClassDecl(XLineDesk line, XModifier modifier, String name, List<XTypeParam> typeParam, List<XType> superClasses, List<XTree> defs) {
+		public XTreeClassDecl(XLineDesk line, XTreeModifier modifier, String name, List<XTreeTypeParam> typeParam, List<XTreeType> superClasses, List<XTree> defs) {
 			super(line);
 			this.modifier = modifier;
 			this.name = name;
@@ -123,18 +123,18 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XModifier extends XTree{
+	public static class XTreeModifier extends XTree{
 		
 		public int modifier;
 		
-		public List<XAnnotation> annotations;
+		public List<XTreeAnnotation> annotations;
 		
-		public XModifier(XLineDesk line, int modifier){
+		public XTreeModifier(XLineDesk line, int modifier){
 			super(line);
 			this.modifier = modifier;
 		}
 		
-		public XModifier(XLineDesk line, int modifier, List<XAnnotation> annotations){
+		public XTreeModifier(XLineDesk line, int modifier, List<XTreeAnnotation> annotations){
 			super(line);
 			this.modifier = modifier;
 			this.annotations = annotations;
@@ -152,9 +152,9 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XAnnotation extends XTree{
+	public static class XTreeAnnotation extends XTree{
 
-		public XAnnotation(XLineDesk line) {
+		public XTreeAnnotation(XLineDesk line) {
 			super(line);
 		}
 
@@ -170,19 +170,19 @@ public abstract class XTree{
 		
 	}
 	
-	public static abstract class XExpression extends XTree{
+	public static abstract class XTreeExpression extends XTree{
 
-		public XExpression(XLineDesk line) {
+		public XTreeExpression(XLineDesk line) {
 			super(line);
 		}
 		
 	}
 	
-	public static class XIdent extends XStatement{
+	public static class XTreeIdent extends XTreeStatement{
 
 		public String name;
 		
-		public XIdent(XLineDesk line, String name) {
+		public XTreeIdent(XLineDesk line, String name) {
 			super(line);
 			this.name = name;
 		}
@@ -199,9 +199,9 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XThis extends XStatement{
+	public static class XTreeThis extends XTreeStatement{
 		
-		public XThis(XLineDesk line) {
+		public XTreeThis(XLineDesk line) {
 			super(line);
 		}
 
@@ -217,9 +217,9 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XSuper extends XStatement{
+	public static class XTreeSuper extends XTreeStatement{
 		
-		public XSuper(XLineDesk line) {
+		public XTreeSuper(XLineDesk line) {
 			super(line);
 		}
 
@@ -235,23 +235,23 @@ public abstract class XTree{
 		
 	}
 	
-	public static abstract class XStatement extends XTree{
+	public static abstract class XTreeStatement extends XTree{
 
-		public XStatement(XLineDesk line) {
+		public XTreeStatement(XLineDesk line) {
 			super(line);
 		}
 		
 	}
 	
-	public static class XType extends XStatement{
+	public static class XTreeType extends XTreeStatement{
 
-		public XIdent name;
+		public XTreeIdent name;
 		
-		public List<XType> typeParam;
+		public List<XTreeType> typeParam;
 		
 		public int array;
 		
-		public XType(XLineDesk line, XIdent name, List<XType> typeParam, int array) {
+		public XTreeType(XLineDesk line, XTreeIdent name, List<XTreeType> typeParam, int array) {
 			super(line);
 			this.name = name;
 			this.typeParam = typeParam;
@@ -270,15 +270,15 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XTypeParam extends XTree{
+	public static class XTreeTypeParam extends XTree{
 		
 		public String name;
 		
-		public List<XType> extend;
+		public List<XTreeType> extend;
 		
 		public boolean isSuper;
 		
-		public XTypeParam(XLineDesk line, String name, List<XType> extend, boolean isSuper) {
+		public XTreeTypeParam(XLineDesk line, String name, List<XTreeType> extend, boolean isSuper) {
 			super(line);
 			this.name = name;
 			this.extend = extend;
@@ -297,17 +297,17 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XVarDecl extends XTree{
+	public static class XTreeVarDecl extends XTree{
 
-		public XModifier modifier;
+		public XTreeModifier modifier;
 		
 		public String name;
 		
-		public XType type;
+		public XTreeType type;
 
-		public XStatement init;
+		public XTreeStatement init;
 		
-		public XVarDecl(XLineDesk line, XModifier modifier, String name, XType type, XStatement init) {
+		public XTreeVarDecl(XLineDesk line, XTreeModifier modifier, String name, XTreeType type, XTreeStatement init) {
 			super(line);
 			this.modifier = modifier;
 			this.name = name;
@@ -327,11 +327,11 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XVarDecls extends XStatement{
+	public static class XTreeVarDecls extends XTreeStatement{
 		
-		public List<XVarDecl> varDecls;
+		public List<XTreeVarDecl> varDecls;
 		
-		public XVarDecls(XLineDesk line, List<XVarDecl> varDecls) {
+		public XTreeVarDecls(XLineDesk line, List<XTreeVarDecl> varDecls) {
 			super(line);
 			this.varDecls = varDecls;
 		}
@@ -348,27 +348,27 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XMethodDecl extends XTree{
+	public static class XTreeMethodDecl extends XTree{
 
-		public XModifier modifier;
+		public XTreeModifier modifier;
 		
 		public String name;
 		
-		public List<XTypeParam> typeParam;
+		public List<XTreeTypeParam> typeParam;
 		
-		public XType returnType;
+		public XTreeType returnType;
 		
-		public List<XVarDecl> paramTypes;
+		public List<XTreeVarDecl> paramTypes;
 		
-		public List<XType> throwList;
+		public List<XTreeType> throwList;
 
-		public XBlock block;
+		public XTreeBlock block;
 		
-		public List<XStatement> superConstructors;
+		public List<XTreeStatement> superConstructors;
 		
 		public boolean varargs;
 		
-		public XMethodDecl(XLineDesk line, XModifier modifier, String name, List<XTypeParam> typeParam, XType returnType, List<XVarDecl> paramTypes, List<XType> throwList, XBlock block, List<XStatement> superConstructors, boolean varargs) {
+		public XTreeMethodDecl(XLineDesk line, XTreeModifier modifier, String name, List<XTreeTypeParam> typeParam, XTreeType returnType, List<XTreeVarDecl> paramTypes, List<XTreeType> throwList, XTreeBlock block, List<XTreeStatement> superConstructors, boolean varargs) {
 			super(line);
 			this.modifier = modifier;
 			this.name = name;
@@ -393,11 +393,11 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XBlock extends XStatement{
+	public static class XTreeBlock extends XTreeStatement{
 
-		public List<XStatement> statements;
+		public List<XTreeStatement> statements;
 		
-		public XBlock(XLineDesk line, List<XStatement> statements) {
+		public XTreeBlock(XLineDesk line, List<XTreeStatement> statements) {
 			super(line);
 			this.statements = statements;
 		}
@@ -414,11 +414,11 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XGroup extends XStatement{
+	public static class XTreeGroup extends XTreeStatement{
 
-		public XStatement statement;
+		public XTreeStatement statement;
 		
-		public XGroup(XLineDesk line, XStatement statement) {
+		public XTreeGroup(XLineDesk line, XTreeStatement statement) {
 			super(line);
 			this.statement = statement;
 		}
@@ -435,11 +435,11 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XBreak extends XStatement{
+	public static class XTreeBreak extends XTreeStatement{
 
 		public String lable;
 		
-		public XBreak(XLineDesk line, String lable) {
+		public XTreeBreak(XLineDesk line, String lable) {
 			super(line);
 			this.lable = lable;
 		}
@@ -456,11 +456,11 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XContinue extends XStatement{
+	public static class XTreeContinue extends XTreeStatement{
 
 		public String lable;
 		
-		public XContinue(XLineDesk line, String lable) {
+		public XTreeContinue(XLineDesk line, String lable) {
 			super(line);
 			this.lable = lable;
 		}
@@ -477,13 +477,13 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XDo extends XStatement{
+	public static class XTreeDo extends XTreeStatement{
 
-		public XStatement block;
+		public XTreeStatement block;
 		
-		public XStatement doWhile;
+		public XTreeStatement doWhile;
 		
-		public XDo(XLineDesk line, XStatement block, XStatement doWhile) {
+		public XTreeDo(XLineDesk line, XTreeStatement block, XTreeStatement doWhile) {
 			super(line);
 			this.block = block;
 			this.doWhile = doWhile;
@@ -501,17 +501,17 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XFor extends XStatement{
+	public static class XTreeFor extends XTreeStatement{
 
-		public XStatement init;
+		public XTreeStatement init;
 		
-		public XStatement doWhile;
+		public XTreeStatement doWhile;
 		
-		public XStatement inc;
+		public XTreeStatement inc;
 		
-		public XStatement block;
+		public XTreeStatement block;
 		
-		public XFor(XLineDesk line, XStatement init, XStatement doWhile, XStatement inc, XStatement block) {
+		public XTreeFor(XLineDesk line, XTreeStatement init, XTreeStatement doWhile, XTreeStatement inc, XTreeStatement block) {
 			super(line);
 			this.init = init;
 			this.doWhile = doWhile;
@@ -531,15 +531,15 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XForeach extends XStatement{
+	public static class XTreeForeach extends XTreeStatement{
 
-		public XStatement var;
+		public XTreeStatement var;
 		
-		public XStatement in;
+		public XTreeStatement in;
 		
-		public XStatement block;
+		public XTreeStatement block;
 		
-		public XForeach(XLineDesk line, XStatement var, XStatement in, XStatement block) {
+		public XTreeForeach(XLineDesk line, XTreeStatement var, XTreeStatement in, XTreeStatement block) {
 			super(line);
 			this.var = var;
 			this.in = in;
@@ -558,13 +558,13 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XWhile extends XStatement{
+	public static class XTreeWhile extends XTreeStatement{
 
-		public XStatement block;
+		public XTreeStatement block;
 		
-		public XStatement doWhile;
+		public XTreeStatement doWhile;
 		
-		public XWhile(XLineDesk line, XStatement block, XStatement doWhile) {
+		public XTreeWhile(XLineDesk line, XTreeStatement block, XTreeStatement doWhile) {
 			super(line);
 			this.block = block;
 			this.doWhile = doWhile;
@@ -582,15 +582,15 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XIf extends XStatement{
+	public static class XTreeIf extends XTreeStatement{
 
-		public XStatement iif;
+		public XTreeStatement iif;
 		
-		public XStatement block;
+		public XTreeStatement block;
 		
-		public XStatement block2;
+		public XTreeStatement block2;
 		
-		public XIf(XLineDesk line, XStatement iif, XStatement block, XStatement block2) {
+		public XTreeIf(XLineDesk line, XTreeStatement iif, XTreeStatement block, XTreeStatement block2) {
 			super(line);
 			this.iif = iif;
 			this.block = block;
@@ -609,11 +609,11 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XReturn extends XStatement{
+	public static class XTreeReturn extends XTreeStatement{
 
-		public XStatement statement;
+		public XTreeStatement statement;
 		
-		public XReturn(XLineDesk line, XStatement statement) {
+		public XTreeReturn(XLineDesk line, XTreeStatement statement) {
 			super(line);
 			this.statement = statement;
 		}
@@ -630,11 +630,11 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XThrow extends XStatement{
+	public static class XTreeThrow extends XTreeStatement{
 
-		public XStatement statement;
+		public XTreeStatement statement;
 		
-		public XThrow(XLineDesk line, XStatement statement) {
+		public XTreeThrow(XLineDesk line, XTreeStatement statement) {
 			super(line);
 			this.statement = statement;
 		}
@@ -651,13 +651,13 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XSynchronized extends XStatement{
+	public static class XTreeSynchronized extends XTreeStatement{
 
-		public XStatement ident;
+		public XTreeStatement ident;
 		
-		public XStatement block;
+		public XTreeStatement block;
 		
-		public XSynchronized(XLineDesk line, XStatement ident, XStatement block) {
+		public XTreeSynchronized(XLineDesk line, XTreeStatement ident, XTreeStatement block) {
 			super(line);
 			this.ident = ident;
 			this.block = block;
@@ -675,11 +675,11 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XConstant extends XStatement{
+	public static class XTreeConstant extends XTreeStatement{
 
 		public XConstantValue value;
 		
-		public XConstant(XLineDesk line, XConstantValue value) {
+		public XTreeConstant(XLineDesk line, XConstantValue value) {
 			super(line);
 			this.value = value;
 		}
@@ -696,15 +696,15 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XMethodCall extends XStatement{
+	public static class XTreeMethodCall extends XTreeStatement{
 		
-		public XStatement method;
+		public XTreeStatement method;
 		
-		public List<XStatement> params;
+		public List<XTreeStatement> params;
 		
-		public List<XType> typeParam;
+		public List<XTreeType> typeParam;
 		
-		public XMethodCall(XLineDesk line, XStatement method, List<XStatement> params, List<XType> typeParam) {
+		public XTreeMethodCall(XLineDesk line, XTreeStatement method, List<XTreeStatement> params, List<XTreeType> typeParam) {
 			super(line);
 			this.method = method;
 			this.params = params;
@@ -723,13 +723,13 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XIndex extends XStatement{
+	public static class XTreeIndex extends XTreeStatement{
 		
-		public XStatement array;
+		public XTreeStatement array;
 		
-		public XStatement index;
+		public XTreeStatement index;
 		
-		public XIndex(XLineDesk line, XStatement array, XStatement index) {
+		public XTreeIndex(XLineDesk line, XTreeStatement array, XTreeStatement index) {
 			super(line);
 			this.array = array;
 			this.index = index;
@@ -747,15 +747,15 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XNew extends XStatement{
+	public static class XTreeNew extends XTreeStatement{
 		
-		public XType type;
+		public XTreeType type;
 		
-		public List<XStatement> params;
+		public List<XTreeStatement> params;
 		
-		public XClassDecl classDecl;
+		public XTreeClassDecl classDecl;
 		
-		public XNew(XLineDesk line, XType type, List<XStatement> params, XClassDecl classDecl) {
+		public XTreeNew(XLineDesk line, XTreeType type, List<XTreeStatement> params, XTreeClassDecl classDecl) {
 			super(line);
 			this.type = type;
 			this.params = params;
@@ -774,15 +774,15 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XNewArray extends XStatement{
+	public static class XTreeNewArray extends XTreeStatement{
 		
-		public XType type;
+		public XTreeType type;
 		
-		public List<XStatement> arraySizes;
+		public List<XTreeStatement> arraySizes;
 		
-		public XStatement arrayInitialize;
+		public XTreeStatement arrayInitialize;
 		
-		public XNewArray(XLineDesk line, XType type, List<XStatement> arraySizes, XStatement arrayInitialize) {
+		public XTreeNewArray(XLineDesk line, XTreeType type, List<XTreeStatement> arraySizes, XTreeStatement arrayInitialize) {
 			super(line);
 			this.type = type;
 			this.arraySizes = arraySizes;
@@ -801,15 +801,15 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XOperatorStatement extends XStatement{
+	public static class XTreeOperatorStatement extends XTreeStatement{
 
-		public XStatement left;
+		public XTreeStatement left;
 		
-		public XStatement right;
+		public XTreeStatement right;
 		
 		public XOperator operator;
 		
-		public XOperatorStatement(XLineDesk line, XStatement left, XOperator operator, XStatement right) {
+		public XTreeOperatorStatement(XLineDesk line, XTreeStatement left, XOperator operator, XTreeStatement right) {
 			super(line);
 			this.left = left;
 			this.operator = operator;
@@ -828,13 +828,13 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XInstanceof extends XStatement{
+	public static class XTreeInstanceof extends XTreeStatement{
 
-		public XStatement statement;
+		public XTreeStatement statement;
 		
-		public XType type;
+		public XTreeType type;
 		
-		public XInstanceof(XLineDesk line, XStatement statement, XType type) {
+		public XTreeInstanceof(XLineDesk line, XTreeStatement statement, XTreeType type) {
 			super(line);
 			this.statement = statement;
 			this.type = type;
@@ -852,15 +852,15 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XOperatorPrefixSuffix extends XStatement{
+	public static class XTreeOperatorPrefixSuffix extends XTreeStatement{
 
 		public List<XOperator> prefix;
 		
-		public XStatement statement;
+		public XTreeStatement statement;
 		
 		public List<XOperator> suffix;
 		
-		public XOperatorPrefixSuffix(XLineDesk line, List<XOperator> prefix, XStatement statement, List<XOperator> suffix) {
+		public XTreeOperatorPrefixSuffix(XLineDesk line, List<XOperator> prefix, XTreeStatement statement, List<XOperator> suffix) {
 			super(line);
 			this.prefix = prefix;
 			this.statement = statement;
@@ -879,11 +879,11 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XIfOperator extends XOperatorStatement{
+	public static class XTreeIfOperator extends XTreeOperatorStatement{
 		
-		public XStatement statement;
+		public XTreeStatement statement;
 		
-		public XIfOperator(XLineDesk line, XStatement left, XStatement statement, XStatement right) {
+		public XTreeIfOperator(XLineDesk line, XTreeStatement left, XTreeStatement statement, XTreeStatement right) {
 			super(line, left, XOperator.IF, right);
 			this.statement = statement;
 		}
@@ -900,13 +900,13 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XCast extends XStatement{
+	public static class XTreeCast extends XTreeStatement{
 		
-		public XType type;
+		public XTreeType type;
 		
-		public XStatement statement;
+		public XTreeStatement statement;
 		
-		public XCast(XLineDesk line, XType type, XStatement statement) {
+		public XTreeCast(XLineDesk line, XTreeType type, XTreeStatement statement) {
 			super(line);
 			this.type = type;
 			this.statement = statement;
@@ -924,13 +924,13 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XLambda extends XStatement{
+	public static class XTreeLambda extends XTreeStatement{
 
-		public List<XVarDecl> params;
+		public List<XTreeVarDecl> params;
 		
-		public XStatement statement;
+		public XTreeStatement statement;
 		
-		public XLambda(XLineDesk line, List<XVarDecl> params, XStatement statement) {
+		public XTreeLambda(XLineDesk line, List<XTreeVarDecl> params, XTreeStatement statement) {
 			super(line);
 			this.params = params;
 			this.statement = statement;
@@ -948,17 +948,17 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XTry extends XStatement{
+	public static class XTreeTry extends XTreeStatement{
 		
-		public List<XVarDecls> resource;
+		public List<XTreeVarDecls> resource;
 		
-		public XStatement block;
+		public XTreeStatement block;
 		
-		public List<XCatch> catchs;
+		public List<XTreeCatch> catchs;
 		
-		public XStatement finallyBlock;
+		public XTreeStatement finallyBlock;
 		
-		public XTry(XLineDesk line, List<XVarDecls> varDecls, XStatement block, List<XCatch> catchs, XStatement finallyBlock) {
+		public XTreeTry(XLineDesk line, List<XTreeVarDecls> varDecls, XTreeStatement block, List<XTreeCatch> catchs, XTreeStatement finallyBlock) {
 			super(line);
 			this.resource = varDecls;
 			this.block = block;
@@ -978,17 +978,17 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XCatch extends XTree{
+	public static class XTreeCatch extends XTree{
 
-		public XModifier modifier;
+		public XTreeModifier modifier;
 		
-		public List<XType> types;
+		public List<XTreeType> types;
 		
 		public String varName;
 		
-		public XStatement block;
+		public XTreeStatement block;
 		
-		public XCatch(XLineDesk line, XModifier modifier, List<XType> types, String varName, XStatement block) {
+		public XTreeCatch(XLineDesk line, XTreeModifier modifier, List<XTreeType> types, String varName, XTreeStatement block) {
 			super(line);
 			this.modifier = modifier;
 			this.types = types;
@@ -1008,11 +1008,11 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XArrayInitialize extends XStatement{
+	public static class XTreeArrayInitialize extends XTreeStatement{
 
-		public List<XStatement> statements;
+		public List<XTreeStatement> statements;
 		
-		public XArrayInitialize(XLineDesk line, List<XStatement> statements) {
+		public XTreeArrayInitialize(XLineDesk line, List<XTreeStatement> statements) {
 			super(line);
 			this.statements = statements;
 		}
@@ -1029,13 +1029,13 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XLable extends XStatement{
+	public static class XTreeLable extends XTreeStatement{
 
 		public String name;
 		
-		public XStatement statement;
+		public XTreeStatement statement;
 		
-		public XLable(XLineDesk line, String name) {
+		public XTreeLable(XLineDesk line, String name) {
 			super(line);
 			this.name = name;
 		}
@@ -1052,13 +1052,13 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XSwitch extends XStatement{
+	public static class XTreeSwitch extends XTreeStatement{
 
-		public XStatement statement;
+		public XTreeStatement statement;
 		
-		public List<XCase> cases;
+		public List<XTreeCase> cases;
 		
-		public XSwitch(XLineDesk line, XStatement statement, List<XCase> cases) {
+		public XTreeSwitch(XLineDesk line, XTreeStatement statement, List<XTreeCase> cases) {
 			super(line);
 			this.statement = statement;
 			this.cases = cases;
@@ -1076,13 +1076,13 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XCase extends XTree{
+	public static class XTreeCase extends XTree{
 
-		public XStatement key;
+		public XTreeStatement key;
 		
-		public List<XStatement> block;
+		public List<XTreeStatement> block;
 		
-		public XCase(XLineDesk line, XStatement key, List<XStatement> block) {
+		public XTreeCase(XLineDesk line, XTreeStatement key, List<XTreeStatement> block) {
 			super(line);
 			this.key = key;
 			this.block = block;
@@ -1100,11 +1100,11 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XAssert extends XStatement{
+	public static class XTreeAssert extends XTreeStatement{
 
-		public XStatement statement;
+		public XTreeStatement statement;
 		
-		public XAssert(XLineDesk line, XStatement statement) {
+		public XTreeAssert(XLineDesk line, XTreeStatement statement) {
 			super(line);
 			this.statement = statement;
 		}
@@ -1121,11 +1121,11 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XCompiledPart extends XStatement{
+	public static class XTreeCompiledPart extends XTreeStatement{
 		
 		public XCodeGen codeGen;
 		
-		public XCompiledPart(XLineDesk line, XCodeGen codeGen) {
+		public XTreeCompiledPart(XLineDesk line, XCodeGen codeGen) {
 			super(line);
 			this.codeGen = codeGen;
 		}

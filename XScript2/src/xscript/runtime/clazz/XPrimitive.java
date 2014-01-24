@@ -2,6 +2,7 @@ package xscript.runtime.clazz;
 
 import java.io.IOException;
 
+import xscript.runtime.XModifier;
 import xscript.runtime.XRuntimeException;
 import xscript.runtime.XVirtualMachine;
 import xscript.runtime.genericclass.XGenericClass;
@@ -22,7 +23,18 @@ public class XPrimitive extends XClass {
 	public static final int DOUBLE = 8;
 	public static final int VOID = 9;
 	
-	private static final String[] NAME = {"Object", "bool", "byte", "char", "short", "int", "long", "float", "double", "void"};
+	public static final String OBJECT_NAME = "Object";
+	public static final String BOOL_NAME = "bool";
+	public static final String BYTE_NAME = "byte";
+	public static final String CHAR_NAME = "char";
+	public static final String SHORT_NAME = "short";
+	public static final String INT_NAME = "int";
+	public static final String LONG_NAME = "long";
+	public static final String FLOAT_NAME = "float";
+	public static final String DOUBLE_NAME = "double";
+	public static final String VOID_NAME = "void";
+	
+	private static final String[] NAME = {OBJECT_NAME, BOOL_NAME, BYTE_NAME, CHAR_NAME, SHORT_NAME, INT_NAME, LONG_NAME, FLOAT_NAME, DOUBLE_NAME, VOID_NAME};
 	private static final String[] WRAPPER = {"", "Bool", "Byte", "Char", "Short", "Int", "Long", "Float", "Double", "Void"};
 	
 	private static final int[] SIZE = {4, 1, 1, 2, 2, 4, 8, 4, 8, 0};
@@ -33,6 +45,7 @@ public class XPrimitive extends XClass {
 		super(virtualMachine, NAME[primitiveID], p);
 		this.primitiveID = primitiveID;
 		state = XClass.STATE_RUNNABLE;
+		modifier = XModifier.FINAL | XModifier.PUBLIC;
 	}
 
 	@Override

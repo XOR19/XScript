@@ -32,6 +32,9 @@ public class XMethod extends XPackage {
 	public static final int CONSTRUCTORMODIFIER = XModifier.PRIVATE | XModifier.PROTECTED | XModifier.PUBLIC | XModifier.VARARGS;
 	public static final int STATICCONSTRUCTORMODIFIER = XModifier.STATIC | XModifier.FINAL | XModifier.PRIVATE;
 	
+	public static final String INIT = "<init>";
+	public static final String STATIC_INIT = "<static>";
+	
 	protected List<XClass> classes = new ArrayList<XClass>();
 	protected String desk;
 	protected int modifier;
@@ -87,7 +90,7 @@ public class XMethod extends XPackage {
 			genericInfos[i] = new XGenericInfo(declaringClass.getVirtualMachine(), inputStream);
 		}
 		if(XModifier.isStatic(modifier)){
-			if(name.equals("<static>")){
+			if(name.equals(STATIC_INIT)){
 				modifier |= STATICCONSTRUCTORMODIFIER;
 				XChecks.checkModifier(declaringClass, modifier, STATICCONSTRUCTORMODIFIER);
 			}else{
@@ -95,7 +98,7 @@ public class XMethod extends XPackage {
 			}
 		}else {
 			index = declaringClass.getMethodIndex();
-			if(name.equals("<init>")){
+			if(name.equals(INIT)){
 				XChecks.checkModifier(declaringClass, modifier, CONSTRUCTORMODIFIER);
 			}else{
 				XChecks.checkModifier(declaringClass, modifier, ALLOWEDMODIFIFER);
@@ -160,7 +163,7 @@ public class XMethod extends XPackage {
 			getNativeMethod();
 		}
 		if(XModifier.isStatic(modifier)){
-			if(name.equals("<static>")){
+			if(name.equals(STATIC_INIT)){
 				modifier |= STATICCONSTRUCTORMODIFIER;
 				XChecks.checkModifier(declaringClass, modifier, STATICCONSTRUCTORMODIFIER);
 			}else{
@@ -168,7 +171,7 @@ public class XMethod extends XPackage {
 			}
 		}else{
 			index = declaringClass.getMethodIndex();
-			if(name.equals("<init>")){
+			if(name.equals(INIT)){
 				XChecks.checkModifier(declaringClass, modifier, CONSTRUCTORMODIFIER);
 			}else if(name.equals("<preInit>")){
 				modifier |= XModifier.PROTECTED;
@@ -340,7 +343,7 @@ public class XMethod extends XPackage {
 	}
 
 	public boolean isConstructor() {
-		return XModifier.isStatic(modifier)?name.equals("<static>"):name.equals("<init>");
+		return XModifier.isStatic(modifier)?name.equals(STATIC_INIT):name.equals(INIT);
 	}
 	
 	public String getRealName(){

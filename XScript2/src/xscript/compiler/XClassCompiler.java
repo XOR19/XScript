@@ -11,61 +11,63 @@ import xscript.compiler.message.XMessageLevel;
 import xscript.compiler.message.XMessageList;
 import xscript.compiler.token.XLineDesk;
 import xscript.compiler.tree.XTree;
-import xscript.compiler.tree.XTree.XAnnotation;
-import xscript.compiler.tree.XTree.XArrayInitialize;
-import xscript.compiler.tree.XTree.XAssert;
-import xscript.compiler.tree.XTree.XBlock;
-import xscript.compiler.tree.XTree.XBreak;
-import xscript.compiler.tree.XTree.XCase;
-import xscript.compiler.tree.XTree.XCast;
-import xscript.compiler.tree.XTree.XCatch;
-import xscript.compiler.tree.XTree.XClassDecl;
-import xscript.compiler.tree.XTree.XClassFile;
-import xscript.compiler.tree.XTree.XCompiledPart;
-import xscript.compiler.tree.XTree.XConstant;
-import xscript.compiler.tree.XTree.XContinue;
-import xscript.compiler.tree.XTree.XDo;
-import xscript.compiler.tree.XTree.XError;
-import xscript.compiler.tree.XTree.XFor;
-import xscript.compiler.tree.XTree.XForeach;
-import xscript.compiler.tree.XTree.XGroup;
-import xscript.compiler.tree.XTree.XIdent;
-import xscript.compiler.tree.XTree.XIf;
-import xscript.compiler.tree.XTree.XIfOperator;
-import xscript.compiler.tree.XTree.XImport;
-import xscript.compiler.tree.XTree.XIndex;
-import xscript.compiler.tree.XTree.XInstanceof;
-import xscript.compiler.tree.XTree.XLable;
-import xscript.compiler.tree.XTree.XLambda;
-import xscript.compiler.tree.XTree.XMethodCall;
-import xscript.compiler.tree.XTree.XMethodDecl;
-import xscript.compiler.tree.XTree.XModifier;
-import xscript.compiler.tree.XTree.XNew;
-import xscript.compiler.tree.XTree.XNewArray;
-import xscript.compiler.tree.XTree.XOperatorPrefixSuffix;
-import xscript.compiler.tree.XTree.XOperatorStatement;
-import xscript.compiler.tree.XTree.XReturn;
-import xscript.compiler.tree.XTree.XStatement;
-import xscript.compiler.tree.XTree.XSuper;
-import xscript.compiler.tree.XTree.XSwitch;
-import xscript.compiler.tree.XTree.XSynchronized;
 import xscript.compiler.tree.XTree.XTag;
-import xscript.compiler.tree.XTree.XThis;
-import xscript.compiler.tree.XTree.XThrow;
-import xscript.compiler.tree.XTree.XTry;
-import xscript.compiler.tree.XTree.XType;
-import xscript.compiler.tree.XTree.XTypeParam;
-import xscript.compiler.tree.XTree.XVarDecl;
-import xscript.compiler.tree.XTree.XVarDecls;
-import xscript.compiler.tree.XTree.XWhile;
+import xscript.compiler.tree.XTree.XTreeAnnotation;
+import xscript.compiler.tree.XTree.XTreeArrayInitialize;
+import xscript.compiler.tree.XTree.XTreeAssert;
+import xscript.compiler.tree.XTree.XTreeBlock;
+import xscript.compiler.tree.XTree.XTreeBreak;
+import xscript.compiler.tree.XTree.XTreeCase;
+import xscript.compiler.tree.XTree.XTreeCast;
+import xscript.compiler.tree.XTree.XTreeCatch;
+import xscript.compiler.tree.XTree.XTreeClassDecl;
+import xscript.compiler.tree.XTree.XTreeClassFile;
+import xscript.compiler.tree.XTree.XTreeCompiledPart;
+import xscript.compiler.tree.XTree.XTreeConstant;
+import xscript.compiler.tree.XTree.XTreeContinue;
+import xscript.compiler.tree.XTree.XTreeDo;
+import xscript.compiler.tree.XTree.XTreeError;
+import xscript.compiler.tree.XTree.XTreeFor;
+import xscript.compiler.tree.XTree.XTreeForeach;
+import xscript.compiler.tree.XTree.XTreeGroup;
+import xscript.compiler.tree.XTree.XTreeIdent;
+import xscript.compiler.tree.XTree.XTreeIf;
+import xscript.compiler.tree.XTree.XTreeIfOperator;
+import xscript.compiler.tree.XTree.XTreeImport;
+import xscript.compiler.tree.XTree.XTreeIndex;
+import xscript.compiler.tree.XTree.XTreeInstanceof;
+import xscript.compiler.tree.XTree.XTreeLable;
+import xscript.compiler.tree.XTree.XTreeLambda;
+import xscript.compiler.tree.XTree.XTreeMethodCall;
+import xscript.compiler.tree.XTree.XTreeMethodDecl;
+import xscript.compiler.tree.XTree.XTreeModifier;
+import xscript.compiler.tree.XTree.XTreeNew;
+import xscript.compiler.tree.XTree.XTreeNewArray;
+import xscript.compiler.tree.XTree.XTreeOperatorPrefixSuffix;
+import xscript.compiler.tree.XTree.XTreeOperatorStatement;
+import xscript.compiler.tree.XTree.XTreeReturn;
+import xscript.compiler.tree.XTree.XTreeStatement;
+import xscript.compiler.tree.XTree.XTreeSuper;
+import xscript.compiler.tree.XTree.XTreeSwitch;
+import xscript.compiler.tree.XTree.XTreeSynchronized;
+import xscript.compiler.tree.XTree.XTreeThis;
+import xscript.compiler.tree.XTree.XTreeThrow;
+import xscript.compiler.tree.XTree.XTreeTry;
+import xscript.compiler.tree.XTree.XTreeType;
+import xscript.compiler.tree.XTree.XTreeTypeParam;
+import xscript.compiler.tree.XTree.XTreeVarDecl;
+import xscript.compiler.tree.XTree.XTreeVarDecls;
+import xscript.compiler.tree.XTree.XTreeWhile;
 import xscript.compiler.tree.XTreeSearch;
 import xscript.compiler.tree.XVisitor;
+import xscript.runtime.XModifier;
 import xscript.runtime.XRuntimeException;
 import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XField;
 import xscript.runtime.clazz.XGenericInfo;
 import xscript.runtime.clazz.XPackage;
+import xscript.runtime.clazz.XPrimitive;
 import xscript.runtime.genericclass.XClassPtr;
 import xscript.runtime.genericclass.XClassPtrClass;
 import xscript.runtime.genericclass.XClassPtrClassGeneric;
@@ -98,9 +100,9 @@ public class XClassCompiler extends XClass implements XVisitor {
 	
 	private HashMap<String, XSyntheticField> syntheticVars;
 	
-	private List<XStatement> staticInit;
+	private List<XTreeStatement> staticInit;
 	
-	private List<XStatement> init;
+	private List<XTreeStatement> init;
 	
 	private XImportHelper importHelper;
 	
@@ -112,7 +114,11 @@ public class XClassCompiler extends XClass implements XVisitor {
 	
 	private List<String> enumNames = new ArrayList<String>();
 	
-	private XClassDecl classDecl;
+	private XTreeClassDecl classDecl;
+	
+	private XLineDesk declLine;
+	
+	
 	
 	protected XClassCompiler(XVirtualMachine virtualMachine, String name, XMessageList messages, XImportHelper importHelper, XPackage p) {
 		super(virtualMachine, name, p);
@@ -144,6 +150,12 @@ public class XClassCompiler extends XClass implements XVisitor {
 				cc.onRequest();
 				cc.gen();
 			}
+			for(XClassPtr superClass:superClasses){
+				XClass c = superClass.getXClass(virtualMachine);
+				if(c instanceof XClassCompiler){
+					((XClassCompiler) c).gen();
+				}
+			}
 			for(XMethod method:methods){
 				((XMethodCompiler)method).compile();
 			}
@@ -172,6 +184,12 @@ public class XClassCompiler extends XClass implements XVisitor {
 			fields = new XField[oldFields.length+toAdd.size()];
 			for(int j=0; j<oldFields.length; j++){
 				fields[j] = oldFields[j];
+				if(oldFields[j] instanceof XFieldCompiler){
+					XFieldCompiler field = (XFieldCompiler) oldFields[j];
+					if(XModifier.isPrivate(field.getModifier()) && field.getReads()==0){
+						compilerError(XMessageLevel.WARNING, "var.never.used", field.getDeclLine(), field.getName());
+					}
+				}
 			}
 			for(int j=0; j<toAdd.size(); j++){
 				fields[j+oldFields.length] = toAdd.get(j);
@@ -204,7 +222,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 		}
 	}
 	
-	protected void registerClass(XClassDecl classDecl){
+	protected void registerClass(XTreeClassDecl classDecl){
 		((XCompiler)virtualMachine).childToCompile(this);
 		registerClasses(classDecl.defs);
 		this.classDecl = classDecl;
@@ -215,8 +233,8 @@ public class XClassCompiler extends XClass implements XVisitor {
 			importHelper = new XImportHelper((XCompiler) virtualMachine, this);
 		}
 		for(XTree tree:defs){
-			if(tree instanceof XClassDecl){
-				XClassDecl decl = (XClassDecl)tree;
+			if(tree instanceof XTreeClassDecl){
+				XTreeClassDecl decl = (XTreeClassDecl)tree;
 				String name = getName()+"."+decl.name;
 				XClassCompiler compiler = new XClassCompiler(virtualMachine, decl.name, new XMessageClass((XCompiler) virtualMachine, name), importHelper, this);
 				if(childs.containsKey(decl.name)){
@@ -229,12 +247,12 @@ public class XClassCompiler extends XClass implements XVisitor {
 		}
 	}
 	
-	private void registerClasses(XClassFile xClassFile){
+	private void registerClasses(XTreeClassFile xClassFile){
 		XPackage xPackage = getParent();
 		boolean gotFirst = false;
 		for(XTree tree:xClassFile.defs){
-			if(tree instanceof XClassDecl){
-				XClassDecl decl = (XClassDecl)tree;
+			if(tree instanceof XTreeClassDecl){
+				XTreeClassDecl decl = (XTreeClassDecl)tree;
 				if(gotFirst){
 					String name = xPackage.getName()+"."+decl.name;
 					XClassCompiler compiler = new XClassCompiler(virtualMachine, decl.name, new XMessageClass((XCompiler) virtualMachine, name), importHelper, this);
@@ -253,7 +271,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 	}
 	
 	@Override
-	public void visitTopLevel(XClassFile xClassFile) {
+	public void visitTopLevel(XTreeClassFile xClassFile) {
 		if(state==STATE_TOGEN){
 			if(xClassFile.packID==null){
 				if(getParent().getName()!=null){
@@ -266,8 +284,8 @@ public class XClassCompiler extends XClass implements XVisitor {
 			}
 			registerClasses(xClassFile);
 			for(XTree tree:xClassFile.defs){
-				if(tree instanceof XImport){
-					importHelper.addImport(this, (XImport)tree);
+				if(tree instanceof XTreeImport){
+					importHelper.addImport(this, (XTreeImport)tree);
 				}
 			}
 		}
@@ -276,69 +294,74 @@ public class XClassCompiler extends XClass implements XVisitor {
 	@Override
 	public void onRequest(){
 		if(classDecl!=null){
-			XClassDecl xClassDef = classDecl;
+			XTreeClassDecl xClassDef = classDecl;
+			declLine = xClassDef.line;
 			classDecl = null;
 			if(!xClassDef.name.equals(getSimpleName())){
-				compilerError(XMessageLevel.ERROR, "wrongclassname", xClassDef.line, getSimpleName(), xClassDef.name);
+				compilerError(XMessageLevel.ERROR, "wrong.classname", xClassDef.line, getSimpleName(), xClassDef.name);
 			}
 			if(xClassDef.typeParam==null){
 				genericInfos = new XGenericInfo[0];
 			}else{
 				genericInfos = new XGenericInfo[xClassDef.typeParam.size()];
 				for(int i=0; i<genericInfos.length; i++){
-					XTypeParam typeParam = xClassDef.typeParam.get(i);
+					XTreeTypeParam typeParam = xClassDef.typeParam.get(i);
 					genericInfos[i] = new XGenericInfo(typeParam.name, new XClassPtr[0], typeParam.isSuper);
 				}
 				for(int i=0; i<genericInfos.length; i++){
-					XTypeParam typeParam = xClassDef.typeParam.get(i);
+					XTreeTypeParam typeParam = xClassDef.typeParam.get(i);
 					XClassPtr[] ptr = getGenericClasses(typeParam.extend, null);
 					genericInfos[i] = new XGenericInfo(typeParam.name, ptr, typeParam.isSuper);
 				}
 			}
 			boolean extendsOtherOuter = false;
 			if(xClassDef.superClasses==null){
-				if(getName().equals("xscript.lang.Object")){
+				if(getName().equals(XConstants.CLASS_OBJECT)){
 					superClasses = new XClassPtr[0];
 				}else{
 					superClasses = new XClassPtr[1];
-					superClasses[0] = new XClassPtrClass("xscript.lang.Object");
+					superClasses[0] = new XClassPtrClass(XConstants.CLASS_OBJECT);
 					try{
 						superClasses[0].getXClassNonNull(virtualMachine);
 					}catch(Exception e){}
 				}
 			}else{
 				superClasses = getGenericClasses(xClassDef.superClasses, null);
+				int k = 0;
 				for(XClassPtr superClass:superClasses){
 					XClass c = superClass.getXClassNonNull(getVirtualMachine());
-					if(!xscript.runtime.XModifier.isStatic(c.getModifier())){
+					int modifier = c.getModifier();
+					if(XModifier.isFinal(modifier)){
+						compilerError(XMessageLevel.ERROR, "super.isfinal", xClassDef.superClasses.get(k).line, c.getName());
+					}
+					if(c.isEnum()){
+						XMethod m = getOuterMethod();
+						if(c.isIndirectEnum() || superClasses.length!=1 || !m.isConstructor() || !XModifier.isStatic(m.getModifier()) || m.getDeclaringClass()!=c){
+							compilerError(XMessageLevel.ERROR, "cant.extend.enum", xClassDef.superClasses.get(k).line, c.getName());
+						}
+					}
+					if(!XModifier.isStatic(c.getModifier())){
 						if(c.getOuterClass()!=null){
-							if(getOuterClass()!=null && !xscript.runtime.XModifier.isStatic(modifier)){
-								if(c.getOuterClass()==getOuterClass()){
-									extendsOtherOuter = true;
-								}else{
-									compilerError(XMessageLevel.ERROR, "cant.extend.inner.class", xClassDef.line, c.getName());
-								}
+							if(getOuterClass()==c.getOuterClass() && !XModifier.isStatic(modifier)){
+								extendsOtherOuter = true;
 							}else{
 								compilerError(XMessageLevel.ERROR, "cant.extend.inner.class", xClassDef.line, c.getName());
 							}
 						}
 						if(c.getOuterMethod()!=null){
-							if(getOuterMethod()!=null && !xscript.runtime.XModifier.isStatic(modifier)){
-								if(c.getOuterMethod()==getOuterMethod()){
-									extendsOtherOuter = true;
-								}else{
-									compilerError(XMessageLevel.ERROR, "cant.extend.inner.class", xClassDef.line, c.getName());
-								}
+							if(getOuterMethod()==c.getOuterMethod() && !XModifier.isStatic(modifier)){
+								extendsOtherOuter = true;
 							}else{
 								compilerError(XMessageLevel.ERROR, "cant.extend.inner.class", xClassDef.line, c.getName());
 							}
 						}
 					}
+					k++;
 				}
 			}
 			modifier = xClassDef.modifier==null?0:xClassDef.modifier.modifier;
 			if(isEnum()){
-				modifier |= xscript.runtime.XModifier.STATIC;
+				modifier |= XModifier.STATIC;
 			}
 			methodList = new ArrayList<XMethod>();
 			fieldList = new ArrayList<XField>();
@@ -346,27 +369,27 @@ public class XClassCompiler extends XClass implements XVisitor {
 			syntheticVars = new HashMap<String, XSyntheticField>();
 			visitTree(xClassDef.defs);
 			if(!visitConstructor){
-				XMethodDecl decl = new XMethodDecl(XLineDesk.NULL, new XModifier(XLineDesk.NULL, xscript.runtime.XModifier.PUBLIC), 
-						"<init>", null, new XType(XLineDesk.NULL, new XIdent(XLineDesk.NULL, "void"), null, 0), null, null, null, null, false);
+				XTreeMethodDecl decl = new XTreeMethodDecl(XLineDesk.NULL, new XTreeModifier(XLineDesk.NULL, XModifier.PUBLIC), 
+						XMethod.INIT, null, new XTreeType(XLineDesk.NULL, new XTreeIdent(XLineDesk.NULL, XPrimitive.VOID_NAME), null, 0), null, null, null, null, false);
 				decl.accept(this);
 			}
 			XCodeGen assertionCodeGen = null;
 			if(hasAssertions){
 				if(staticInit == null){
-					staticInit = new ArrayList<XTree.XStatement>();
+					staticInit = new ArrayList<XTree.XTreeStatement>();
 				}
 				assertionCodeGen = new XCodeGen();
-				staticInit.add(0, new XCompiledPart(XLineDesk.NULL, assertionCodeGen));
+				staticInit.add(0, new XTreeCompiledPart(XLineDesk.NULL, assertionCodeGen));
 			}
 			if(staticInit != null){
-				XMethodDecl staticMethodDecl = new XMethodDecl(XLineDesk.NULL, new XModifier(XLineDesk.NULL, xscript.runtime.XModifier.STATIC), 
-						"<static>", null, new XType(XLineDesk.NULL, new XIdent(XLineDesk.NULL, "void"), null, 0), null, null,
-						new XBlock(XLineDesk.NULL, staticInit), null, false);
+				XTreeMethodDecl staticMethodDecl = new XTreeMethodDecl(XLineDesk.NULL, new XTreeModifier(XLineDesk.NULL, XModifier.STATIC | XModifier.PRIVATE), 
+						XMethod.STATIC_INIT, null, new XTreeType(XLineDesk.NULL, new XTreeIdent(XLineDesk.NULL, XPrimitive.VOID_NAME), null, 0), null, null,
+						new XTreeBlock(XLineDesk.NULL, staticInit), null, false);
 				staticMethodDecl.accept(this);
 			}
 			if(isEnum()){
 				XClassPtr array = new XClassPtrGeneric("xscript.lang.Array", new XClassPtr[]{new XClassPtrClass(getName())});
-				XFieldCompiler field = addSyntheticField(xscript.runtime.XModifier.PRIVATE | xscript.runtime.XModifier.FINAL | xscript.runtime.XModifier.STATIC,
+				XFieldCompiler field = addSyntheticField(XModifier.PRIVATE | XModifier.FINAL | XModifier.STATIC,
 						"values", array);
 				if(staticInit != null){
 					XCodeGen codeGen = new XCodeGen();
@@ -382,9 +405,9 @@ public class XClassCompiler extends XClass implements XVisitor {
 					field.incWrites();
 					codeGen.addInstruction(new XInstructionSetStaticField(field), 0);
 					codeGen.addInstruction(new XInstructionOPop(), 0);
-					staticInit.add(new XCompiledPart(XLineDesk.NULL, codeGen));
+					staticInit.add(new XTreeCompiledPart(XLineDesk.NULL, codeGen));
 				}
-			}else if(getOuterClass()!=null && !xscript.runtime.XModifier.isStatic(modifier) && !extendsOtherOuter){
+			}else if(getOuterClass()!=null && !XModifier.isStatic(modifier) && !extendsOtherOuter){
 				XClass outer = getOuterClass();
 				String name = outer.getName();
 				XClassPtr type;
@@ -397,8 +420,8 @@ public class XClassCompiler extends XClass implements XVisitor {
 				}else{
 					type = new XClassPtrClass(name);
 				}
-				addSyntheticField(xscript.runtime.XModifier.PROTECTED | xscript.runtime.XModifier.FINAL, "outer", type);
-			}else if(getOuterMethod()!=null && !xscript.runtime.XModifier.isStatic(modifier) && !extendsOtherOuter){
+				addSyntheticField(XModifier.PROTECTED | XModifier.FINAL, "outer", type);
+			}else if(getOuterMethod()!=null && !XModifier.isStatic(modifier) && !extendsOtherOuter && !XModifier.isStatic(getOuterMethod().getModifier())){
 				XClass outer = getOuterMethod().getDeclaringClass();
 				String name = outer.getName();
 				XClassPtr type;
@@ -411,7 +434,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 				}else{
 					type = new XClassPtrClass(name);
 				}
-				addSyntheticField(xscript.runtime.XModifier.PROTECTED | xscript.runtime.XModifier.FINAL, "outer", type);
+				addSyntheticField(XModifier.PROTECTED | XModifier.FINAL, "outer", type);
 			}
 			if(hasAssertions){
 				String name = getName();
@@ -425,7 +448,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 				}else{
 					type = new XClassPtrClass(name);
 				}
-				XFieldCompiler field = addSyntheticField(xscript.runtime.XModifier.PRIVATE | xscript.runtime.XModifier.FINAL | xscript.runtime.XModifier.STATIC, "assertionsDisabled", new XClassPtrClass("bool"));
+				XFieldCompiler field = addSyntheticField(XModifier.PRIVATE | XModifier.FINAL | XModifier.STATIC, "assertionsDisabled", new XClassPtrClass(XPrimitive.BOOL_NAME));
 				assertionCodeGen.addInstruction(new XInstructionLoadConstClass(type), 0);
 				XMethod m = getVirtualMachine().getClassProvider().getXClass("xscript.lang.Class").getMethod("desiredAssertionStatus()bool");
 				assertionCodeGen.addInstruction(new XInstructionInvokeDynamic(m, new XClassPtr[0]), 0);
@@ -442,12 +465,12 @@ public class XClassCompiler extends XClass implements XVisitor {
 	}
 	
 	@Override
-	public void visitImport(XImport xImport) {
-		shouldNeverCalled();
+	public void visitImport(XTreeImport xImport) {
+		XError.shouldNeverCalled();
 	}
 	
 	private XSyntheticField addSyntheticField(int modifier, String name, XClassPtr type){
-		XSyntheticField field = new XSyntheticField(this, modifier | xscript.runtime.XModifier.SYNTHETIC, name, type, new xscript.runtime.XAnnotation[0]);
+		XSyntheticField field = new XSyntheticField(this, modifier | XModifier.SYNTHETIC, name, type, new xscript.runtime.XAnnotation[0], declLine);
 		syntheticFields.put(name, field);
 		field.checkName(this);
 		addChild(field);
@@ -455,7 +478,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 	}
 	
 	private XSyntheticField addSyntheticVar(int modifier, String name, XClassPtr type){
-		XSyntheticField field = new XSyntheticField(this, modifier | xscript.runtime.XModifier.SYNTHETIC, name, type, new xscript.runtime.XAnnotation[0]);
+		XSyntheticField field = new XSyntheticField(this, modifier | XModifier.SYNTHETIC, name, type, new xscript.runtime.XAnnotation[0], declLine);
 		syntheticVars.put(name, field);
 		field.checkName(this);
 		addChild(field);
@@ -491,40 +514,40 @@ public class XClassCompiler extends XClass implements XVisitor {
 	}
 
 	@Override
-	public void visitClassDecl(XClassDecl xClassDef) {}
+	public void visitClassDecl(XTreeClassDecl xClassDef) {}
 
 	@Override
-	public void visitAnnotation(XAnnotation xAnnotation) {
-		shouldNeverCalled();
+	public void visitAnnotation(XTreeAnnotation xAnnotation) {
+		XError.shouldNeverCalled();
 	}
 
 	@Override
-	public void visitModifier(XModifier xModifier) {
-		shouldNeverCalled();
+	public void visitModifier(XTreeModifier xModifier) {
+		XError.shouldNeverCalled();
 	}
 
 	@Override
-	public void visitError(XError xError) {
-		shouldNeverCalled();
+	public void visitError(XTreeError xError) {
+		XError.shouldNeverCalled();
 	}
 
 	@Override
-	public void visitIdent(XIdent xIdent) {
-		shouldNeverCalled();
+	public void visitIdent(XTreeIdent xIdent) {
+		XError.shouldNeverCalled();
 	}
 
 	@Override
-	public void visitType(XType xType) {
-		shouldNeverCalled();
+	public void visitType(XTreeType xType) {
+		XError.shouldNeverCalled();
 	}
 
 	@Override
-	public void visitTypeParam(XTypeParam xTypeParam) {
-		shouldNeverCalled();
+	public void visitTypeParam(XTreeTypeParam xTypeParam) {
+		XError.shouldNeverCalled();
 	}
 
 	@Override
-	public void visitVarDecl(XVarDecl xVarDecl) {
+	public void visitVarDecl(XTreeVarDecl xVarDecl) {
 		int modifier;
 		if(xVarDecl.modifier==null){
 			modifier = 0;
@@ -534,7 +557,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 		XClassPtr type = getGenericClass(xVarDecl.type, null);
 		xscript.runtime.XAnnotation[] annotations = new xscript.runtime.XAnnotation[0];
 		try{
-			XField field = new XField(this, modifier, xVarDecl.name, type, annotations);
+			XField field = new XFieldCompiler(this, modifier, xVarDecl.name, type, annotations, xVarDecl.line);
 			XPackage c = getChild(field.getSimpleName());
 			if(c instanceof XSyntheticField){
 				((XSyntheticField) c).inc();
@@ -547,16 +570,16 @@ public class XClassCompiler extends XClass implements XVisitor {
 			}
 			fieldList.add(field);
 			if(xVarDecl.init!=null){
-				if(xVarDecl.modifier!=null && xscript.runtime.XModifier.isStatic(xVarDecl.modifier.modifier)){
+				if(xVarDecl.modifier!=null && XModifier.isStatic(xVarDecl.modifier.modifier)){
 					if(staticInit==null)
-						staticInit = new ArrayList<XTree.XStatement>();
-					staticInit.add(new XOperatorStatement(xVarDecl.line, new XIdent(xVarDecl.line, xVarDecl.name), XOperator.LET, xVarDecl.init));
+						staticInit = new ArrayList<XTree.XTreeStatement>();
+					staticInit.add(new XTreeOperatorStatement(xVarDecl.line, new XTreeIdent(xVarDecl.line, xVarDecl.name), XOperator.LET, xVarDecl.init));
 				}else{
 					if(init==null)
-						init = new ArrayList<XTree.XStatement>();
-					XOperatorStatement thisName = new XOperatorStatement(xVarDecl.line, new XIdent(xVarDecl.line, "this"), XOperator.ELEMENT, 
-							new XIdent(xVarDecl.line, xVarDecl.name));
-					init.add(new XOperatorStatement(xVarDecl.line, thisName, XOperator.LET, xVarDecl.init));
+						init = new ArrayList<XTree.XTreeStatement>();
+					XTreeOperatorStatement thisName = new XTreeOperatorStatement(xVarDecl.line, new XTreeIdent(xVarDecl.line, "this"), XOperator.ELEMENT, 
+							new XTreeIdent(xVarDecl.line, xVarDecl.name));
+					init.add(new XTreeOperatorStatement(xVarDecl.line, thisName, XOperator.LET, xVarDecl.init));
 				}
 			}
 		}catch(XRuntimeException e){
@@ -592,7 +615,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 	}
 	
 	@Override
-	public void visitMethodDecl(XMethodDecl xMethodDecl) {
+	public void visitMethodDecl(XTreeMethodDecl xMethodDecl) {
 		int modifier;
 		if(xMethodDecl.modifier==null){
 			modifier = 0;
@@ -600,7 +623,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 			modifier = xMethodDecl.modifier.modifier;
 		}
 		if(xMethodDecl.varargs){
-			modifier |= xscript.runtime.XModifier.VARARGS;
+			modifier |= XModifier.VARARGS;
 		}
 		List<XClassPtr> classes = new ArrayList<XClassPtr>();
 		XGenericInfo[] genericInfos;
@@ -609,11 +632,11 @@ public class XClassCompiler extends XClass implements XVisitor {
 		}else{
 			genericInfos = new XGenericInfo[xMethodDecl.typeParam.size()];
 			for(int i=0; i<genericInfos.length; i++){
-				XTypeParam typeParam = xMethodDecl.typeParam.get(i);
+				XTreeTypeParam typeParam = xMethodDecl.typeParam.get(i);
 				genericInfos[i] = new XGenericInfo(typeParam.name, new XClassPtr[0], typeParam.isSuper);
 			}
 			for(int i=0; i<genericInfos.length; i++){
-				XTypeParam typeParam = xMethodDecl.typeParam.get(i);
+				XTreeTypeParam typeParam = xMethodDecl.typeParam.get(i);
 				XClassPtr[] ptr = getGenericClasses(typeParam.extend, genericInfos);
 				classes.addAll(Arrays.asList(ptr));
 				genericInfos[i] = new XGenericInfo(typeParam.name, ptr, typeParam.isSuper);
@@ -625,13 +648,13 @@ public class XClassCompiler extends XClass implements XVisitor {
 		XClassPtr[] paramTypes;
 		int size = xMethodDecl.paramTypes==null?0:xMethodDecl.paramTypes.size();
 		int ss = 0;
-		if(xMethodDecl.name.equals("<init>")){
+		if(xMethodDecl.name.equals(XMethod.INIT)){
 			if(isEnum()){
 				ss = 2;
 				paramTypes = new XClassPtr[size+2];
 				paramTypes[0] = new XClassPtrClass("xscript.lang.String");
-				paramTypes[1] = new XClassPtrClass("int");
-			}else if(getOuterClass()!=null && !xscript.runtime.XModifier.isStatic(modifier)){
+				paramTypes[1] = new XClassPtrClass(XPrimitive.INT_NAME);
+			}else if(getOuterClass()!=null && !XModifier.isStatic(modifier)){
 				ss = 1;
 				paramTypes = new XClassPtr[size+1];
 				XClass outer = getOuterClass();
@@ -645,7 +668,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 				}else{
 					paramTypes[0] = new XClassPtrClass(name);
 				}
-			}else if(getOuterMethod()!=null && !xscript.runtime.XModifier.isStatic(modifier)){
+			}else if(getOuterMethod()!=null && !XModifier.isStatic(modifier)){
 				ss = 1;
 				paramTypes = new XClassPtr[size+1];
 				XClass outer = getOuterMethod().getDeclaringClass();
@@ -671,7 +694,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 				classes.add(paramTypes[i+ss]);
 			}
 		}
-		if(xMethodDecl.name.equals("<init>")){
+		if(xMethodDecl.name.equals(XMethod.INIT)){
 			visitConstructor = true;
 		}
 		xscript.runtime.XAnnotation[][] paramAnnotations = new xscript.runtime.XAnnotation[paramTypes.length][0];
@@ -714,83 +737,83 @@ public class XClassCompiler extends XClass implements XVisitor {
 	}
 	
 	@Override
-	public void visitBlock(XBlock xBlock) {
+	public void visitBlock(XTreeBlock xBlock) {
 		if(staticInit==null){
-			staticInit = new ArrayList<XTree.XStatement>();
+			staticInit = new ArrayList<XTree.XTreeStatement>();
 		}
 		staticInit.add(xBlock);
 	}
 
 	@Override
-	public void visitBreak(XBreak xBreak) {
-		shouldNeverCalled();
+	public void visitBreak(XTreeBreak xBreak) {
+		XError.shouldNeverCalled();
 	}
 
 	@Override
-	public void visitContinue(XContinue xContinue) {
-		shouldNeverCalled();
+	public void visitContinue(XTreeContinue xContinue) {
+		XError.shouldNeverCalled();
 	}
 
 	@Override
-	public void visitDo(XDo xDo) {
-		shouldNeverCalled();
+	public void visitDo(XTreeDo xDo) {
+		XError.shouldNeverCalled();
 	}
 
 	@Override
-	public void visitWhile(XWhile xWhile) {
-		shouldNeverCalled();
+	public void visitWhile(XTreeWhile xWhile) {
+		XError.shouldNeverCalled();
 	}
 
 	@Override
-	public void visitFor(XFor xFor) {
-		shouldNeverCalled();
+	public void visitFor(XTreeFor xFor) {
+		XError.shouldNeverCalled();
 	}
 
 	@Override
-	public void visitIf(XIf xIf) {
-		shouldNeverCalled();
+	public void visitIf(XTreeIf xIf) {
+		XError.shouldNeverCalled();
 	}
 
 	@Override
-	public void visitReturn(XReturn xReturn) {
-		shouldNeverCalled();
+	public void visitReturn(XTreeReturn xReturn) {
+		XError.shouldNeverCalled();
 	}
 
 	@Override
-	public void visitThrow(XThrow xThrow) {
-		shouldNeverCalled();
+	public void visitThrow(XTreeThrow xThrow) {
+		XError.shouldNeverCalled();
 	}
 
 	@Override
-	public void visitVarDecls(XVarDecls xVarDecls) {
+	public void visitVarDecls(XTreeVarDecls xVarDecls) {
 		visitTree(xVarDecls.varDecls);
 	}
 
 	@Override
-	public void visitGroup(XGroup xGroup) {
-		shouldNeverCalled();
+	public void visitGroup(XTreeGroup xGroup) {
+		XError.shouldNeverCalled();
 	}
 
 	@Override
-	public void visitSynchronized(XSynchronized xSynchroized) {
-		shouldNeverCalled();
+	public void visitSynchronized(XTreeSynchronized xSynchroized) {
+		XError.shouldNeverCalled();
 	}
 
 	@Override
-	public void visitConstant(XConstant xConstant) {
-		shouldNeverCalled();
+	public void visitConstant(XTreeConstant xConstant) {
+		XError.shouldNeverCalled();
 	}
 
 	@Override
-	public void visitMethodCall(XMethodCall xMethodCall) {
-		shouldNeverCalled();
+	public void visitMethodCall(XTreeMethodCall xMethodCall) {
+		XError.shouldNeverCalled();
 	}
 
 	@Override
-	public void visitNew(XNew xNew) {
+	public void visitNew(XTreeNew xNew) {
 		if(isEnum()){
 			if(staticInit==null){
-				staticInit = new ArrayList<XTree.XStatement>();
+				staticInit = new ArrayList<XTree.XTreeStatement>();
 			}
 			XClassPtr type;
 			String name = getName();
@@ -803,119 +826,115 @@ public class XClassCompiler extends XClass implements XVisitor {
 			}else{
 				type = new XClassPtrClass(name);
 			}
-			fieldList.add(new XField(this, xscript.runtime.XModifier.STATIC | xscript.runtime.XModifier.FINAL | 
-					xscript.runtime.XModifier.PUBLIC | XField.ENUMFIELD, xNew.type.name.name, type, new xscript.runtime.XAnnotation[0]));
-			XIdent left = new XIdent(xNew.line, xNew.type.name.name);
-			xNew.params.add(0, new XConstant(xNew.line, new XConstantValue(enumNames.size())));
-			xNew.params.add(0, new XConstant(xNew.line, new XConstantValue(xNew.type.name.name)));
-			XNew right = new XNew(xNew.line, new XType(xNew.line, new XIdent(xNew.line, getName()), null, 0), xNew.params, xNew.classDecl);
-			staticInit.add(new XOperatorStatement(xNew.line, left, XOperator.LET, right));
+			fieldList.add(new XField(this, XModifier.STATIC | XModifier.FINAL | 
+					XModifier.PUBLIC | XField.ENUMFIELD, xNew.type.name.name, type, new xscript.runtime.XAnnotation[0]));
+			XTreeIdent left = new XTreeIdent(xNew.line, xNew.type.name.name);
+			xNew.params.add(0, new XTreeConstant(xNew.line, new XConstantValue(enumNames.size())));
+			xNew.params.add(0, new XTreeConstant(xNew.line, new XConstantValue(xNew.type.name.name)));
+			XTreeNew right = new XTreeNew(xNew.line, new XTreeType(xNew.line, new XTreeIdent(xNew.line, getName()), null, 0), xNew.params, xNew.classDecl);
+			staticInit.add(new XTreeOperatorStatement(xNew.line, left, XOperator.LET, right));
 			enumNames.add(xNew.type.name.name);
 		}else{
-			shouldNeverCalled();
+			XError.shouldNeverCalled();
 		}
 	}
 
 	@Override
-	public void visitOperator(XOperatorStatement xOperatorStatement) {
-		shouldNeverCalled();
+	public void visitOperator(XTreeOperatorStatement xOperatorStatement) {
+		XError.shouldNeverCalled();
 	}
 
 	@Override
-	public void visitOperatorPrefixSuffix(XOperatorPrefixSuffix xOperatorPrefixSuffix) {
-		shouldNeverCalled();
+	public void visitOperatorPrefixSuffix(XTreeOperatorPrefixSuffix xOperatorPrefixSuffix) {
+		XError.shouldNeverCalled();
 	}
 
 	@Override
-	public void visitIndex(XIndex xIndex) {
-		shouldNeverCalled();
+	public void visitIndex(XTreeIndex xIndex) {
+		XError.shouldNeverCalled();
 	}
 
 	@Override
-	public void visitIfOperator(XIfOperator xIfOperator) {
-		shouldNeverCalled();
+	public void visitIfOperator(XTreeIfOperator xIfOperator) {
+		XError.shouldNeverCalled();
 	}
 
 	@Override
-	public void visitCast(XCast xCast) {
-		shouldNeverCalled();
+	public void visitCast(XTreeCast xCast) {
+		XError.shouldNeverCalled();
 	}
 
 	@Override
-	public void visitLambda(XLambda xLambda) {
-		shouldNeverCalled();
+	public void visitLambda(XTreeLambda xLambda) {
+		XError.shouldNeverCalled();
 	}
 
 	@Override
-	public void visitTry(XTry xTry) {
-		shouldNeverCalled();
+	public void visitTry(XTreeTry xTry) {
+		XError.shouldNeverCalled();
 	}
 
 	@Override
-	public void visitCatch(XCatch xCatch) {
-		shouldNeverCalled();
+	public void visitCatch(XTreeCatch xCatch) {
+		XError.shouldNeverCalled();
 	}
 
 	@Override
-	public void visitNewArray(XNewArray xNewArray) {
-		shouldNeverCalled();
+	public void visitNewArray(XTreeNewArray xNewArray) {
+		XError.shouldNeverCalled();
 	}
 
 	@Override
-	public void visitArrayInitialize(XArrayInitialize xArrayInitialize) {
-		shouldNeverCalled();
+	public void visitArrayInitialize(XTreeArrayInitialize xArrayInitialize) {
+		XError.shouldNeverCalled();
 	}
 
 	@Override
-	public void visitForeach(XForeach xForeach) {
-		shouldNeverCalled();
+	public void visitForeach(XTreeForeach xForeach) {
+		XError.shouldNeverCalled();
 	}
 	
 	@Override
-	public void visitLable(XLable xLable) {
-		shouldNeverCalled();
+	public void visitLable(XTreeLable xLable) {
+		XError.shouldNeverCalled();
 	}
 	
 	@Override
-	public void visitSwitch(XSwitch xSwitch) {
-		shouldNeverCalled();
+	public void visitSwitch(XTreeSwitch xSwitch) {
+		XError.shouldNeverCalled();
 	}
 
 	@Override
-	public void visitCase(XCase xCase) {
-		shouldNeverCalled();
+	public void visitCase(XTreeCase xCase) {
+		XError.shouldNeverCalled();
 	}
 	
 	@Override
-	public void visitThis(XThis xThis) {
-		shouldNeverCalled();
+	public void visitThis(XTreeThis xThis) {
+		XError.shouldNeverCalled();
 	}
 
 	@Override
-	public void visitSuper(XSuper xSuper) {
-		shouldNeverCalled();
+	public void visitSuper(XTreeSuper xSuper) {
+		XError.shouldNeverCalled();
 	}
 	
 	@Override
-	public void visitInstanceof(XInstanceof xInstanceof) {
-		shouldNeverCalled();
+	public void visitInstanceof(XTreeInstanceof xInstanceof) {
+		XError.shouldNeverCalled();
 	}
 	
 	@Override
-	public void visitAssert(XAssert xAssert) {
-		shouldNeverCalled();
+	public void visitAssert(XTreeAssert xAssert) {
+		XError.shouldNeverCalled();
 	}
 	
 	@Override
-	public void visitCompiled(XCompiledPart xCompiledPart) {
-		shouldNeverCalled();
-	}
-	
-	private void shouldNeverCalled(){
-		throw new AssertionError("Should never be happened :(");
+	public void visitCompiled(XTreeCompiledPart xCompiledPart) {
+		XError.shouldNeverCalled();
 	}
 
-	public XClassPtr getGenericClass(XType type, XGenericInfo[] extra) {
+	public XClassPtr getGenericClass(XTreeType type, XGenericInfo[] extra) {
 		if(getOuterMethod()==null){
 			return importHelper.getGenericClass(this, type, null, extra, true);
 		}else{
@@ -923,7 +942,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 		}
 	}
 	
-	public XClassPtr[] getGenericClasses(List<XType> types, XGenericInfo[] extra) {
+	public XClassPtr[] getGenericClasses(List<XTreeType> types, XGenericInfo[] extra) {
 		if(types==null)
 			return new XClassPtr[0];
 		XClassPtr[] ptr = new XClassPtr[types.size()];
@@ -944,7 +963,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 	public void addVars(HashMap<String, XVariable> vars) {
 		for(XVariable var:vars.values()){
 			if(!var.name.equals("this"))
-				addSyntheticVar(var.modifier | xscript.runtime.XModifier.PROTECTED | xscript.runtime.XModifier.FINAL, var.name, var.type.getXClassPtr());
+				addSyntheticVar((var.modifier & ~(XModifier.PUBLIC | XModifier.PRIVATE)) | XModifier.PROTECTED | XModifier.FINAL, var.name, var.type.getXClassPtr());
 		}
 	}
 
@@ -961,6 +980,35 @@ public class XClassCompiler extends XClass implements XVisitor {
 	
 	public int enumOrdinal(String name){
 		return enumNames.indexOf(name);
+	}
+
+	public void checkAccess(XClass c, XLineDesk line) {
+		if(getVirtualMachine()!=c.getVirtualMachine()){
+			throw new XRuntimeException("%s has a diferent VM than %s", this, c);
+		}
+		int modifier = c.getModifier();
+		XClass checkClass1 = this;
+		while(checkClass1.getOuterClass()!=null){
+			checkClass1 = checkClass1.getOuterClass();
+		}
+		XClass checkClass2 = c;
+		while(checkClass2.getOuterClass()!=null){
+			checkClass2 = checkClass2.getOuterClass();
+		}
+		boolean sameOuterClass = checkClass1==checkClass2;
+		if(XModifier.isPrivate(modifier)){
+			if(!sameOuterClass){
+				compilerError(XMessageLevel.ERROR, "unable.to.access", line, this, c);
+			}
+		}else if(XModifier.isProtected(modifier)){
+			if(!sameOuterClass && !canCastTo(c) && getPackage()!=c.getPackage()){
+				compilerError(XMessageLevel.ERROR, "unable.to.access", line, this, c);
+			}
+		}else if(!XModifier.isPublic(modifier)){
+			if(!sameOuterClass && getPackage()!=c.getPackage()){
+				compilerError(XMessageLevel.ERROR, "unable.to.access", line, this, c);
+			}
+		}
 	}
 	
 }

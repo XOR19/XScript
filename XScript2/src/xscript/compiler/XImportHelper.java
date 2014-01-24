@@ -4,9 +4,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import xscript.compiler.classtypes.XClassPtrErrored;
 import xscript.compiler.message.XMessageLevel;
-import xscript.compiler.tree.XTree.XImport;
-import xscript.compiler.tree.XTree.XType;
+import xscript.compiler.tree.XTree.XTreeImport;
+import xscript.compiler.tree.XTree.XTreeType;
 import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XGenericInfo;
 import xscript.runtime.clazz.XPackage;
@@ -40,7 +41,7 @@ public class XImportHelper {
 		staticIndirectImports.addAll(compiler.getPredefStaticIndirectImports());
 	}
 
-	public void addImport(XClassCompiler xClassCompiler, XImport xImport) {
+	public void addImport(XClassCompiler xClassCompiler, XTreeImport xImport) {
 		if(xClassCompiler!=this.xClassCompiler)
 			throw new AssertionError();
 		if(xImport.indirect){
@@ -81,7 +82,7 @@ public class XImportHelper {
 		return false;
 	}
 	
-	private XClassPtr getGenericClass1(XClassCompiler xClassCompiler, XType type, XMethod method, XGenericInfo[] extra, boolean doError) {
+	private XClassPtr getGenericClass1(XClassCompiler xClassCompiler, XTreeType type, XMethod method, XGenericInfo[] extra, boolean doError) {
 		for(int i=1; i<9; i++){
 			if(XPrimitive.getName(i).equals(type.name.name)){
 				return new XClassPtrClass(type.name.name);
@@ -119,7 +120,7 @@ public class XImportHelper {
 			for(String s:directImports){
 				if(endsWith(s, type.name.name)){
 					try{
-						xClassCompiler.getVirtualMachine().getClassProvider().getXClass(s);
+						compiler.getClassProvider().getXClass(s);
 						name = s;
 						break;
 					}catch(Exception e){}
@@ -129,7 +130,7 @@ public class XImportHelper {
 		if(name==null){
 			for(String s:indirectImports){
 				try{
-					xClassCompiler.getVirtualMachine().getClassProvider().getXClass(s+"."+type.name.name);
+					compiler.getClassProvider().getXClass(s+"."+type.name.name);
 					name = s+"."+type.name.name;
 					break;
 				}catch(Exception e){}
@@ -137,7 +138,7 @@ public class XImportHelper {
 		}
 		if(name==null){
 			try{
-				xClassCompiler.getVirtualMachine().getClassProvider().getXClass(type.name.name);
+				compiler.getClassProvider().getXClass(type.name.name);
 				name = type.name.name;
 			}catch(Exception e){
 				if(doError){
@@ -158,12 +159,16 @@ public class XImportHelper {
 		}
 	}
 	
-	public XClassPtr getGenericClass(XClassCompiler xClassCompiler, XType type, XMethod method, XGenericInfo[] extra, boolean doError) {
+	public XClassPtr getGenericClass(XClassCompiler xClassCompiler, XTreeType type, XMethod method, XGenericInfo[] extra, boolean doError) {
 		XClassPtr classPtr = getGenericClass1(xClassCompiler, type, method, extra, doError);
 		if(classPtr==null)
 			return null;
+		XClass c = classPtr.getXClass(compiler);
+		if(c!=null){
+			xClassCompiler.checkAccess(c, type.line);
+		}
 		if(type.array>0){
-			XClass c = classPtr.getXClass(xClassCompiler.getVirtualMachine());
+			c = classPtr.getXClass(compiler);
 			if(c==null || XPrimitive.getPrimitiveID(c)==XPrimitive.OBJECT){
 				classPtr = new XClassPtrGeneric("xscript.lang.Array", new XClassPtr[]{classPtr});
 			}else{

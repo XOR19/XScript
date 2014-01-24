@@ -1,4 +1,4 @@
-package xscript.compiler;
+package xscript.compiler.classtypes;
 
 import xscript.runtime.clazz.XPrimitive;
 

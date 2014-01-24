@@ -123,7 +123,15 @@ public class XClass extends XPackage{
 	}
 	
 	public boolean isEnum(){
+		return isDirectEnum() || isIndirectEnum();
+	}
+	
+	public boolean isDirectEnum(){
 		return superClasses.length!=0 && superClasses[0].getXClass(virtualMachine).getName().equals("xscript.lang.Enum");
+	}
+	
+	public boolean isIndirectEnum(){
+		return superClasses.length==1 && superClasses[0].getXClass(virtualMachine).isDirectEnum();
 	}
 
 	public XClassTable getClassTable(XClass xClass){

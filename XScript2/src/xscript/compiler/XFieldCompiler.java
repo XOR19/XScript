@@ -1,5 +1,6 @@
 package xscript.compiler;
 
+import xscript.compiler.token.XLineDesk;
 import xscript.runtime.XAnnotation;
 import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XField;
@@ -11,12 +12,16 @@ public class XFieldCompiler extends XField {
 	
 	private int writes;
 	
-	public XFieldCompiler(XClass declaringClass, int modifier, String name, XClassPtr type, XAnnotation[] annotations) {
+	private XLineDesk declLine;
+	
+	public XFieldCompiler(XClass declaringClass, int modifier, String name, XClassPtr type, XAnnotation[] annotations, XLineDesk declLine) {
 		super(declaringClass, modifier, name, type, annotations, true);
+		this.declLine = declLine;
 	}
 	
-	protected XFieldCompiler(XClass declaringClass, int modifier, String name, XClassPtr type, XAnnotation[] annotations, boolean getIndex) {
+	protected XFieldCompiler(XClass declaringClass, int modifier, String name, XClassPtr type, XAnnotation[] annotations, XLineDesk declLine, boolean getIndex) {
 		super(declaringClass, modifier, name, type, annotations, getIndex);
+		this.declLine = declLine;
 	}
 
 	public void incReads() {
@@ -33,6 +38,10 @@ public class XFieldCompiler extends XField {
 	
 	public int getWrites(){
 		return writes;
+	}
+	
+	public XLineDesk getDeclLine(){
+		return declLine;
 	}
 	
 }
