@@ -880,17 +880,23 @@ public class XParser {
 			}else if(token.kind==XTokenKind.ELEMENT){
 				XToken t = token;
 				nextToken();
-				XTreeIdent ident;
+				XTreeIdent ident = null;
 				if(token.kind==XTokenKind.CLASS){
 					ident = new XTreeIdent(token.lineDesk, "class");
 					nextToken();
 				}else if(token.kind==XTokenKind.THIS){
 					ident = new XTreeIdent(token.lineDesk, "this");
 					nextToken();
+				}else if(token.kind==XTokenKind.NEW){
+					XTreeNew n = (XTreeNew) makeNumRead(true);
+					n.element = statement;
+					statement = n;
 				}else{
 					ident = makeIdent();
 				}
-				statement = new XTreeOperatorStatement(t.lineDesk, statement, XOperator.ELEMENT, ident);
+				if(ident!=null){
+					statement = new XTreeOperatorStatement(t.lineDesk, statement, XOperator.ELEMENT, ident);
+				}
 			}else if(token.kind==XTokenKind.INSTANCEOF){
 				XToken t = token;
 				nextToken();

@@ -212,6 +212,7 @@ public class XTreeChanger implements XVisitor {
 		xNew.type = visitTree(xNew.type);
 		xNew.params = visitTree(xNew.params);
 		xNew.classDecl = visitTree(xNew.classDecl);
+		xNew.element = visitTree(xNew.element);
 	}
 
 	@Override

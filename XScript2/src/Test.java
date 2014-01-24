@@ -27,9 +27,8 @@ public class Test {
 		XVirtualMachine vm = new XVirtualMachine(new XZipClassLoader(new File(f, "rt.zip")), 1024);
 		XClass c = vm.getClassProvider().getXClass("test.Test");
 		System.out.println(c.dump());
-		c = vm.getClassProvider().getXClass("test.Test.test()void.I");
+		c = vm.getClassProvider().getXClass("test.Test.test()void.$0");
 		System.out.println(c.dump());
-		
 	}
 	
 }

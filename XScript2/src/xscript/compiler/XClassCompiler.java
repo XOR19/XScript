@@ -654,7 +654,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 				paramTypes = new XClassPtr[size+2];
 				paramTypes[0] = new XClassPtrClass("xscript.lang.String");
 				paramTypes[1] = new XClassPtrClass(XPrimitive.INT_NAME);
-			}else if(getOuterClass()!=null && !XModifier.isStatic(modifier)){
+			}else if(getOuterClass()!=null && !XModifier.isStatic(this.modifier)){
 				ss = 1;
 				paramTypes = new XClassPtr[size+1];
 				XClass outer = getOuterClass();
@@ -668,7 +668,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 				}else{
 					paramTypes[0] = new XClassPtrClass(name);
 				}
-			}else if(getOuterMethod()!=null && !XModifier.isStatic(modifier)){
+			}else if(getOuterMethod()!=null && !XModifier.isStatic(this.modifier)){
 				ss = 1;
 				paramTypes = new XClassPtr[size+1];
 				XClass outer = getOuterMethod().getDeclaringClass();
@@ -962,7 +962,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 
 	public void addVars(HashMap<String, XVariable> vars) {
 		for(XVariable var:vars.values()){
-			if(!var.name.equals("this"))
+			if(!var.name.equals("this") && XModifier.isFinal(var.modifier))
 				addSyntheticVar((var.modifier & ~(XModifier.PUBLIC | XModifier.PRIVATE)) | XModifier.PROTECTED | XModifier.FINAL, var.name, var.type.getXClassPtr());
 		}
 	}

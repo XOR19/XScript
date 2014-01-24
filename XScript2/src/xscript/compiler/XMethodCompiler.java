@@ -90,10 +90,13 @@ public class XMethodCompiler extends XMethod {
 						if(dc==c)
 							selvInvoke = true;
 						if(dc.getOuterMethod()!=null){
-							for(int j=0; j<numVars; j++){
-								codeGen.addInstruction(last+2+j, new XInstructionReadLocal(j+2), 0);
+							List<XSyntheticField> cSyntheticVars = ((XClassCompiler)dc).getSyntheticVars();
+							int j=0;
+							for(XSyntheticField sVar:cSyntheticVars){
+								codeGen.addInstruction(last+2+j, new XInstructionReadLocal(syntheticVars.indexOf(sVar)+2), 0);
+								j++;
 							}
-							i+=numVars;
+							i+=cSyntheticVars.size();
 						}
 						last = i;
 					}

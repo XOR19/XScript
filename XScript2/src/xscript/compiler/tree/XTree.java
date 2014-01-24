@@ -6,6 +6,7 @@ import xscript.compiler.XCodeGen;
 import xscript.compiler.XConstantValue;
 import xscript.compiler.XOperator;
 import xscript.compiler.token.XLineDesk;
+import xscript.compiler.tree.XTree.XTreeNew;
 
 public abstract class XTree{
 
@@ -754,6 +755,8 @@ public abstract class XTree{
 		public List<XTreeStatement> params;
 		
 		public XTreeClassDecl classDecl;
+
+		public XTreeStatement element;
 		
 		public XTreeNew(XLineDesk line, XTreeType type, List<XTreeStatement> params, XTreeClassDecl classDecl) {
 			super(line);

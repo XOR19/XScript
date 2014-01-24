@@ -263,6 +263,7 @@ public class XTreePrinter implements XVisitor {
 		accept("className", xNew.type);
 		accept("params", xNew.params);
 		accept("classDecl", xNew.classDecl);
+		accept("element", xNew.element);
 	}
 
 	@Override

@@ -3,14 +3,12 @@ package test;
 public class Test{
 	
 	public void test(){
-		int i = 0;
-		class I{
-			public void a(){
+		final int i=0;
+		new Test(){
+			public void test(){
 				int j = i;
 			}
-		}
-		new I();
-		
+		};
 	}
 	
 }

@@ -75,7 +75,6 @@ import xscript.compiler.tree.XTree.XTreeVarDecl;
 import xscript.compiler.tree.XTree.XTreeVarDecls;
 import xscript.compiler.tree.XTree.XTreeWhile;
 import xscript.compiler.tree.XVisitor;
-import xscript.runtime.XAnnotation;
 import xscript.runtime.XModifier;
 import xscript.runtime.XRuntimeException;
 import xscript.runtime.clazz.XClass;
@@ -169,6 +168,8 @@ public class XStatementCompiler implements XVisitor {
 	private XTryHandle finallyTryHandle;
 	
 	private XInstructionDumyJump blockFinallyEndJump;
+	
+	private int classNum;
 	
 	public XStatementCompiler(XVarType returnExpected, XStatementCompiler parent, XMethodCompiler methodCompiler){
 		this.returnExpected = returnExpected;
@@ -1360,19 +1361,43 @@ public class XStatementCompiler implements XVisitor {
 	
 	@Override
 	public void visitNew(XTreeNew xNew) {
-		//TODO
 		
-		XVarType newType = getVarTypeForThis(xNew.type, true);
+		XCodeGen elem = null;
+		if(xNew.element!=null){
+			elem = visitTree(xNew.element, null).getCodeGen();
+		}
+		
+		XVarType newType = null;
+		
+		if(xNew.classDecl!=null){
+			xNew.classDecl.name = "$"+addClassNum();
+			visitClassDecl(xNew.classDecl);
+			newType = getVarTypeForThis(new XTreeType(xNew.classDecl.line, new XTreeIdent(xNew.type.line, xNew.classDecl.name), null, 0), true);
+		}
+		
+		if(newType==null){
+			if(elem==null){
+				newType = getVarTypeForThis(xNew.type, true);
+			}else{
+				newType = getVarTypeForThis(xNew.type, true);
+			}
+		}
 		XClass c = newType.getXClass();
 		if(c.isArray()){
 			compilerError(XMessageLevel.ERROR, "cant.instanciate.array", xNew.line, c);
 		}else if(c.isEnum()){
 			compilerError(XMessageLevel.ERROR, "cant.instanciate.enum", xNew.line, c);
-		}else if(c.getOuterClass()!=null){
-			compilerError(XMessageLevel.ERROR, "cant.instanciate.class", xNew.line, c);
 		}else if(c.getOuterMethod()!=null && c.getOuterMethod()!=methodCompiler){
 			compilerError(XMessageLevel.ERROR, "cant.instanciate.class", xNew.line, c);
 		}else{
+			if(c.getOuterClass()!=null && !XModifier.isStatic(c.getOuterClass().getModifier())){
+				if(c.getOuterClass()!=methodCompiler.getDeclaringClass()){
+					compilerError(XMessageLevel.ERROR, "cant.instanciate.class", xNew.line, c);
+					return;
+				}
+			}else if(elem!=null){
+				compilerError(XMessageLevel.ERROR, "not.new.this", xNew.line, c);
+			}
 			XMethodSearch search = searchMethod(newType, false, XMethod.INIT, true, false);
 			addInstruction(new XInstructionNew(newType.getXClassPtr()), xNew);
 			addInstruction(new XInstructionODup(), xNew);
@@ -1417,6 +1442,24 @@ public class XStatementCompiler implements XVisitor {
 				}
 				types = params;
 				codeGens = cg;
+			}else if(c.getOuterClass()!=null && !XModifier.isStatic(c.getOuterClass().getModifier())){
+				XClassCompiler cc = (XClassCompiler) c;
+				cc.gen();
+				XVarType[] params = new XVarType[types.length+1];
+				XCodeGen[] cg = new XCodeGen[params.length];
+				params[0] = methodCompiler.getDeclaringClassVarType();
+				if(elem==null){
+					cg[0] = new XCodeGen();
+					cg[0].addInstruction(new XInstructionReadLocal(0), xNew.line.startLine);
+				}else{
+					cg[0] = elem;
+				}
+				for(int j=1; j<types.length; j++){
+					params[j+1] = types[j];
+					cg[j+1] = codeGens[j];
+				}
+				types = params;
+				codeGens = cg;
 			}
 			search.applyTypes(types);
 			search.applyReturn(getPrimitiveType(XPrimitive.VOID));
@@ -1425,6 +1468,13 @@ public class XStatementCompiler implements XVisitor {
 		}
 	}
 	
+	private int addClassNum() {
+		if(parent==null){
+			return classNum++;
+		}
+		return parent.addClassNum();
+	}
+
 	private int num(int nid, XLineDesk lineDesk){
 		switch(nid){
 		case XPrimitive.CHAR:
