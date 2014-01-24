@@ -157,8 +157,11 @@ public class XField extends XPackage {
 			data = object.getData();
 			i = classTable.getFieldStartID()+index;
 			if(getTypePrimitive()==XPrimitive.OBJECT){
-				XGenericClass type = getType(object.getXClass());
-				XChecks.checkCast(object.getXClass(), type);
+				XObject obj = getDeclaringClass().getVirtualMachine().getObjectProvider().getObject(value);
+				if(obj!=null){
+					XGenericClass type = getType(object.getXClass());
+					XChecks.checkCast(obj.getXClass(), type);
+				}
 			}
 		}
 		int size = getSizeInObject();

@@ -10,8 +10,14 @@ public class XAnyType extends XVarType {
 
 	public static final XVarType type = new XAnyType();
 	
+	private XVarType should;
+	
 	private XAnyType(){}
 
+	public XAnyType(XVarType should){
+		this.should = should;
+	}
+	
 	@Override
 	public XClass[] getXClasses() {
 		return null;
@@ -48,4 +54,8 @@ public class XAnyType extends XVarType {
 		return null;
 	}
 
+	public XVarType getShould(){
+		return should;
+	}
+	
 }

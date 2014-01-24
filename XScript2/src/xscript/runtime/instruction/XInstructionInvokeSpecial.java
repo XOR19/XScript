@@ -68,7 +68,7 @@ public class XInstructionInvokeSpecial extends XInstruction {
 		}
 		XGenericClass[] paramTypes = method.getParams(null, new XGenericMethodProviderImp(method, solvedGenerics));
 		long[] params = new long[paramTypes.length+1];
-		for(int i=params.length-1; i>0; i++){
+		for(int i=params.length-1; i>0; i--){
 			int pID = XPrimitive.getPrimitiveID(paramTypes[i-1].getXClass());
 			params[i] = methodExecutor.pop(pID);
 			if(pID==XPrimitive.OBJECT){

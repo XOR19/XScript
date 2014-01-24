@@ -7,12 +7,15 @@ import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XInputStream;
 import xscript.runtime.clazz.XOutputStream;
 import xscript.runtime.clazz.XPrimitive;
+import xscript.runtime.genericclass.XClassPtr;
 import xscript.runtime.threads.XMethodExecutor;
 import xscript.runtime.threads.XThread;
 
 public class XInstructionWriteLocal extends XInstruction {
 
 	private final int local;
+	private XClassPtr localType;
+	private int prim;
 	
 	public XInstructionWriteLocal(int local){
 		this.local = local;
@@ -24,12 +27,16 @@ public class XInstructionWriteLocal extends XInstruction {
 	
 	@Override
 	public void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
-		long value = methodExecutor.pop(XPrimitive.getPrimitiveID(methodExecutor.getLocalType(local).getXClass()));
-		if(XPrimitive.getPrimitiveID(methodExecutor.getLocalType(local).getXClass())==XPrimitive.OBJECT){
-			XChecks.checkCast(vm.getObjectProvider().getObject(value).getXClass(), methodExecutor.getLocalType(local));
+		if(localType==null){
+			localType = methodExecutor.getLocalType(local);
+			prim = XPrimitive.getPrimitiveID(localType.getXClass(vm));
+		}
+		long value = methodExecutor.pop(prim);
+		if(prim==XPrimitive.OBJECT){
+			XChecks.checkCast(vm.getObjectProvider().getObject(value).getXClass(), localType.getXClass(vm, methodExecutor.getDeclaringClass(), methodExecutor));
 		}
 		methodExecutor.setLocal(local, value);
-		methodExecutor.push(value, XPrimitive.getPrimitiveID(methodExecutor.getLocalType(local).getXClass()));
+		methodExecutor.push(value, prim);
 	}
 
 	@Override

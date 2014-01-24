@@ -56,6 +56,11 @@ public class XGenericClass implements List<Object>, Callable<Map<String, Object>
 		}
 		return true;
 	}
+	
+	@Override
+	public String toString() {
+		return xClass.toString();
+	}
 
 	@Override
 	public Map<String, Object> call() {

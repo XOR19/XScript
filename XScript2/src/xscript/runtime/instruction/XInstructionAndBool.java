@@ -29,4 +29,5 @@ public class XInstructionAndBool extends XInstruction {
 		return "andz";
 	}
 
+	
 }

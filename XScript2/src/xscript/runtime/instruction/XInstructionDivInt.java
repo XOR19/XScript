@@ -28,5 +28,5 @@ public class XInstructionDivInt extends XInstruction {
 	public String getSource() {
 		return "divi";
 	}
-
+	
 }

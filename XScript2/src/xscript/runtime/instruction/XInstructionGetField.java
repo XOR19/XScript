@@ -77,5 +77,5 @@ public class XInstructionGetField extends XInstruction {
 	public String getSource() {
 		return "rf "+className+"."+fieldName+":"+fieldType;
 	}
-
+	
 }

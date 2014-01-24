@@ -68,12 +68,13 @@ public class XInstructionInvokeStatic extends XInstruction {
 		}
 		XGenericClass[] paramTypes = method.getParams(null, new XGenericMethodProviderImp(method, solvedGenerics));
 		long[] params = new long[paramTypes.length];
-		for(int i=params.length-1; i>=0; i++){
+		for(int i=params.length-1; i>=0; i--){
 			int pID = XPrimitive.getPrimitiveID(paramTypes[i].getXClass());
 			params[i] = methodExecutor.pop(pID);
 			if(pID==XPrimitive.OBJECT){
 				XObject obj = vm.getObjectProvider().getObject(params[i]);
-				XChecks.checkCast(obj.getXClass(), paramTypes[i]);
+				if(obj!=null)
+					XChecks.checkCast(obj.getXClass(), paramTypes[i]);
 			}
 		}
 		thread.call(method, solvedGenerics, params);

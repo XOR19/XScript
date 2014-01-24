@@ -68,12 +68,13 @@ public class XInstructionInvokeDynamic extends XInstruction {
 		}
 		XGenericClass[] paramTypes = method.getParams(null, new XGenericMethodProviderImp(method, solvedGenerics));
 		long[] params = new long[paramTypes.length+1];
-		for(int i=params.length-1; i>0; i++){
-			int pID = XPrimitive.getPrimitiveID(paramTypes[i-1].getXClass());
-			params[i] = methodExecutor.pop(pID);
+		for(int i=paramTypes.length-1; i>=0; i--){
+			int pID = XPrimitive.getPrimitiveID(paramTypes[i].getXClass());
+			params[i+1] = methodExecutor.pop(pID);
 			if(pID==XPrimitive.OBJECT){
-				XObject obj = vm.getObjectProvider().getObject(params[i]);
-				XChecks.checkCast(obj.getXClass(), paramTypes[i-1]);
+				XObject obj = vm.getObjectProvider().getObject(params[i+1]);
+				if(obj!=null)
+					XChecks.checkCast(obj.getXClass(), paramTypes[i]);
 			}
 		}
 		params[0] = methodExecutor.oPop();

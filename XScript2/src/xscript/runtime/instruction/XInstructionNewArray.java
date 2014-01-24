@@ -39,7 +39,7 @@ public class XInstructionNewArray extends XInstruction {
 	}
 
 	private long createArray(XGenericClass c, int pos, int[] size, XVirtualMachine vm, XMethodExecutor methodExecutor){
-		XChecks.checkAccess(methodExecutor.getDeclaringClass().getXClass(), c.getXClass());
+		XChecks.checkAccess(methodExecutor.getMethod().getDeclaringClass(), c.getXClass());
 		int s = size[pos];
 		long pointer = vm.getObjectProvider().createArray(c, s);
 		pos++;

@@ -42,8 +42,8 @@ public class XObject implements Map<Object, Object>, Callable<Callable<Map<Strin
 		if(!(xClass.getXClass().isArray()))
 			throw new XRuntimeException("%s isn't an array", xClass);
 		this.xClass = xClass;
-		data = new byte[xClass.getXClass().getObjectSize()+size];
-		xClass.getXClass().getLengthField().set(this, size);
+		data = new byte[xClass.getXClass().getObjectSize()+size*xClass.getXClass().getArrayElementSize()];
+		xClass.getXClass().getLengthField().finalSet(this, size);
 	}
 	
 	public XGenericClass getXClass(){

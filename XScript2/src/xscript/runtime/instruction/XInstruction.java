@@ -160,7 +160,7 @@ public abstract class XInstruction {
 	protected abstract void save(XOutputStream outputStream) throws IOException;
 
 	public abstract String getSource();
-
+	
 	@Override
 	public String toString(){
 		return getSource();

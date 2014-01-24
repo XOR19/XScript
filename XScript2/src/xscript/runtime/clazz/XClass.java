@@ -50,11 +50,11 @@ public class XClass extends XPackage{
 	protected int methodCount;
 	protected int enumCount;
 	
-	protected int objectFieldCount;
-	
 	private byte[] staticData;
 	
 	protected int state;
+	
+	protected long classObject;
 	
 	public XClass(XVirtualMachine virtualMachine, String name, XPackage p) {
 		super(name);
@@ -114,6 +114,10 @@ public class XClass extends XPackage{
 		return parent instanceof XMethod?((XMethod)parent):null;
 	}
 	
+	public XClass getOuterClassOrMethodDeclClass(){
+		return parent instanceof XClass?((XClass)parent):parent instanceof XMethod?((XMethod)parent).getDeclaringClass():null;
+	}
+	
 	public boolean isObjectClass(){
 		return superClasses.length==0;
 	}
@@ -135,11 +139,13 @@ public class XClass extends XPackage{
 	}
 
 	public XClassTable getClassTable(XClass xClass){
+		if(XPrimitive.getPrimitiveID(xClass)!=XPrimitive.OBJECT)
+			return null;
 		if(isObjectClass()){
 			return classTable[0];
 		}
 		int ci = xClass.classIndex;
-		if(classTable.length>ci){
+		if(ci<classTable.length){
 			XClassTable ct = classTable[ci];
 			if(ct!=null && ct.getXClass()==xClass)
 				return ct;
@@ -162,7 +168,7 @@ public class XClass extends XPackage{
 	}
 
 	public int getObjectSize() {
-		return objectFieldCount;
+		return fieldCount;
 	}
 
 	public int getGenericID(String genericName) {
@@ -219,6 +225,9 @@ public class XClass extends XPackage{
 				}
 			}
 		}
+		XObject obj = virtualMachine.getObjectProvider().getObject(classObject);
+		if(obj!=null)
+			obj.markVisible();
 	}
 
 	public byte[] getStaticData() {
@@ -232,8 +241,6 @@ public class XClass extends XPackage{
 	public XField getField(String name){
 		for(int i=0; i<fields.length; i++){
 			if(fields[i].getSimpleName().equals(name)){
-				if(XModifier.isSynthetic(fields[i].getModifier()))
-					return null;
 				return fields[i];
 			}
 		}
@@ -337,6 +344,102 @@ public class XClass extends XPackage{
 		}
 	}
 	
+	private void setupClassTable(){
+		classTable = new XClassTable[0];
+		List<XGenericClass> classes = new ArrayList<XGenericClass>();
+		XGenericClass generics[] = new XGenericClass[genericInfos.length];
+		for(int i=0; i<generics.length; i++){
+			generics[i] = new XGenericClass(new XClassClassGeneric(virtualMachine, genericInfos[i].getName()));
+		}
+		addAllChilds(new XGenericClass(this, generics), classes, new ArrayList<XClass>());
+		classIndex = 0;
+		boolean again;
+		do{
+			again = false;
+			for(XGenericClass gc : classes){
+				int nextFreeID = gc.getXClass().getNextFreeID(classIndex);
+				if(nextFreeID!=classIndex){
+					classIndex = nextFreeID;
+					again = true;
+					break;
+				}
+			}
+		}while(again);
+		List<XMethod> methods = new ArrayList<XMethod>();
+		XClassPtr[] superClasses = getSuperClasses();
+		for(XClassPtr cp:superClasses){
+			XMethod[] vmethods = cp.getXClass(virtualMachine).virtualMethods;
+			for(XMethod vmethod:vmethods){
+				methods.add(vmethod);
+			}
+		}
+		for(XMethod m:this.methods){
+			methods.add(m);
+		}
+		virtualMethods = methods.toArray(new XMethod[methods.size()]);
+		int fieldStartID = 0;
+		for(XGenericClass gc : classes){
+			fieldStartID = gc.getXClass().makeClassTable(this, fieldStartID, gc);
+		}
+	}
+	
+	private int makeClassTable(XClass c, int fieldStartID, XGenericClass gc){
+		int[] methodIDs = new int[methods.length];
+		for(int i=0; i<methodIDs.length; i++){
+			methodIDs[i] = findIDFor(methods[i], gc, c);
+		}
+		XClassTable ct = new XClassTable(c, fieldStartID, methodIDs, null);
+		if(c.classIndex>=classTable.length){
+			XClassTable[] newClassTable = new XClassTable[c.classIndex+1];
+			System.arraycopy(classTable, 0, newClassTable, 0, classTable.length);
+			classTable = newClassTable;
+		}
+		classTable[c.classIndex] = ct;
+		return fieldStartID + fieldCount;
+	}
+	
+	private int findIDFor(XMethod xMethod, XGenericClass gc, XClass c) {
+		XMethod[] methods = c.virtualMethods;
+		int id=0;
+		for(XMethod m:methods){
+			if(m==xMethod){
+				return id;
+			}
+			id++;
+		}
+		return -1;
+	}
+
+	private int getNextFreeID(int freeID) {
+		if(classTable.length<freeID && classTable[freeID]!=null){
+			for(int i=freeID+1; i<classTable.length; i++){
+				if(classTable[i]==null)
+					return i;
+			}
+			return classTable.length;
+		}
+		return freeID;
+	}
+
+	private void addAllChilds(XGenericClass c, List<XGenericClass> classes, List<XClass> in){
+		if(!classes.contains(c)){
+			XClass cc = c.getXClass();
+			for(XGenericClass gc:classes){
+				if(cc==gc.getXClass())
+					throw new XRuntimeException("Can't extend the same class with different generics", cc);
+			}
+			if(in.contains(cc))
+				throw new XRuntimeException("Recusrion", cc);
+			in.add(cc);
+			XClassPtr[] superClasses = cc.getSuperClasses();
+			for(XClassPtr cp:superClasses){
+				addAllChilds(cp.getXClass(virtualMachine, c, null), classes, in);
+			}
+			in.remove(cc);
+			classes.add(c);
+		}
+	}
+	
 	private void checkDiamonds(HashMap<XClass, XClass> checkedClasses) {
 		for(int i=0; i<superClasses.length; i++){
 			XClass xClass = superClasses[i].getXClassNonNull(virtualMachine);
@@ -373,9 +476,9 @@ public class XClass extends XPackage{
 						throw new XRuntimeException("Class %s isn't inited correctly, so %s can't inited", xClass, this);
 					}
 				}
-				
+				setupClassTable();
 				state = STATE_RUNNABLE;
-				XMethod xMethod = getMethod("<staticInit>()void");
+				XMethod xMethod = getMethod(XMethod.STATIC_INIT+"()void");
 				if(xMethod!=null)
 					virtualMachine.getThreadProvider().importantInterrupt("Static "+getName(), xMethod, new XGenericClass[0], new long[0]);
 			}catch(Throwable e){
@@ -538,6 +641,14 @@ public class XClass extends XPackage{
 
 	public XField[] getFields() {
 		return fields;
+	}
+
+	public long getClassObject() {
+		if(classObject==0){
+			XGenericClass gc = new XGenericClass(virtualMachine.getClassProvider().getXClass("xscript.lang.Class"));
+			classObject = virtualMachine.getObjectProvider().createObject(gc);
+		}
+		return classObject;
 	}
 	
 }

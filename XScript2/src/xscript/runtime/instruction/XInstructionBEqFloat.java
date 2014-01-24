@@ -18,7 +18,7 @@ public class XInstructionBEqFloat extends XInstruction {
 	public void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
 		float right = methodExecutor.fPop();
 		float left = methodExecutor.fPop();
-		methodExecutor.zPush(right>=left);
+		methodExecutor.zPush(left>=right);
 	}
 
 	@Override
@@ -29,4 +29,5 @@ public class XInstructionBEqFloat extends XInstruction {
 		return "beqf";
 	}
 
+	
 }

@@ -12,6 +12,7 @@ import xscript.runtime.threads.XThread;
 public class XInstructionReadLocal extends XInstruction {
 
 	private final int local;
+	private int prim=-1;
 	
 	public XInstructionReadLocal(int local){
 		this.local = local;
@@ -23,7 +24,10 @@ public class XInstructionReadLocal extends XInstruction {
 	
 	@Override
 	public void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
-		methodExecutor.push(methodExecutor.getLocal(local), XPrimitive.getPrimitiveID(methodExecutor.getLocalType(local).getXClass()));
+		if(prim==-1){
+			prim = XPrimitive.getPrimitiveID(methodExecutor.getLocalType(local).getXClass(vm));
+		}
+		methodExecutor.push(methodExecutor.getLocal(local), prim);
 	}
 
 	@Override

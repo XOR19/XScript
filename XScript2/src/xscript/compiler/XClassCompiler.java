@@ -668,7 +668,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 				}else{
 					paramTypes[0] = new XClassPtrClass(name);
 				}
-			}else if(getOuterMethod()!=null && !XModifier.isStatic(this.modifier)){
+			}else if(getOuterMethod()!=null && !XModifier.isStatic(this.modifier) && !XModifier.isStatic(getOuterMethod().getModifier())){
 				ss = 1;
 				paramTypes = new XClassPtr[size+1];
 				XClass outer = getOuterMethod().getDeclaringClass();
@@ -988,12 +988,12 @@ public class XClassCompiler extends XClass implements XVisitor {
 		}
 		int modifier = c.getModifier();
 		XClass checkClass1 = this;
-		while(checkClass1.getOuterClass()!=null){
-			checkClass1 = checkClass1.getOuterClass();
+		while(checkClass1.getOuterClassOrMethodDeclClass()!=null){
+			checkClass1 = checkClass1.getOuterClassOrMethodDeclClass();
 		}
 		XClass checkClass2 = c;
-		while(checkClass2.getOuterClass()!=null){
-			checkClass2 = checkClass2.getOuterClass();
+		while(checkClass2.getOuterClassOrMethodDeclClass()!=null){
+			checkClass2 = checkClass2.getOuterClassOrMethodDeclClass();
 		}
 		boolean sameOuterClass = checkClass1==checkClass2;
 		if(XModifier.isPrivate(modifier)){

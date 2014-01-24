@@ -1,0 +1,7 @@
+package xscript.lang;
+
+public class VM{
+	
+	public static native void println(String out);
+	
+}

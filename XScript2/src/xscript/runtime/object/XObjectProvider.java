@@ -2,6 +2,8 @@ package xscript.runtime.object;
 
 import xscript.runtime.XRuntimeException;
 import xscript.runtime.XVirtualMachine;
+import xscript.runtime.clazz.XClass;
+import xscript.runtime.clazz.XField;
 import xscript.runtime.genericclass.XGenericClass;
 
 public class XObjectProvider {
@@ -77,13 +79,36 @@ public class XObjectProvider {
 	}
 
 	public long createString(String value) {
-		// TODO Auto-generated method stub
-		return 0;
+		XClass sc = virtualMachine.getClassProvider().getXClass("xscript.lang.String");
+		XGenericClass gc = new XGenericClass(sc);
+		long s = createObject(gc);
+		XGenericClass ac = new XGenericClass(virtualMachine.getClassProvider().getXClass("xscript.lang.ArrayChar"));
+		long v = createArray(ac, value.length());
+		XObject array = getObject(v);
+		for(int i=0; i<value.length(); i++){
+			array.setArrayElement(i, value.charAt(i));
+		}
+		XField fvalue = sc.getField("value");
+		fvalue.finalSet(getObject(s), v);
+		return s;
 	}
 
 	public String getString(XObject obj) {
-		// TODO Auto-generated method stub
-		return null;
+		if(obj==null)
+			return "null";
+		XClass sc = virtualMachine.getClassProvider().getXClass("xscript.lang.String");
+		if(obj.getXClass().getXClass()==sc){
+			XField fvalue = sc.getField("value");
+			long v = fvalue.get(obj);
+			XObject array = getObject(v);
+			String out = "";
+			int size = array.getArrayLength();
+			for(int i=0; i<size; i++){
+				out += (char)array.getArrayElement(i);
+			}
+			return out;
+		}
+		return obj.getXClass()+":"+Long.toHexString(getPointer(obj));
 	}
 	
 	

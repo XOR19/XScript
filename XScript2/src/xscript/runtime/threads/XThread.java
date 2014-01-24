@@ -41,7 +41,7 @@ public class XThread {
 	
 	protected void run(int numInstructions){
 		if(methodExecutor!=null){
-			while(numInstructions-->0){
+			while(numInstructions-->0 && methodExecutor!=null){
 				XInstruction instruction = methodExecutor.getNextInstruction();
 				while(instruction==null){
 					XMethodExecutor oldMethodExecutor = methodExecutor.getParent();
@@ -52,6 +52,8 @@ public class XThread {
 						}
 					}
 					methodExecutor = oldMethodExecutor;
+					if(oldMethodExecutor==null)
+						return;
 					instruction = methodExecutor.getNextInstruction();
 				}
 				if(instruction!=null){
@@ -59,6 +61,10 @@ public class XThread {
 						instruction.run(virtualMachine, this, methodExecutor);
 					}catch(XRuntimeException e){
 						e.printStackTrace();
+						System.err.println(methodExecutor.getMethod()+":"+methodExecutor.getLine()+":"+instruction.getSource());
+					}catch(Throwable e){
+						e.printStackTrace();
+						System.err.println(methodExecutor.getMethod()+":"+methodExecutor.getLine()+":"+instruction.getSource());
 					}
 					XObject obj = virtualMachine.getObjectProvider().getObject(exception);
 					if(obj!=null){

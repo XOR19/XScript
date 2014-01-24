@@ -18,7 +18,7 @@ public class XInstructionBEqDouble extends XInstruction {
 	public void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
 		double right = methodExecutor.dPop();
 		double left = methodExecutor.dPop();
-		methodExecutor.zPush(right>=left);
+		methodExecutor.zPush(left>=right);
 	}
 
 	@Override
@@ -29,4 +29,5 @@ public class XInstructionBEqDouble extends XInstruction {
 		return "beqd";
 	}
 
+	
 }

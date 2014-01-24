@@ -18,7 +18,7 @@ public class XInstructionCompBool extends XInstruction {
 	public void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
 		boolean right = methodExecutor.zPop();
 		boolean left = methodExecutor.zPop();
-		methodExecutor.iPush(right==left?0:right?-1:1);
+		methodExecutor.iPush(right==left?0:right?1:-1);
 	}
 
 	@Override
@@ -28,5 +28,6 @@ public class XInstructionCompBool extends XInstruction {
 	public String getSource() {
 		return "compz";
 	}
+
 
 }

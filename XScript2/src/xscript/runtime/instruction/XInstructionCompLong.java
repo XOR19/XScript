@@ -18,7 +18,7 @@ public class XInstructionCompLong extends XInstruction {
 	public void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
 		long right = methodExecutor.lPop();
 		long left = methodExecutor.lPop();
-		methodExecutor.iPush(right==left?0:right>left?-1:1);
+		methodExecutor.iPush(right==left?0:left>right?-1:1);
 	}
 
 	@Override
@@ -28,5 +28,6 @@ public class XInstructionCompLong extends XInstruction {
 	public String getSource() {
 		return "compl";
 	}
+
 
 }

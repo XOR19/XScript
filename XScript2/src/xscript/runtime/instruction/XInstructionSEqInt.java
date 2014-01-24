@@ -18,7 +18,7 @@ public class XInstructionSEqInt extends XInstruction {
 	public void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
 		int right = methodExecutor.iPop();
 		int left = methodExecutor.iPop();
-		methodExecutor.zPush(right<=left);
+		methodExecutor.zPush(left<=right);
 	}
 
 	@Override

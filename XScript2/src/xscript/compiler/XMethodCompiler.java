@@ -58,6 +58,7 @@ public class XMethodCompiler extends XMethod {
 		if(codeGen!=null && isConstructor()){
 			XClassCompiler c = (XClassCompiler) getDeclaringClass();
 			if(!XModifier.isStatic(modifier) && c.getOuterMethod()!=null){
+				int off = XModifier.isStatic(c.getOuterMethod().getModifier())?1:2;
 				List<XSyntheticField> syntheticVars = c.getSyntheticVars();
 				int numVars = syntheticVars.size();
 				XClassPtr[] params = new XClassPtr[this.params.length+numVars];
@@ -93,7 +94,7 @@ public class XMethodCompiler extends XMethod {
 							List<XSyntheticField> cSyntheticVars = ((XClassCompiler)dc).getSyntheticVars();
 							int j=0;
 							for(XSyntheticField sVar:cSyntheticVars){
-								codeGen.addInstruction(last+2+j, new XInstructionReadLocal(syntheticVars.indexOf(sVar)+2), 0);
+								codeGen.addInstruction(last+2+j, new XInstructionReadLocal(syntheticVars.indexOf(sVar)+off), 0);
 								j++;
 							}
 							i+=cSyntheticVars.size();
@@ -105,7 +106,7 @@ public class XMethodCompiler extends XMethod {
 					for(int j=0; j<numVars; j++){
 						XField f = syntheticVars.get(j);
 						if(f.getDeclaringClass()==getDeclaringClass()){
-							codeGen.addInstruction(last+1+j*3, new XInstructionReadLocal(j+2), 0);
+							codeGen.addInstruction(last+1+j*3, new XInstructionReadLocal(j+off), 0);
 							codeGen.addInstruction(last+1+j*3+1, new XInstructionSetLocalField(0, f), 0);
 							if(f.getTypePrimitive()==XPrimitive.OBJECT){
 								codeGen.addInstruction(last+1+j*3+2, new XInstructionOPop(), 0);
@@ -139,7 +140,7 @@ public class XMethodCompiler extends XMethod {
 						ptr = new XClassPtrClass(name);
 					}
 					var.type = XVarType.getVarTypeFor(ptr, cc.getVirtualMachine(), null, null);
-					var.id = j+2;
+					var.id = j+off;
 					codeGen.addVariable(var);
 				}
 			}
@@ -153,6 +154,13 @@ public class XMethodCompiler extends XMethod {
 			lineEntries = codeGen.getLineEntries();
 			catchEntries = codeGen.getCatchEntries();
 			localEntries = codeGen.getLocalEntries();
+			for(int i=0; i<localEntries.length; i++){
+				if(maxLocalSize<localEntries[i].getIndex()+1){
+					maxLocalSize = localEntries[i].getIndex()+1;
+				}
+			}
+			maxStackSize = 100;
+			maxObjectStackSize = 100;
 			codeGen = null;
 		}
 	}

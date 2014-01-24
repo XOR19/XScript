@@ -307,11 +307,11 @@ public class XMethod extends XPackage {
 	
 	public int getLine(int programPointer){
 		for(int i=1; i<lineEntries.length; i++){
-			if(lineEntries[i].getFrom()<programPointer){
+			if(lineEntries[i].getFrom()>programPointer){
 				return lineEntries[i-1].getLine();
 			}
 		}
-		return lineEntries[lineEntries.length].getLine();
+		return lineEntries[lineEntries.length-1].getLine();
 	}
 	
 	public int getParamCount() {

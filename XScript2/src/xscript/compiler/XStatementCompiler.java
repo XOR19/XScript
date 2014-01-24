@@ -619,7 +619,7 @@ public class XStatementCompiler implements XVisitor {
 					addInstruction(variable.start = new XInstructionDumyDelete(), xMethodDecl);
 					addVariable(variable);
 					outerID = variable;
-				}else if(decl.getOuterMethod()!=null && !XModifier.isStatic(decl.getModifier())){
+				}else if(decl.getOuterMethod()!=null && !XModifier.isStatic(decl.getModifier()) && !XModifier.isStatic((decl.getOuterMethod().getModifier()))){
 					XVariable variable = new XVariable();
 					variable.modifier = XModifier.FINAL | XModifier.SYNTHETIC;
 					variable.type = getVarTypeForName(decl.getOuterMethod().getDeclaringClass().getName());
@@ -2324,9 +2324,9 @@ public class XStatementCompiler implements XVisitor {
 
 	@Override
 	public void visitCast(XTreeCast xCast) {
-		XStatementCompiler a = visitTree(xCast.statement, XAnyType.type);
-		addInstructions(a);
 		XVarType castTo = getVarTypeForThis(xCast.type, true);
+		XStatementCompiler a = visitTree(xCast.statement, new XAnyType(castTo));
+		addInstructions(a);
 		int prim1 = a.returnType.getPrimitiveID();
 		int prim2 = castTo.getPrimitiveID();
 		if(prim1!=prim2){

@@ -21,6 +21,7 @@ import xscript.runtime.nativeclass.XLangArrayInt;
 import xscript.runtime.nativeclass.XLangArrayLong;
 import xscript.runtime.nativeclass.XLangArrayShort;
 import xscript.runtime.nativeclass.XLangObject;
+import xscript.runtime.nativeclass.XLangVM;
 import xscript.runtime.object.XObject;
 import xscript.runtime.threads.XMethodExecutor;
 import xscript.runtime.threads.XThread;
@@ -43,11 +44,11 @@ public class XNativeProvider {
 		XLangArrayLong.registerNatives(this);
 		XLangArrayShort.registerNatives(this);
 		XLangObject.registerNatives(this);
+		XLangVM.registerNatives(this);
 	}
 
 	public void call(XThread thread, XMethodExecutor methodExecutor, XMethod method, XGenericClass[] generics, long[] params) {
 		XNativeMethod nativeMethod = method.getNativeMethod();
-		
 		XObject _this = null;
 		int i=0;
 		if(!XModifier.isStatic(method.getModifier())){

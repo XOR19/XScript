@@ -25,7 +25,7 @@ public class XInstructionLoadConstClass extends XInstruction {
 	@Override
 	public void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
 		XClass c = xClass.getXClass(vm, methodExecutor.getDeclaringClass(), methodExecutor).getXClass();
-		//TODO
+		methodExecutor.oPush(c.getClassObject());
 	}
 
 	@Override

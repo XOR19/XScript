@@ -18,7 +18,7 @@ public class XInstructionCompInt extends XInstruction {
 	public void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
 		int right = methodExecutor.iPop();
 		int left = methodExecutor.iPop();
-		methodExecutor.iPush(right==left?0:right>left?-1:1);
+		methodExecutor.iPush(right==left?0:left>right?-1:1);
 	}
 
 	@Override
@@ -29,4 +29,5 @@ public class XInstructionCompInt extends XInstruction {
 		return "compi";
 	}
 
+	
 }

@@ -18,7 +18,7 @@ public class XInstructionSmaLong extends XInstruction {
 	public void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
 		long right = methodExecutor.lPop();
 		long left = methodExecutor.lPop();
-		methodExecutor.zPush(right<left);
+		methodExecutor.zPush(left<right);
 	}
 
 	@Override

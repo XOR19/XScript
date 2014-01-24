@@ -18,7 +18,7 @@ public class XInstructionCompDouble extends XInstruction {
 	public void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
 		double right = methodExecutor.dPop();
 		double left = methodExecutor.dPop();
-		methodExecutor.iPush(right==left?0:right>left?-1:1);
+		methodExecutor.iPush(right==left?0:left>right?-1:1);
 	}
 
 	@Override
@@ -29,4 +29,5 @@ public class XInstructionCompDouble extends XInstruction {
 		return "compd";
 	}
 
+	
 }

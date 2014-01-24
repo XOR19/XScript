@@ -21,7 +21,7 @@ public class XInstructionCheckNull extends XInstruction {
 		long value = methodExecutor.oPop();
 		XObject obj = vm.getObjectProvider().getObject(value);
 		if(obj==null){
-			throw new XRuntimeException("nullpinter");
+			throw new XRuntimeException("nullpointer");
 		}
 	}
 
@@ -33,4 +33,5 @@ public class XInstructionCheckNull extends XInstruction {
 		return "cn";
 	}
 
+	
 }

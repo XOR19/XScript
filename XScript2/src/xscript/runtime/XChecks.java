@@ -48,12 +48,12 @@ public final class XChecks {
 		}
 		int modifier = xClass2.getModifier();
 		XClass checkClass1 = xClass;
-		while(checkClass1.getOuterClass()!=null){
-			checkClass1 = checkClass1.getOuterClass();
+		while(checkClass1.getOuterClassOrMethodDeclClass()!=null){
+			checkClass1 = checkClass1.getOuterClassOrMethodDeclClass();
 		}
 		XClass checkClass2 = xClass2;
-		while(checkClass2.getOuterClass()!=null){
-			checkClass2 = checkClass2.getOuterClass();
+		while(checkClass2.getOuterClassOrMethodDeclClass()!=null){
+			checkClass2 = checkClass2.getOuterClassOrMethodDeclClass();
 		}
 		boolean sameOuterClass = checkClass1==checkClass2;
 		if(XModifier.isPrivate(modifier)){
@@ -110,12 +110,12 @@ public final class XChecks {
 		int modifier = xClass2.getModifier();
 		int fModifier = field.getModifier();
 		XClass checkClass1 = xClass;
-		while(checkClass1.getOuterClass()!=null){
-			checkClass1 = checkClass1.getOuterClass();
+		while(checkClass1.getOuterClassOrMethodDeclClass()!=null){
+			checkClass1 = checkClass1.getOuterClassOrMethodDeclClass();
 		}
 		XClass checkClass2 = xClass2;
-		while(checkClass2.getOuterClass()!=null){
-			checkClass2 = checkClass2.getOuterClass();
+		while(checkClass2.getOuterClassOrMethodDeclClass()!=null){
+			checkClass2 = checkClass2.getOuterClassOrMethodDeclClass();
 		}
 		boolean sameOuterClass = checkClass1==checkClass2;
 		if(XModifier.isPrivate(modifier) || XModifier.isPrivate(fModifier)){
@@ -141,12 +141,12 @@ public final class XChecks {
 		int modifier = xClass2.getModifier();
 		int fModifier = method.getModifier();
 		XClass checkClass1 = xClass;
-		while(checkClass1.getOuterClass()!=null){
-			checkClass1 = checkClass1.getOuterClass();
+		while(checkClass1.getOuterClassOrMethodDeclClass()!=null){
+			checkClass1 = checkClass1.getOuterClassOrMethodDeclClass();
 		}
 		XClass checkClass2 = xClass2;
-		while(checkClass2.getOuterClass()!=null){
-			checkClass2 = checkClass2.getOuterClass();
+		while(checkClass2.getOuterClassOrMethodDeclClass()!=null){
+			checkClass2 = checkClass2.getOuterClassOrMethodDeclClass();
 		}
 		boolean sameOuterClass = checkClass1==checkClass2;
 		if(XModifier.isPrivate(modifier) || XModifier.isPrivate(fModifier)){

@@ -59,10 +59,12 @@ public class XMethodExecutor implements XGenericMethodProvider {
 		objectStack = new long[method.getMaxObjectStackSize()];
 		local = new long[method.getMaxLocalSize()];
 		if(!XModifier.isStatic(method.getModifier())){
-			local[0] = params[0];
-			if(method.getDeclaringClass().getVirtualMachine().getObjectProvider().getObject(local[0])==null)
+			if(method.getDeclaringClass().getVirtualMachine().getObjectProvider().getObject(params[0])==null)
 				throw new XRuntimeException("Null Pointer");
 			pl--;
+		}
+		for(int i=0; i<params.length; i++){
+			local[i] = params[i];
 		}
 		if(pl!=method.getParamCount()){
 			throw new XRuntimeException("Wrong number of arguments got %s but need %s", method.getParamCount(), pl);
@@ -283,22 +285,17 @@ public class XMethodExecutor implements XGenericMethodProvider {
 		return true;
 	}
 
-	public XGenericClass getLocalType(int local) {
-		XClassPtr cp = method.getLocalType(programPointer-1, local);
-		if(cp!=null){
-			return cp.getXClass(method.getDeclaringClass().getVirtualMachine(), declaringClass, this);
-		}
-		return null;
+	public XClassPtr getLocalType(int local) {
+		return method.getLocalType(programPointer-1, local);
 	}
 	
-	public void ret(long value) {
-		ret = value;
-		programPointer = Integer.MAX_VALUE;
-	}
-
 	public void saveStackSize(int index) {
 		catchStackPointer[index] = stackPointer;
 		catchObjectStackPointer[index] = objectStackPointer;
+	}
+	
+	public int getLine(){
+		return method.getLine(programPointer-1);
 	}
 	
 }

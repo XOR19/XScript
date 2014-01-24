@@ -50,6 +50,9 @@ public class XThreadProvider {
 	}
 	
 	private XThread getNextThread(){
+		if(threads.isEmpty()){
+			return null;
+		}
 		XThread thread = threads.get(activeThreadID);
 		thread.sleepUpdate();
 		if(thread.getThreadState()!=XThreadState.RUNNING){
@@ -60,6 +63,9 @@ public class XThreadProvider {
 			int startThread = activeThreadID;
 			do{
 				activeThreadID++;
+				if(threads.isEmpty()){
+					break;
+				}
 				if(activeThreadID>=threads.size()){
 					activeThreadID = 0;
 				}
