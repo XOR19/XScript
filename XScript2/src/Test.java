@@ -9,6 +9,8 @@ import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XZipClassLoader;
 import xscript.runtime.genericclass.XGenericClass;
+import xscript.runtime.nativemethod.XNativeClass;
+import xscript.runtime.nativemethod.XNativeClass.XNativeMethod;
 
 public class Test {
 	
@@ -29,7 +31,9 @@ public class Test {
 		
 		vm.getThreadProvider().start("main", c.getMethod("test()void"), new XGenericClass[0], new long[0]);
 		
-		for(int i=0; i<100; i++){
+		vm.getThreadProvider().run(10, 100);
+		
+		/*for(int i=0; i<100; i++){
 		
 			long startTest1 = System.nanoTime();
 			vm.getThreadProvider().run(10, 100);
@@ -38,7 +42,7 @@ public class Test {
 			System.out.println((endTest1-startTest1)/1000000.0f+"ms");
 			System.out.println(endTest1-startTest1+"ns");
 		
-		}
+		}*/
 		
 	}
 	

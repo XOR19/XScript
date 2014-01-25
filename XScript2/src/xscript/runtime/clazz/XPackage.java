@@ -7,9 +7,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import xscript.runtime.XMap;
 import xscript.runtime.XSet;
 
-public class XPackage implements Map<String, Object> {
+public class XPackage extends XMap<String, Object> {
 
 	protected String name;
 	protected XPackage parent;
@@ -78,11 +79,6 @@ public class XPackage implements Map<String, Object> {
 	}
 
 	@Override
-	public void clear() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public boolean containsKey(Object key) {
 		return childs.containsKey(key);
 	}
@@ -137,11 +133,6 @@ public class XPackage implements Map<String, Object> {
 	}
 
 	@Override
-	public Set<String> keySet() {
-		return new XSet<String>(new ArrayList<String>(childs.keySet()));
-	}
-
-	@Override
 	public Map<String, Map<String, ?>> put(String key, Object value) {
 		throw new UnsupportedOperationException();
 	}
@@ -152,18 +143,8 @@ public class XPackage implements Map<String, Object> {
 	}
 
 	@Override
-	public Map<String, Map<String, ?>> remove(Object key) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public int size() {
 		return childs.size();
-	}
-
-	@Override
-	public Collection<Object> values() {
-		return new XSet<Object>(new ArrayList<Object>(childs.values()));
 	}
 
 	public void addChildClasses(List<XClass> classes) {
@@ -173,6 +154,16 @@ public class XPackage implements Map<String, Object> {
 		for(XPackage p:childs.values()){
 			p.addChildClasses(classes);
 		}
+	}
+
+	@Override
+	protected Collection<? extends Object> getValues() {
+		return childs.values();
+	}
+
+	@Override
+	protected Collection<String> getKeys() {
+		return childs.keySet();
 	}
 	
 }

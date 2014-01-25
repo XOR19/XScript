@@ -312,6 +312,7 @@ public class XParser {
 					name += "."+ident();
 				}
 			}
+			expected(XTokenKind.SEMICOLON);
 			return new XTreeImport(endLineBlock(), name, indirect, staticImport);
 		}
 		endLineBlock();
@@ -1662,7 +1663,7 @@ public class XParser {
 		}else if(token.kind==XTokenKind.ANNOTATION){
 			return annotationDecl(modifier);
 		}else{
-			parserMessage(XMessageLevel.ERROR, "expected", "class, interface & enum");
+			parserMessage(XMessageLevel.ERROR, "expected", "class, interface & enum", token.kind);
 			unhandledUnexpected = true;
 			return null;
 		}

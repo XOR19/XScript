@@ -21,12 +21,13 @@ import xscript.runtime.object.XObject;
 import xscript.runtime.object.XObjectProvider;
 import xscript.runtime.threads.XThreadProvider;
 
-public class XVirtualMachine implements Map<String, Map<String, Object>>, Invocable{
+public class XVirtualMachine extends XMap<String, Map<String, Object>> implements Invocable{
 
 	private XClassProvider classProvider;
 	private XObjectProvider objectProvider;
 	private XNativeProvider nativeProvider;
 	private XThreadProvider threadProvider;
+	private XTimer timer;
 
 	public XVirtualMachine(XClassLoader standartClassLoader, int memSize){
 		classProvider = new XClassProvider(this);
@@ -34,6 +35,7 @@ public class XVirtualMachine implements Map<String, Map<String, Object>>, Invoca
 		nativeProvider = new XNativeProvider(this);
 		threadProvider = new XThreadProvider(this);
 		classProvider.addClassLoader(standartClassLoader);
+		timer = new XTimer();
 	}
 	
 	public XClassProvider getClassProvider() {
@@ -52,9 +54,12 @@ public class XVirtualMachine implements Map<String, Map<String, Object>>, Invoca
 		return threadProvider;
 	}
 
-	@Override
-	public void clear() {
-		throw new UnsupportedOperationException();
+	public XTimer getTimer() {
+		return timer;
+	}
+	
+	public void setTimer(XTimer timer) {
+		this.timer = timer;
 	}
 
 	@Override
@@ -118,20 +123,6 @@ public class XVirtualMachine implements Map<String, Map<String, Object>>, Invoca
 	}
 
 	@Override
-	public boolean isEmpty() {
-		return false;
-	}
-
-	@Override
-	public Set<String> keySet() {
-		List<String> names = new ArrayList<String>();
-		for(XClass c:classProvider.getAllLoadedClasses()){
-			names.add(c.getName());
-		}
-		return new XSet<String>(names);
-	}
-
-	@Override
 	public Map<String, Object> put(String arg0, Map<String, Object> arg1) {
 		throw new UnsupportedOperationException();
 	}
@@ -142,20 +133,24 @@ public class XVirtualMachine implements Map<String, Map<String, Object>>, Invoca
 	}
 
 	@Override
-	public Map<String, Object> remove(Object arg0) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public int size() {
 		return classProvider.getAllLoadedClasses().size();
 	}
 
 	@Override
-	public Collection<Map<String, Object>> values() {
-		return new XSet<Map<String, Object>>(classProvider.getAllLoadedClasses());
+	protected Collection<? extends Map<String, Object>> getValues() {
+		return classProvider.getAllLoadedClasses();
 	}
 
+	@Override
+	protected Collection<? extends String> getKeys() {
+		List<String> names = new ArrayList<String>();
+		for(XClass c:classProvider.getAllLoadedClasses()){
+			names.add(c.getName());
+		}
+		return names;
+	}
+	
 	@Override
 	public <T> T getInterface(Class<T> clasz) {
 		return null;

@@ -125,7 +125,7 @@ public class XThread {
 	}
 	
 	protected void sleepUpdate(){
-		long currentTime = System.currentTimeMillis();
+		long currentTime = virtualMachine.getTimer().getMiliSecounds();
 		sleepTime -= currentTime-lastRunTime;
 		lastRunTime = currentTime;
 		if(sleepTime<=0)

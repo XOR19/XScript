@@ -1,5 +1,6 @@
 package xscript.runtime.nativemethod;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
 
 import xscript.runtime.XModifier;
@@ -49,6 +50,8 @@ public class XNativeProvider {
 
 	public void call(XThread thread, XMethodExecutor methodExecutor, XMethod method, XGenericClass[] generics, long[] params) {
 		XNativeMethod nativeMethod = method.getNativeMethod();
+		if(nativeMethod==null)
+			throw new XRuntimeException("Native %s not found", method.getName());
 		XObject _this = null;
 		int i=0;
 		if(!XModifier.isStatic(method.getModifier())){
@@ -109,6 +112,45 @@ public class XNativeProvider {
 		}else{
 			method.setNativeMethod(nativeMethod);
 		}
+	}
+	
+	public void addNativeClass(Class<?> nativeClass){
+		
+		XNativeClass classInfo = nativeClass.getAnnotation(XNativeClass.class);
+		
+		if(classInfo!=null){
+			
+			Method[] methods = nativeClass.getMethods();
+			
+			for(Method method:methods){
+				
+				XNativeClass.XNativeMethod methodInfo = method.getAnnotation(XNativeClass.XNativeMethod.class);
+				
+				if(methodInfo!=null){
+					
+					XParamScanner paramScanner = new XParamScanner();
+					
+					paramScanner.scann(method);
+					
+					String name = methodInfo.value();
+					
+					if(name.isEmpty()){
+						name = method.getName();
+					}
+					
+					System.out.println("add:"+name+paramScanner.getDesk());
+					
+					addNativeMethod(classInfo.value(), name+paramScanner.getDesk(), new XNativeMethodImp(method, paramScanner.isNeedVM(), 
+							paramScanner.isNeedThread(), paramScanner.isNeedME(), paramScanner.isNeedGenerics(), paramScanner.isNeedThis()));
+					
+				}
+				
+			}
+		
+			addNativeClass(nativeClass.getSuperclass());
+			
+		}
+		
 	}
 	
 	private static class InvokeThread extends Thread{

@@ -1,5 +1,6 @@
 package xscript.runtime;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -11,6 +12,14 @@ public class XSet<E> implements Set<E> {
 	
 	public XSet(List<? extends E> list){
 		this.list = list;
+	}
+	
+	public XSet(Collection<? extends E> collection){
+		if(collection instanceof List){
+			list = (List<? extends E>) collection;
+		}else{
+			list = new ArrayList<E>(collection);
+		}
 	}
 	
 	@Override

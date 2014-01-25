@@ -13,7 +13,11 @@ public class XWrapper {
 	public static Object getJavaObject(XObjectProvider objectProvider, int primitive, long value){
 		switch(primitive){
 		case XPrimitive.OBJECT:
-			return objectProvider.getObject(value);
+			XObject obj = objectProvider.getObject(value);
+			if(obj.getXClass().getXClass().getName().equals("xscript.lang.String")){
+				return objectProvider.getString(obj);
+			}
+			return obj;
 		case XPrimitive.BOOL:
 			return value!=0;
 		case XPrimitive.BYTE:
@@ -41,6 +45,9 @@ public class XWrapper {
 	public static long getXObject(XObjectProvider objectProvider, int primitive, Object value){
 		switch(primitive){
 		case XPrimitive.OBJECT:
+			if(value instanceof String){
+				return objectProvider.createString((String)value);
+			}
 			return objectProvider.getPointer((XObject)value);
 		case XPrimitive.BOOL:
 			return castToBoolean(value)?-1:0;

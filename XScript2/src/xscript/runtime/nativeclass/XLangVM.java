@@ -20,7 +20,7 @@ public class XLangVM {
 		public Object invoke(XVirtualMachine virtualMachine, XThread thread,
 				XMethodExecutor methodExecutor, XGenericClass[] generics,
 				XObject _this, Object[] params) {
-			System.out.println(virtualMachine.getObjectProvider().getString((XObject)params[0]));
+			System.out.println((String)params[0]);
 			return null;
 		}
 		

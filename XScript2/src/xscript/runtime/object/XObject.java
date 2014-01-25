@@ -1,15 +1,13 @@
 package xscript.runtime.object;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
 
+import xscript.runtime.XMap;
 import xscript.runtime.XModifier;
 import xscript.runtime.XRuntimeException;
-import xscript.runtime.XSet;
 import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XField;
 import xscript.runtime.clazz.XWrapper;
@@ -17,7 +15,7 @@ import xscript.runtime.genericclass.XClassPtr;
 import xscript.runtime.genericclass.XGenericClass;
 import xscript.runtime.threads.XThread;
 
-public class XObject implements Map<Object, Object>, Callable<Callable<Map<String, Object>>>{
+public class XObject extends XMap<Object, Object> implements Callable<Callable<Map<String, Object>>>{
 
 	private XGenericClass xClass;
 	private byte[] data;
@@ -143,55 +141,10 @@ public class XObject implements Map<Object, Object>, Callable<Callable<Map<Strin
 	}
 
 	@Override
-	public void clear() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public boolean containsKey(Object name) {
 		if(name instanceof String)
 			return getField((String)name)!=null;
 		return false;
-	}
-
-	@Override
-	public boolean containsValue(Object value) {
-		return getValues().contains(value);
-	}
-
-	@Override
-	public Set<Entry<Object, Object>> entrySet() {
-		List<String> keys = getKeys();
-		List<Entry<Object, Object>> entries = new ArrayList<Map.Entry<Object, Object>>();
-		for(String key:keys){
-			entries.add(new FieldEntry(key));
-		}
-		return new XSet<Entry<Object, Object>>(entries);
-	}
-
-	private class FieldEntry implements Entry<Object, Object>{
-
-		private String key;
-		
-		public FieldEntry(String key){
-			this.key = key;
-		}
-		
-		@Override
-		public String getKey() {
-			return key;
-		}
-
-		@Override
-		public Object getValue() {
-			return get(key);
-		}
-
-		@Override
-		public Object setValue(Object value) {
-			return put(key, value);
-		}
-		
 	}
 	
 	@Override
@@ -201,16 +154,6 @@ public class XObject implements Map<Object, Object>, Callable<Callable<Map<Strin
 			return getFieldValue(field);
 		}
 		return null;
-	}
-
-	@Override
-	public boolean isEmpty() {
-		return false;
-	}
-
-	@Override
-	public Set<Object> keySet() {
-		return new XSet<Object>(getKeys());
 	}
 	
 	@Override
@@ -232,28 +175,6 @@ public class XObject implements Map<Object, Object>, Callable<Callable<Map<Strin
 		}
 		return old;
 	}
-
-	@Override
-	public void putAll(Map<? extends Object, ? extends Object> values) {
-		for(Entry<? extends Object, ? extends Object> e:values.entrySet()){
-			put(e.getKey(), e.getValue());
-		}
-	}
-
-	@Override
-	public Object remove(Object arg0) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public int size() {
-		return getKeys().size();
-	}
-
-	@Override
-	public Collection<Object> values() {
-		return new XSet<Object>(getValues());
-	}
 	
 	private XField getField(String name){
 		int split = name.lastIndexOf('.');
@@ -267,14 +188,14 @@ public class XObject implements Map<Object, Object>, Callable<Callable<Map<Strin
 		return XWrapper.getJavaObject(objProv, primitive, field.get(this));
 	}
 	
-	private List<String> getKeys(){
+	protected List<Object> getKeys(){
 		XClass c = xClass.getXClass();
-		List<String> names = new ArrayList<String>();
+		List<Object> names = new ArrayList<Object>();
 		addClassFields(c, new ArrayList<XClass>(), names);
 		return names;
 	}
 	
-	private static void addClassFields(XClass c, List<XClass> classes, List<String> names){
+	private static void addClassFields(XClass c, List<XClass> classes, List<Object> names){
 		if(!classes.contains(c)){
 			classes.add(c);
 			XField fields[] = c.getFields();
@@ -289,7 +210,7 @@ public class XObject implements Map<Object, Object>, Callable<Callable<Map<Strin
 		}
 	}
 	
-	private List<Object> getValues(){
+	protected List<Object> getValues(){
 		XClass c = xClass.getXClass();
 		List<Object> values = new ArrayList<Object>();
 		addClassValues(c, new ArrayList<XClass>(), values);
