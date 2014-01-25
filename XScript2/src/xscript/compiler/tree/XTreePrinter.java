@@ -3,6 +3,7 @@ package xscript.compiler.tree;
 import java.util.List;
 
 import xscript.compiler.tree.XTree.XTreeAnnotation;
+import xscript.compiler.tree.XTree.XTreeAnnotationEntry;
 import xscript.compiler.tree.XTree.XTreeArrayInitialize;
 import xscript.compiler.tree.XTree.XTreeAssert;
 import xscript.compiler.tree.XTree.XTreeBlock;
@@ -127,7 +128,8 @@ public class XTreePrinter implements XVisitor {
 
 	@Override
 	public void visitAnnotation(XTreeAnnotation xAnnotation) {
-		
+		accept("annotation", xAnnotation.annotation);
+		accept("entries", xAnnotation.entries);
 	}
 
 	@Override
@@ -378,6 +380,12 @@ public class XTreePrinter implements XVisitor {
 	@Override
 	public void visitCompiled(XTreeCompiledPart xCompiledPart) {
 		
+	}
+
+	@Override
+	public void visitAnnotationEntry(XTreeAnnotationEntry xTreeAnnotationEntry) {
+		accept("name", xTreeAnnotationEntry.name);
+		accept("value", xTreeAnnotationEntry.value);
 	}
 
 }

@@ -4,4 +4,12 @@ public class Char{
 
 	private final char value;
 
+	public Char(char value){
+		this.value = value;
+	}
+	
+	public char getValue(){
+		return value;
+	}
+	
 }

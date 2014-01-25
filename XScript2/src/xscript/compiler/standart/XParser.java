@@ -13,6 +13,7 @@ import xscript.compiler.token.XToken;
 import xscript.compiler.token.XTokenKind;
 import xscript.compiler.tree.XTree;
 import xscript.compiler.tree.XTree.XTreeAnnotation;
+import xscript.compiler.tree.XTree.XTreeAnnotationEntry;
 import xscript.compiler.tree.XTree.XTreeArrayInitialize;
 import xscript.compiler.tree.XTree.XTreeAssert;
 import xscript.compiler.tree.XTree.XTreeBlock;
@@ -207,6 +208,51 @@ public class XParser {
 	}
 	
 	public XTreeAnnotation makeAnnotation(){
+		startLineBlock();
+		expected(XTokenKind.AT);
+		XTreeIdent name = qualident();
+		List<XTreeAnnotationEntry> entries = null;
+		if(token.kind==XTokenKind.LGROUP){
+			entries = makeAnnotationEntries();
+		}
+		return new XTreeAnnotation(endLineBlock(), name, entries);
+	}
+	
+	public List<XTreeAnnotationEntry> makeAnnotationEntries(){
+		if(token.kind==XTokenKind.LGROUP){
+			expected(XTokenKind.LGROUP);
+			List<XTreeAnnotationEntry> list;
+			if(token.kind==XTokenKind.RGROUP){
+				list = null;
+			}else{
+				list = new ArrayList<XTree.XTreeAnnotationEntry>();
+				if(token.kind==XTokenKind.IDENT){
+					XToken oldToken = token;
+					lexer.notSure();
+					nextToken();
+					if(token.kind==XTokenKind.EQUAL){
+						lexer.sure();
+						nextToken();
+						XTreeStatement sm = makeAnnotationEntryValue();
+						list.add(new XTreeAnnotationEntry(sm.line, new XTreeIdent(oldToken.lineDesk, oldToken.param.getString()), sm));
+						while(token.kind==XTokenKind.COMMA){
+							nextToken();
+							XTreeIdent name = makeIdent();
+							expected(XTokenKind.EQUAL);
+							sm = makeAnnotationEntryValue();
+							list.add(new XTreeAnnotationEntry(sm.line, name, sm));
+						}
+					}else{
+						lexer.reset();
+						token = oldToken;
+						XTreeStatement sm = makeAnnotationEntryValue();
+						list.add(new XTreeAnnotationEntry(sm.line, null, sm));
+					}
+				}
+			}
+			expected(XTokenKind.RGROUP);
+			return list;
+		}
 		return null;
 	}
 	
@@ -1638,7 +1684,83 @@ public class XParser {
 	}
 	
 	public List<XTree> annotationBody(String name){
-		return null;
+		expected(XTokenKind.LBRAKET);
+		if(unhandledUnexpected){
+			skip(false, false, false, false, false, false, true);
+			if(token.kind==XTokenKind.LBRAKET)
+				nextToken();
+		}
+		List<XTree> list = new ArrayList<XTree>();
+		while(token.kind!=XTokenKind.EOF && token.kind!=XTokenKind.RBRAKET){
+			list.add(annotationBodyDecl(name));
+			if(unhandledUnexpected){
+				skip(true, true, false, true, false, true, true);
+			}
+		}
+		expected(XTokenKind.RBRAKET);
+		return list;
+	}
+	
+	public XTree annotationBodyDecl(String className){
+		XTreeModifier modifier = makeModifier();
+		if(token.kind==XTokenKind.CLASS || token.kind==XTokenKind.INTERFACE || token.kind==XTokenKind.ENUM || token.kind==XTokenKind.ANNOTATION){
+			return makeClassDecl(modifier);
+		}
+		if(token.kind==XTokenKind.LBRAKET && xscript.runtime.XModifier.isStatic(modifier.modifier)){
+			if(modifier.annotations!=null){
+				parserMessage(XMessageLevel.ERROR, "staticblock.noannotations", modifier.line);
+			}
+			if(modifier.modifier!=xscript.runtime.XModifier.STATIC){
+				parserMessage(XMessageLevel.ERROR, "staticblock.wrongmodifier", modifier.line, xscript.runtime.XModifier.toString(modifier.modifier & ~xscript.runtime.XModifier.STATIC));
+			}
+			return makeBlock();
+		}
+		List<XTreeTypeParam> typeParam = makeTypeParamList();
+		XTreeType type = makeType();
+		XLineDesk line = new XLineDesk(token.lineDesk);
+		String name = ident();
+		if(token.kind==XTokenKind.LGROUP){
+			return makeAnnotationElementDecl(line, modifier, typeParam, type, name);
+		}else{
+			XTree tree = makeVarDecls(line, modifier, type, name);
+			expected(XTokenKind.SEMICOLON);
+			parserMessage(XMessageLevel.ERROR, "no.var.accepted.in.annotation", name);
+			return tree;
+		}
+	}
+	
+	public XTreeMethodDecl makeAnnotationElementDecl(XLineDesk line, XTreeModifier modifier, List<XTreeTypeParam> typeParam, XTreeType returnType, String name){
+		if(typeParam!=null && typeParam.size()>0){
+			parserMessage(XMessageLevel.ERROR, "no.typeParams", name);
+		}
+		expected(XTokenKind.LGROUP);
+		expected(XTokenKind.RGROUP);
+		
+		XTreeBlock block = null;
+		
+		if(token.kind==XTokenKind.DEFAULT){
+			
+			expected(XTokenKind.DEFAULT);
+			
+			List<XTreeStatement> list = new ArrayList<XTreeStatement>();
+			
+			XTreeStatement entry = makeAnnotationEntryValue();
+			
+			list.add(entry);
+			
+			block = new XTreeBlock(entry.line, list);
+			
+		}
+		
+		return new XTreeMethodDecl(line, modifier, name, typeParam, returnType, null, null, block, null, false);
+	}
+	
+	public XTreeStatement makeAnnotationEntryValue(){
+		if(token.kind==XTokenKind.AT){
+			return makeAnnotation();
+		}else{
+			return makeNumRead(true);
+		}
 	}
 	
 	public XTreeClassDecl annotationDecl(XTreeModifier modifier){

@@ -4,7 +4,7 @@ public class Test{
 	
 	public static void test(){
 		VM.println("out");
-		
+		int i = -1;
 	}
 	
 }

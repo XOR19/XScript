@@ -1,6 +1,7 @@
 package xscript.compiler.tree;
 
 import xscript.compiler.tree.XTree.XTreeAnnotation;
+import xscript.compiler.tree.XTree.XTreeAnnotationEntry;
 import xscript.compiler.tree.XTree.XTreeArrayInitialize;
 import xscript.compiler.tree.XTree.XTreeAssert;
 import xscript.compiler.tree.XTree.XTreeBlock;
@@ -137,5 +138,7 @@ public interface XVisitor {
 	public void visitAssert(XTreeAssert xAssert);
 
 	public void visitCompiled(XTreeCompiledPart xCompiledPart);
+
+	public void visitAnnotationEntry(XTreeAnnotationEntry xTreeAnnotationEntry);
 
 }

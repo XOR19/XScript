@@ -13,6 +13,7 @@ import xscript.compiler.token.XLineDesk;
 import xscript.compiler.tree.XTree;
 import xscript.compiler.tree.XTree.XTag;
 import xscript.compiler.tree.XTree.XTreeAnnotation;
+import xscript.compiler.tree.XTree.XTreeAnnotationEntry;
 import xscript.compiler.tree.XTree.XTreeArrayInitialize;
 import xscript.compiler.tree.XTree.XTreeAssert;
 import xscript.compiler.tree.XTree.XTreeBlock;
@@ -60,6 +61,8 @@ import xscript.compiler.tree.XTree.XTreeVarDecls;
 import xscript.compiler.tree.XTree.XTreeWhile;
 import xscript.compiler.tree.XTreeSearch;
 import xscript.compiler.tree.XVisitor;
+import xscript.runtime.XAnnotation;
+import xscript.runtime.XAnnotationEntry;
 import xscript.runtime.XModifier;
 import xscript.runtime.XRuntimeException;
 import xscript.runtime.XVirtualMachine;
@@ -467,6 +470,41 @@ public class XClassCompiler extends XClass implements XVisitor {
 	@Override
 	public void visitImport(XTreeImport xImport) {
 		XError.shouldNeverCalled();
+	}
+	
+	private XAnnotation[] makeAnnotations(List<XTreeAnnotation> annotations){
+		if(annotations==null)
+			return new XAnnotation[0];
+		XAnnotation[] a = new XAnnotation[annotations.size()];
+		for(int i=0; i<a.length; i++){
+			a[i] = makeAnnotation(annotations.get(i));
+		}
+		return a;
+	}
+	
+	private XAnnotation makeAnnotation(XTreeAnnotation annotation){
+		String name = annotation.annotation.name;
+		XClassPtr cp = getGenericClass(new XTreeType(annotation.annotation.line, annotation.annotation, null, 0), null);
+		XClass c = cp.getXClassNonNull(virtualMachine);
+		XAnnotationEntry[] entries;
+		if(annotation.entries==null){
+			entries = new XAnnotationEntry[0];
+		}else{
+			entries = new XAnnotationEntry[annotation.entries.size()];
+			for(int i=0; i<entries.length; i++){
+				entries[i] = makeAnnotationEntry(annotation.entries.get(i));
+			}
+		}
+		return new XAnnotation(name, entries);
+	}
+	
+	private XAnnotationEntry makeAnnotationEntry(XTreeAnnotationEntry annotationEntry){
+		String name = annotationEntry.name.name;
+		XTreeStatement v = annotationEntry.value;
+		//TODO
+		int type;
+		Object[] value;
+		return null;//new XAnnotationEntry(name, type, value);
 	}
 	
 	private XSyntheticField addSyntheticField(int modifier, String name, XClassPtr type){
@@ -934,6 +972,11 @@ public class XClassCompiler extends XClass implements XVisitor {
 		XError.shouldNeverCalled();
 	}
 
+	@Override
+	public void visitAnnotationEntry(XTreeAnnotationEntry xTreeAnnotationEntry) {
+		XError.shouldNeverCalled();
+	}
+	
 	public XClassPtr getGenericClass(XTreeType type, XGenericInfo[] extra) {
 		if(getOuterMethod()==null){
 			return importHelper.getGenericClass(this, type, null, extra, true);

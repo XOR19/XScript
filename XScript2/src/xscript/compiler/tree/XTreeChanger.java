@@ -3,6 +3,7 @@ package xscript.compiler.tree;
 import java.util.List;
 
 import xscript.compiler.tree.XTree.XTreeAnnotation;
+import xscript.compiler.tree.XTree.XTreeAnnotationEntry;
 import xscript.compiler.tree.XTree.XTreeArrayInitialize;
 import xscript.compiler.tree.XTree.XTreeAssert;
 import xscript.compiler.tree.XTree.XTreeBlock;
@@ -91,7 +92,10 @@ public class XTreeChanger implements XVisitor {
 	}
 
 	@Override
-	public void visitAnnotation(XTreeAnnotation xAnnotation) {}
+	public void visitAnnotation(XTreeAnnotation xAnnotation) {
+		xAnnotation.annotation = visitTree(xAnnotation.annotation);
+		xAnnotation.entries = visitTree(xAnnotation.entries);
+	}
 
 	@Override
 	public void visitModifier(XTreeModifier xModifier) {
@@ -326,6 +330,12 @@ public class XTreeChanger implements XVisitor {
 	@Override
 	public void visitCompiled(XTreeCompiledPart xCompiledPart) {
 		
+	}
+
+	@Override
+	public void visitAnnotationEntry(XTreeAnnotationEntry xTreeAnnotationEntry) {
+		xTreeAnnotationEntry.name = visitTree(xTreeAnnotationEntry.name);
+		xTreeAnnotationEntry.value = visitTree(xTreeAnnotationEntry.value);
 	}
 
 }

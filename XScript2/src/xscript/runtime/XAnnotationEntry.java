@@ -80,6 +80,11 @@ public class XAnnotationEntry {
 				value[i] = XClassPtr.load(inputStream);
 			}
 			break;
+		case 11:
+			for(int i=0; i<value.length; i++){
+				value[i] = new XAnnotation(inputStream);
+			}
+			break;
 		}
 	}
 
@@ -151,6 +156,11 @@ public class XAnnotationEntry {
 		case 10:
 			for(int i=0; i<value.length; i++){
 				((XClassPtr)value[i]).save(outputStream);
+			}
+			break;
+		case 11:
+			for(int i=0; i<value.length; i++){
+				((XAnnotation)value[i]).save(outputStream);
 			}
 			break;
 		}

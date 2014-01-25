@@ -9,8 +9,6 @@ import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XZipClassLoader;
 import xscript.runtime.genericclass.XGenericClass;
-import xscript.runtime.nativemethod.XNativeClass;
-import xscript.runtime.nativemethod.XNativeClass.XNativeMethod;
 
 public class Test {
 	

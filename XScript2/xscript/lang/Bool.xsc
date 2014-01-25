@@ -4,4 +4,12 @@ public class Bool{
 
 	private final bool value;
 
+	public Bool(bool value){
+		this.value = value;
+	}
+	
+	public bool getValue(){
+		return value;
+	}
+	
 }

@@ -15,7 +15,7 @@ public abstract class XTree{
 		FOR, IF, RETURN, THROW, VARDECLS, GROUP, SYNCHRONIZED, CONST, METHODCALL, 
 		NEW, OPERATOR, OPERATORSUFFIXPREFIX, 
 		INDEX, IFOPERATOR, CAST, LAMBDA, TRY, CATCH, NEWARRAY, ARRAYINITIALIZE, 
-		FOREACH, LABLE, SWITCH, CASE, THIS, SUPER, INSTANCEOF, ASSERT, COMPILED;
+		FOREACH, LABLE, SWITCH, CASE, THIS, SUPER, INSTANCEOF, ASSERT, COMPILED, ANNOTATIONENTRY;
 	}
 	
 	public static class XTreeError extends XTree{
@@ -152,10 +152,16 @@ public abstract class XTree{
 		
 	}
 	
-	public static class XTreeAnnotation extends XTree{
+	public static class XTreeAnnotation extends XTreeStatement{
 
-		public XTreeAnnotation(XLineDesk line) {
+		public XTreeIdent annotation;
+		
+		public List<XTreeAnnotationEntry> entries;
+		
+		public XTreeAnnotation(XLineDesk line, XTreeIdent annotation, List<XTreeAnnotationEntry> entries) {
 			super(line);
+			this.annotation = annotation;
+			this.entries = entries;
 		}
 
 		@Override
@@ -166,6 +172,30 @@ public abstract class XTree{
 		@Override
 		public void accept(XVisitor v) {
 			v.visitAnnotation(this);
+		}
+		
+	}
+	
+	public static class XTreeAnnotationEntry extends XTreeStatement{
+
+		public XTreeIdent name;
+		
+		public XTreeStatement value;
+		
+		public XTreeAnnotationEntry(XLineDesk line, XTreeIdent name, XTreeStatement value) {
+			super(line);
+			this.name = name;
+			this.value = value;
+		}
+
+		@Override
+		public XTag getTag() {
+			return XTag.ANNOTATIONENTRY;
+		}
+
+		@Override
+		public void accept(XVisitor v) {
+			v.visitAnnotationEntry(this);
 		}
 		
 	}

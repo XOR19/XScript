@@ -29,6 +29,7 @@ import xscript.compiler.message.XMessageLevel;
 import xscript.compiler.token.XLineDesk;
 import xscript.compiler.tree.XTree;
 import xscript.compiler.tree.XTree.XTreeAnnotation;
+import xscript.compiler.tree.XTree.XTreeAnnotationEntry;
 import xscript.compiler.tree.XTree.XTreeArrayInitialize;
 import xscript.compiler.tree.XTree.XTreeAssert;
 import xscript.compiler.tree.XTree.XTreeBlock;
@@ -79,6 +80,7 @@ import xscript.runtime.XModifier;
 import xscript.runtime.XRuntimeException;
 import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XField;
+import xscript.runtime.clazz.XPackage;
 import xscript.runtime.clazz.XPrimitive;
 import xscript.runtime.genericclass.XClassPtr;
 import xscript.runtime.genericclass.XClassPtrClass;
@@ -464,32 +466,36 @@ public class XStatementCompiler implements XVisitor {
 			varAccess.isStatic = true;
 		}else{
 			String rname = xType.name.name;
-			int s=-1;
-			String next = null;
-			while(true){
-				XClassPtr c = methodCompiler.getGenericClass(xType, false);
+			String[] spName = rname.split("\\.");
+			XClassPtr c = null;
+			int pos = 0;
+			xType.name.name = "";
+			for(int i=0; i<spName.length; i++){
+				xType.name.name += spName[i];
+				c = methodCompiler.getGenericClass(xType, false);
 				if(c!=null){
-					varAccess.declaringClass = getVarTypeForThis(c);
-					if(s>-1){
-						next = rname.substring(s+1);
-					}
+					pos = i+1;
 					break;
 				}
-				s = xType.name.name.lastIndexOf('.');
-				if(s==-1){
-					next = rname;
-					break;
-				}
-				xType.name.name = xType.name.name.substring(0, s);
+				xType.name.name += ".";
 			}
-			if(varAccess.declaringClass!=null){
+			if(c!=null){
+				for(; pos<spName.length; pos++){
+					XClass cc = c.getXClass(methodCompiler.getDeclaringClass().getVirtualMachine());
+					XPackage p = cc.getChild(spName[pos]);
+					if(p instanceof XClass){
+						c = new XClassPtrClass(p.getName());
+					}else{
+						break;
+					}
+				}
+				varAccess.declaringClass = getVarTypeForThis(c);
 				varAccess.isStatic = true;
 			}
 			xType.name.name = rname;
-			if(next!=null){
-				String[] na = next.split("\\.");
-				varAccess.name = na[0];
-				for(int i=1; i<na.length; i++){
+			if(pos<spName.length){
+				varAccess.name = spName[pos];
+				for(int i=pos+1; i<spName.length; i++){
 					XResolvedVariable rv = getVariable(varAccess, xType);
 					if(rv.field==null){
 						if(rv.variable!=null){
@@ -520,7 +526,7 @@ public class XStatementCompiler implements XVisitor {
 						varAccess.variable = null;
 						varAccess.declaringClass = getVarTypeForFieldType(rv.field, varAccess.declaringClass);
 					}
-					varAccess.name = na[i];
+					varAccess.name = spName[i];
 				}
 				setReturn(XAnyType.type, xType);
 			}
@@ -1669,13 +1675,14 @@ public class XStatementCompiler implements XVisitor {
 		while(checkClass2.getOuterClass()!=null){
 			checkClass2 = checkClass2.getOuterClass();
 		}
-		boolean sameOuterClass = checkClass1==checkClass2;
+		if(checkClass1==checkClass2)
+			return true;
 		if(XModifier.isPrivate(modifier) || XModifier.isPrivate(fModifier)){
-			return sameOuterClass;
+			return false;
 		}else if(XModifier.isProtected(modifier) || XModifier.isProtected(fModifier)){
-			return sameOuterClass || xClass.canCastTo(xClass2) || xClass.getPackage()==xClass2.getPackage();
+			return xClass.canCastTo(xClass2) || xClass.getPackage()==xClass2.getPackage();
 		}else if(!XModifier.isPublic(modifier) || !XModifier.isPublic(fModifier)){
-			return sameOuterClass || xClass.getPackage()==xClass2.getPackage();
+			return xClass.getPackage()==xClass2.getPackage();
 		}
 		return true;
 	}
@@ -2401,7 +2408,6 @@ public class XStatementCompiler implements XVisitor {
 	@Override
 	public void visitTry(XTreeTry xTry) {
 		if(xTry.finallyBlock!=null || xTry.resource!=null){
-			System.out.println(xTry.line);
 			startFinallyBlock(xTry);
 		}
 		
@@ -2644,7 +2650,6 @@ public class XStatementCompiler implements XVisitor {
 				XInstructionDumyJump endJump;
 				XInstruction breakTarget;
 				XVarType cp = sc.returnType.getSuperClass("xscript.lang.Iterable");
-				System.out.println(cp);
 				if(cp != null){
 					XMethodSearch search = searchMethod(sc.returnType, "iterator");
 					search.applyTypes(new XVarType[0]);
@@ -2907,6 +2912,11 @@ public class XStatementCompiler implements XVisitor {
 	public void visitCompiled(XTreeCompiledPart xCompiledPart) {
 		codeGen = xCompiledPart.codeGen;
 		setReturn(null, xCompiledPart);
+	}
+	
+	@Override
+	public void visitAnnotationEntry(XTreeAnnotationEntry xTreeAnnotationEntry) {
+		XError.shouldNeverCalled();
 	}
 	
 	private void setReturn(XVarType returnType, XTree tree){
