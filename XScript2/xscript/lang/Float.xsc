@@ -12,5 +12,9 @@ public class Float{
 		return value;
 	}
 	
+	public static Float valueOf(float f){
+		return new Float(f);
+	}
+	
 }
 	

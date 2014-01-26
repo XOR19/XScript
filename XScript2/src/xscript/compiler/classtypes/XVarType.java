@@ -89,6 +89,10 @@ public abstract class XVarType {
 		if(varTypeFor instanceof XAnyType){
 			return true;
 		}
+		if(varTypeFor instanceof XPrimitiveType){
+			int prim = varTypeFor.getPrimitiveID();
+			return getXClass().getName().equals("xscript.lang."+XPrimitive.getWrapper(prim));
+		}
 		XClass ca[] = varTypeFor.getXClasses();
 		if(ca==null){
 			return false;

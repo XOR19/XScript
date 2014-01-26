@@ -332,6 +332,7 @@ public class XClass extends XPackage{
 				if(isArray()){
 					lengthField = getField("length");
 				}
+				staticData = new byte[staticFieldCount];
 				state = STATE_LOADED;
 				virtualMachine.getClassProvider().addClassForLoading(this);
 			}catch(Throwable e){
@@ -344,7 +345,7 @@ public class XClass extends XPackage{
 		}
 	}
 	
-	private void setupClassTable(){
+	protected void setupClassTable(){
 		classTable = new XClassTable[0];
 		List<XGenericClass> classes = new ArrayList<XGenericClass>();
 		XGenericClass generics[] = new XGenericClass[genericInfos.length];

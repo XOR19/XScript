@@ -159,6 +159,7 @@ public final class XChecks {
 			}
 		}else if(!XModifier.isPublic(modifier) || !XModifier.isPublic(fModifier)){
 			if(!sameOuterClass && xClass.getPackage()!=xClass2.getPackage()){
+				System.out.println("cm:"+XModifier.getSource(modifier)+", mm:"+XModifier.getSource(fModifier));
 				throw new XRuntimeException("%s can't access %s", xClass, method);
 			}
 		}

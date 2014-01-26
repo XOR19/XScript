@@ -12,4 +12,8 @@ public class Long{
 		return value;
 	}
 	
+	public static Long valueOf(long l){
+		return new Long(l);
+	}
+	
 }

@@ -47,6 +47,8 @@ public class XMethodSearch {
 	}
 	
 	private void addMethod(XMethod method, XKnownType kt){
+		if(!method.getRealName().equals(name))
+			return;
 		XVarType generics[];
 		if(kt instanceof XSingleType){
 			generics = ((XSingleType) kt).generics;
@@ -66,7 +68,48 @@ public class XMethodSearch {
 			m.mThrows[i] = XVarType.getVarTypeFor(method.getThrows()[i], vm, generics, this.generics);
 		}
 		m.returnType =  XVarType.getVarTypeFor(method.getReturnTypePtr(), vm, generics, this.generics);
+		addMethod(m);
+	}
+	
+	private void addMethod(XCompilerMethod m){
+		
+		ListIterator<XCompilerMethod> i = posibleMethods[0].listIterator();
+		
+		while(i.hasNext()){
+			int res = isMethodIdentical(m, i.next());
+			if(res==1){
+				i.set(m);
+				return;
+			}else if(res==2){
+				return;
+			}
+		}
 		posibleMethods[0].add(m);
+	}
+	
+	private int isMethodIdentical(XCompilerMethod m1, XCompilerMethod m2){
+		if(m1.method == m2.method)
+			return 2;
+		if(m1.params.length!=m2.params.length)
+			return 0;
+		int ret = 1;
+		if(!canCastTo(m1.method.getDeclaringClass(), m2.method.getDeclaringClass())){
+			XCompilerMethod tmp = m2;
+			m2 = m1;
+			m1 = tmp;
+			ret = 2;
+		}
+		if(!m2.returnType.canCastTo(m1.returnType))
+			return 0;
+		for(int i=0; i<m2.params.length; i++){
+			if(!m2.params[i].canCastTo(m1.params[i]))
+				return 0;
+		}
+		return ret;
+	}
+	
+	private boolean canCastTo(XClass c1, XClass c2){
+		return c1.canCastTo(c2);
 	}
 	
 	private void reset(){
@@ -122,9 +165,6 @@ public class XMethodSearch {
 	}
 	
 	private int isMethodOk(XCompilerMethod m){
-		if(!m.method.getRealName().equals(name)){
-			return 0;
-		}
 		boolean casts = false;
 		boolean varargs = false;
 		if(types!=null){

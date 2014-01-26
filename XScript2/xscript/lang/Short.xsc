@@ -12,4 +12,8 @@ public class Short{
 		return value;
 	}
 	
+	public static Short valueOf(short s){
+		return new Short(s);
+	}
+	
 }

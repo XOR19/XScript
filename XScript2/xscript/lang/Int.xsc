@@ -16,4 +16,8 @@ public class Int{
 	
 	public static native String toHex(long l);
 
+	public static Int valueOf(int i){
+		return new Int(i);
+	}
+	
 }

@@ -12,4 +12,8 @@ public class Double{
 		return value;
 	}
 	
+	public static Double valueOf(double d){
+		return new Double(d);
+	}
+	
 }

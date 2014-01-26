@@ -921,9 +921,10 @@ public class XStatementCompiler implements XVisitor {
 		continues = breaks = null;
 		XStatementCompiler c2 = visitTree(xDo.doWhile, getPrimitiveType(XPrimitive.BOOL));
 		XInstructionDumyIf iif = new XInstructionDumyIf();
-		iif.target = getTarget(c1.getCodeGen(), xDo);
+		addInstruction(iif.target = new XInstructionDumyDelete(), xDo);
 		addInstructions(c1);
-		XInstruction continueTarget = getTarget(c2.getCodeGen(), xDo);
+		XInstruction continueTarget = new XInstructionDumyDelete();
+		addInstruction(continueTarget, xDo);
 		addInstructions(c2);
 		addInstruction(iif, xDo);
 		XInstructionDumyDelete breakTarget = new XInstructionDumyDelete();
@@ -942,7 +943,8 @@ public class XStatementCompiler implements XVisitor {
 		continues = new ArrayList<XInstructionDumyJump>();
 		breaks = new ArrayList<XInstructionDumyJump>();
 		XStatementCompiler c2 = visitTree(xWhile.block, null);
-		XInstruction continueTarget = getTarget(c1.getCodeGen(), xWhile);
+		XInstruction continueTarget = new XInstructionDumyDelete();
+		addInstruction(continueTarget, xWhile);
 		addInstructions(c1);
 		XInstructionDumyNIf iif = new XInstructionDumyNIf();
 		addInstruction(iif, xWhile);
@@ -968,12 +970,14 @@ public class XStatementCompiler implements XVisitor {
 		continues = new ArrayList<XInstructionDumyJump>();
 		breaks = new ArrayList<XInstructionDumyJump>();
 		XStatementCompiler c3 = visitTree(xFor.block, null);
-		XInstruction startTarget = getTarget(c1.getCodeGen(), xFor);
+		XInstruction startTarget = new XInstructionDumyDelete();
+		addInstruction(startTarget, xFor);
 		addInstructions(c1);
 		XInstructionDumyNIf iif = new XInstructionDumyNIf();
 		addInstruction(iif, xFor);
 		addInstructions(c3);
-		XInstruction continueTarget = getTarget(c2.getCodeGen(), xFor);
+		XInstruction continueTarget = new XInstructionDumyDelete();
+		addInstruction(continueTarget, xFor);
 		addInstructions(c2);
 		XInstructionDumyJump jump = new XInstructionDumyJump();
 		jump.target = startTarget;
@@ -1004,7 +1008,8 @@ public class XStatementCompiler implements XVisitor {
 		}else{
 			XInstructionDumyJump elsee = new XInstructionDumyJump();
 			addInstruction(elsee, xIf);
-			iff.target = getTarget(b2.getCodeGen(), xIf);
+			addInstruction(iff.target = new XInstructionDumyDelete(), xIf);
+			addInstructions(b2);
 			addInstruction(elsee.target = new XInstructionDumyDelete(), xIf);
 		}
 	}
@@ -1329,7 +1334,22 @@ public class XStatementCompiler implements XVisitor {
 				int prim1 = from.getPrimitiveID();
 				int prim2 = to.getPrimitiveID();
 				if(prim1!=prim2){
-					if(prim1>=2 && prim1<=8 && prim2>=2 && prim2<=8){
+					if(prim2==XPrimitive.OBJECT){
+						XMethodSearch search;
+						if(to.getXClass().getName().equals("xscript.lang.Object")){
+							search = searchMethod(getVarTypeForName("xscript.lang."+XPrimitive.getWrapper(prim1)), true, "valueOf", false);
+						}else{
+							search = searchMethod(to, true, "valueOf", false);
+						}
+						search.applyTypes(from);
+						search.applyReturn(to);
+						makeCall(search, tree, new XCodeGen[]{new XCodeGen()});
+					}else if(prim1==XPrimitive.OBJECT){
+						XMethodSearch search = searchMethod(from, "getValue");
+						search.applyTypes();
+						search.applyReturn(to);
+						makeCall(search, tree, new XCodeGen[0]);
+					}else if(prim1>=2 && prim1<=8 && prim2>=2 && prim2<=8){
 						int s1 = prim1-XPrimitive.INT;
 						int s2 = prim2-XPrimitive.INT;
 						if(s1<0)
@@ -2323,10 +2343,11 @@ public class XStatementCompiler implements XVisitor {
 		addInstructions(sct);
 		XInstructionDumyJump jump = new XInstructionDumyJump();
 		addInstruction(jump, xIfOperator);
-		iif.target = getTarget(scf.getCodeGen(), xIfOperator);
+		addInstruction(iif.target = new XInstructionDumyDelete(), xIfOperator);
+		addInstructions(scf);
 		addInstruction(jump.target = new XInstructionDumyDelete(), xIfOperator);
 		//TODO
-		setReturn(returnType, xIfOperator);
+		setReturn(returnExpected, xIfOperator);
 	}
 
 	@Override
@@ -2337,7 +2358,22 @@ public class XStatementCompiler implements XVisitor {
 		int prim1 = a.returnType.getPrimitiveID();
 		int prim2 = castTo.getPrimitiveID();
 		if(prim1!=prim2){
-			if(prim1>=2 && prim1<=8 && prim2>=2 && prim2<=8){
+			if(prim2==XPrimitive.OBJECT){
+				XMethodSearch search;
+				if(castTo.getXClass().getName().equals("xscript.lang.Object")){
+					search = searchMethod(getVarTypeForName("xscript.lang."+XPrimitive.getWrapper(prim1)), true, "valueOf", false);
+				}else{
+					search = searchMethod(castTo, true, "valueOf", false);
+				}
+				search.applyTypes(a.returnType);
+				search.applyReturn(castTo);
+				makeCall(search, xCast, new XCodeGen[]{new XCodeGen()});
+			}else if(prim1==XPrimitive.OBJECT){
+				XMethodSearch search = searchMethod(a.returnType, "getValue");
+				search.applyTypes();
+				search.applyReturn(castTo);
+				makeCall(search, xCast, new XCodeGen[0]);
+			}else if(prim1>=2 && prim1<=8 && prim2>=2 && prim2<=8){
 				int s1 = prim1-XPrimitive.INT;
 				int s2 = prim2-XPrimitive.INT;
 				if(s1<0)
@@ -2920,6 +2956,10 @@ public class XStatementCompiler implements XVisitor {
 	}
 	
 	private void setReturn(XVarType returnType, XTree tree){
+		if(returnType instanceof XAnyType){
+			this.returnType = returnType;
+			return;
+		}
 		if(returnType instanceof XErroredType){
 			this.returnType = returnType;
 			return;
@@ -2944,17 +2984,6 @@ public class XStatementCompiler implements XVisitor {
 			}
 		}
 		this.returnType = returnType;
-	}
-	
-	private static XInstruction getTarget(XCodeGen codeGen, XTree tree){
-		List<XInstruction> list = codeGen.getInstructionList();
-		if(list.isEmpty()){
-			XInstructionDumyDelete inst = new XInstructionDumyDelete();
-			list.add(inst);
-			return inst;
-		}else{
-			return list.get(0);
-		}
 	}
 	
 }

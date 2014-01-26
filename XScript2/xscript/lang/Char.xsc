@@ -12,4 +12,8 @@ public class Char{
 		return value;
 	}
 	
+	public static Char valueOf(char c){
+		return new Char(c);
+	}
+	
 }

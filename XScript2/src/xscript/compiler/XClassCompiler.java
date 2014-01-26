@@ -121,8 +121,6 @@ public class XClassCompiler extends XClass implements XVisitor {
 	
 	private XLineDesk declLine;
 	
-	
-	
 	protected XClassCompiler(XVirtualMachine virtualMachine, String name, XMessageList messages, XImportHelper importHelper, XPackage p) {
 		super(virtualMachine, name, p);
 		this.messages = messages;
@@ -137,6 +135,19 @@ public class XClassCompiler extends XClass implements XVisitor {
 	
 	protected XMessageList getMessageList(){
 		return messages;
+	}
+	
+	public boolean canCastTo(XClass xClass){
+		if(xClass instanceof XClassCompiler){
+			if(this==xClass)
+				return true;
+			for(XClassPtr ptr:superClasses){
+				if(ptr.getXClassNonNull(virtualMachine).canCastTo(xClass))
+					return true;
+			}
+			return false;
+		}
+		return xClass.getClassTable(this)!=null;
 	}
 	
 	public void gen() {
@@ -154,7 +165,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 				cc.gen();
 			}
 			for(XClassPtr superClass:superClasses){
-				XClass c = superClass.getXClass(virtualMachine);
+				XClass c = superClass.getXClassNonNull(virtualMachine);
 				if(c instanceof XClassCompiler){
 					((XClassCompiler) c).gen();
 				}
@@ -203,6 +214,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 			for(XMethod method:methods){
 				((XMethodCompiler)method).gen();
 			}
+			setupClassTable();
 			if(errored){
 				state = STATE_ERRORED;
 			}else{
@@ -464,6 +476,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 			fieldList = null;
 			methodList = null;
 			((XCompiler)virtualMachine).toCompile(this);
+			
 		}
 	}
 	

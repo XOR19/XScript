@@ -2,14 +2,26 @@ package xscript.lang;
 
 public class Bool{
 
-	private final bool value;
+	public static final Bool TRUE = new Bool(true);
+	public static final Bool FALSE = new Bool(false);
 
+	private final bool value;
+	
 	public Bool(bool value){
 		this.value = value;
 	}
 	
 	public bool getValue(){
 		return value;
+	}
+	
+	@Override
+	public String toString(){
+		return value?"true":"false";
+	}
+	
+	public static Bool valueOf(bool b){
+		return b?TRUE:FALSE;
 	}
 	
 }

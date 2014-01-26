@@ -12,7 +12,8 @@ public final class String{
 		return value.length;
 	}
 
-	public String operator+(String other){
+	public String operator+(Object otherObj){
+		String other = toString(otherObj);
 		String out = new String(value.length+other.value.length);
 		int l1 = value.length;
 		for(int i=0; i<l1; i++){
@@ -25,4 +26,16 @@ public final class String{
 		return out;
 	}
 
+	@Override
+	public String toString(){
+		return this;
+	}
+	
+	public static String toString(Object o){
+		if(o==null){
+			return "null";
+		}
+		return o.toString();
+	}
+	
 }

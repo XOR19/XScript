@@ -272,8 +272,8 @@ public class XParser {
 				}else{
 					parserMessage(XMessageLevel.ERROR, "duplicated.modifier", token.kind.name);
 				}
+				nextToken();
 			}
-			nextToken();
 		}
 		return new XTreeModifier(endLineBlock(), modifier, annotations);
 	}

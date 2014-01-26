@@ -12,4 +12,8 @@ public class Byte{
 		return value;
 	}
 	
+	public static Byte valueOf(byte b){
+		return new Byte(b);
+	}
+	
 }

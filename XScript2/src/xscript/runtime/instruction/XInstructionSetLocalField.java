@@ -47,7 +47,7 @@ public class XInstructionSetLocalField extends XInstruction {
 		XObject object = vm.getObjectProvider().getObject(pointer);
 		if(XModifier.isFinal(field.getModifier()) && local==0){
 			XObject _this = vm.getObjectProvider().getObject(pointer);
-			if(methodExecutor.getMethod().getRealName().equals("<init>") && _this==object){
+			if(methodExecutor.getMethod().isConstructor() && !XModifier.isStatic(methodExecutor.getMethod().getModifier()) && _this==object){
 				field.finalSet(object, value);
 			}else{
 				throw new XRuntimeException("Try to write final field %s", field.getName());

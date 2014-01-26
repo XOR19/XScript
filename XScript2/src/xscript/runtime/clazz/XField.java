@@ -33,13 +33,13 @@ public class XField extends XPackage {
 		}
 		(type = XClassPtr.load(inputStream)).getXClass(declaringClass.getVirtualMachine());
 		if(XModifier.isStatic(modifier)){
-			declaringClass.getStaticFieldIndex(getSizeInObject());
+			index = declaringClass.getStaticFieldIndex(getSizeInObject());
 			if((modifier & ENUMFIELD)!=0){
 				enumID = declaringClass.getEnumIndex();
 			}
 			XChecks.checkModifier(declaringClass, modifier, STATICALLOWEDMODIFIFER);
 		}else{
-			declaringClass.getFieldIndex(getSizeInObject());
+			index = declaringClass.getFieldIndex(getSizeInObject());
 			XChecks.checkModifier(declaringClass, modifier, ALLOWEDMODIFIFER);
 		}
 	}

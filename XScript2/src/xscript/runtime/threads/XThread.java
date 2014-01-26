@@ -41,7 +41,7 @@ public class XThread {
 	
 	protected void run(int numInstructions){
 		if(methodExecutor!=null){
-			while(numInstructions-->0 && methodExecutor!=null){
+			while(numInstructions-->0 && methodExecutor!=null && getThreadState()==XThreadState.RUNNING){
 				XInstruction instruction = methodExecutor.getNextInstruction();
 				while(instruction==null){
 					XMethodExecutor oldMethodExecutor = methodExecutor.getParent();
