@@ -21,7 +21,9 @@ import xscript.runtime.nativeclass.XLangArrayFloat;
 import xscript.runtime.nativeclass.XLangArrayInt;
 import xscript.runtime.nativeclass.XLangArrayLong;
 import xscript.runtime.nativeclass.XLangArrayShort;
+import xscript.runtime.nativeclass.XLangInt;
 import xscript.runtime.nativeclass.XLangObject;
+import xscript.runtime.nativeclass.XLangString;
 import xscript.runtime.nativeclass.XLangVM;
 import xscript.runtime.object.XObject;
 import xscript.runtime.threads.XMethodExecutor;
@@ -44,7 +46,9 @@ public class XNativeProvider {
 		XLangArrayInt.registerNatives(this);
 		XLangArrayLong.registerNatives(this);
 		XLangArrayShort.registerNatives(this);
+		XLangInt.registerNatives(this);
 		XLangObject.registerNatives(this);
+		XLangString.registerNatives(this);
 		XLangVM.registerNatives(this);
 	}
 
@@ -61,7 +65,7 @@ public class XNativeProvider {
 		Object[] oParam = new Object[params.length-i];
 		XGenericClass[] genericClasses = method.getParams(_this==null?null:_this.getXClass(), new XGenericMethodProviderImp(method, generics));
 		if(oParam.length!=genericClasses.length)
-			throw new XRuntimeException("An native call error happened");
+			throw new XRuntimeException("An native call error happened %s", method.getName());
 		for(int j=0; j<oParam.length; j++){
 			long value = params[j+i];
 			XGenericClass genericClass = genericClasses[j];

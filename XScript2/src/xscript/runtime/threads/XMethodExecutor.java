@@ -47,6 +47,8 @@ public class XMethodExecutor implements XGenericMethodProvider {
 		this.classes = classes;
 		if(XModifier.isNative(method.getModifier()))
 			throw new XRuntimeException("Can't run native method %s", method);
+		if(XModifier.isAbstract(method.getModifier()))
+			throw new XRuntimeException("Can't run abstract method %s", method);
 		this.generics = generics;
 		if(generics==null){
 			if(method.getGenericParams()!=0)

@@ -2,10 +2,15 @@ package xscript.lang;
 
 public final class Class{
 
+	private final String name;
+
 	private Class(){
+		name = null;
 	}
 
-	public native String getName();
+	public String getName(){
+		return name;
+	}
 
 	public native bool desiredAssertionStatus();
 

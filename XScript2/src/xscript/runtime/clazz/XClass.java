@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 
 import xscript.runtime.XAnnotation;
 import xscript.runtime.XChecks;
@@ -154,6 +155,8 @@ public class XClass extends XPackage{
 	}
 	
 	public boolean canCastTo(XClass xClass){
+		if(getState()!=STATE_RUNNABLE)
+			return canCastTo2(this, xClass);
 		return xClass.getClassTable(this)!=null;
 	}
 	
@@ -371,11 +374,11 @@ public class XClass extends XPackage{
 		for(XClassPtr cp:superClasses){
 			XMethod[] vmethods = cp.getXClass(virtualMachine).virtualMethods;
 			for(XMethod vmethod:vmethods){
-				methods.add(vmethod);
+				addMethod(methods, vmethod, classes);
 			}
 		}
 		for(XMethod m:this.methods){
-			methods.add(m);
+			addMethod(methods, m, classes);
 		}
 		virtualMethods = methods.toArray(new XMethod[methods.size()]);
 		int fieldStartID = 0;
@@ -384,10 +387,75 @@ public class XClass extends XPackage{
 		}
 	}
 	
+	private static void addMethod(List<XMethod> methods, XMethod method, List<XGenericClass> generics){
+		ListIterator<XMethod> i = methods.listIterator();
+		while(i.hasNext()){
+			int res = isMethodCompatible(method, i.next(), generics);
+			if(res==1){
+				i.set(method);
+				return;
+			}else if(res==2){
+				return;
+			}
+		}
+		methods.add(method);
+	}
+	
+	private static int isMethodCompatible(XMethod m1, XMethod m2, List<XGenericClass> generics){
+		if(m1==m2)
+			return 2;
+		if(!m1.getRealName().equals(m2.getRealName()))
+			return 0;
+		if(m1.getParamCount()!=m2.getParamCount())
+			return 0;
+		int ret = 1;
+		if(!m1.getDeclaringClass().canCastTo(m2.getDeclaringClass())){
+			XMethod tmp = m1;
+			m1 = m2;
+			m2 = tmp;
+			ret = 2;
+		}
+		XGenericClass g1 = gcf(m1.getDeclaringClass(), generics);
+		XGenericClass g2 = gcf(m2.getDeclaringClass(), generics);
+		if(!m2.getReturnType(g2, null).canCastTo(m1.getReturnType(g1, null)))
+			return 0;
+		XClassPtr[] p1 = m1.getParams();
+		XClassPtr[] p2 = m2.getParams();
+		XVirtualMachine vm = m1.getDeclaringClass().getVirtualMachine();
+		for(int i=0; i<p1.length; i++){
+			if(!p2[i].getXClass(vm, g2, null).canCastTo(p1[i].getXClass(vm, g1, null)))
+				return 0;
+		}
+		return ret;
+	}
+	
+	private static XGenericClass gcf(XClass c, List<XGenericClass> generics){
+		for(XGenericClass generic:generics){
+			if(generic.getXClass()==c)
+				return generic;
+		}
+		return null;
+	}
+	
+	private static boolean canCastTo2(XClass from, XClass to){
+		if(from==to)
+			return true;
+		for(XClassPtr classes : from.getSuperClasses()){
+			if(canCastTo2(classes.getXClassNonNull(from.virtualMachine), to)){
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	private int makeClassTable(XClass c, int fieldStartID, XGenericClass gc){
-		int[] methodIDs = new int[methods.length];
-		for(int i=0; i<methodIDs.length; i++){
-			methodIDs[i] = findIDFor(methods[i], gc, c);
+		if(isObjectClass() && !c.isObjectClass())
+			return fieldStartID;
+		int[] methodIDs = new int[methodCount];
+		for(int i=0; i<methods.length; i++){
+			if(!XModifier.isStatic(methods[i].getModifier())){
+				methodIDs[methods[i].getIndex()] = findIDFor(methods[i], gc, c);
+			}
 		}
 		XClassTable ct = new XClassTable(c, fieldStartID, methodIDs, null);
 		if(c.classIndex>=classTable.length){
@@ -646,8 +714,12 @@ public class XClass extends XPackage{
 
 	public long getClassObject() {
 		if(classObject==0){
-			XGenericClass gc = new XGenericClass(virtualMachine.getClassProvider().getXClass("xscript.lang.Class"));
+			XClass c = virtualMachine.getClassProvider().getXClass("xscript.lang.Class");
+			XGenericClass gc = new XGenericClass(c);
 			classObject = virtualMachine.getObjectProvider().createObject(gc);
+			long name = virtualMachine.getObjectProvider().createString(getName());
+			XField nameF = c.getField("name");
+			nameF.finalSet(virtualMachine.getObjectProvider().getObject(classObject), name);
 		}
 		return classObject;
 	}

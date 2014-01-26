@@ -13,19 +13,11 @@ public final class String{
 	}
 
 	public String operator+(Object otherObj){
-		String other = toString(otherObj);
-		String out = new String(value.length+other.value.length);
-		int l1 = value.length;
-		for(int i=0; i<l1; i++){
-			out.value[i] = value[i];
-		}
-		int l2 = other.value.length;
-		for(int i=0; i<l2; i++){
-			out.value[l1+i] = other.value[i];
-		}
-		return out;
+		return add(this, toString(otherObj));
 	}
 
+	private native static String add(String s1, String s2);
+	
 	@Override
 	public String toString(){
 		return this;

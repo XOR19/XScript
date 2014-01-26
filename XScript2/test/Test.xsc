@@ -3,9 +3,8 @@ package test;
 public class Test{
 	
 	public static void test(){
-		Bool b = false;
-		String s = b.toString();
-		VM.println(s);
+		Object b = true;
+		VM.println("out:"+b);
 	}
 	
 }

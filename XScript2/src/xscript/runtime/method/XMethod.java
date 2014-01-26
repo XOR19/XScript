@@ -518,5 +518,9 @@ public class XMethod extends XPackage {
 			c.load(inputStream);
 		}
 	}
+
+	public int getIndex() {
+		return index;
+	}
 	
 }

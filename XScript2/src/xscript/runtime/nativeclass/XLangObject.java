@@ -21,8 +21,7 @@ public class XLangObject {
 		public Object invoke(XVirtualMachine virtualMachine, XThread thread,
 				XMethodExecutor methodExecutor, XGenericClass[] generics,
 				XObject _this, Object[] params) {
-			// TODO
-			return null;
+			return virtualMachine.getObjectProvider().getObject(_this.getXClass().getXClass().getClassObject());
 		}
 		
 	}
