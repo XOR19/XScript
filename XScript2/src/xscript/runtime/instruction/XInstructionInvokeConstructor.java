@@ -62,7 +62,6 @@ public class XInstructionInvokeConstructor extends XInstruction {
 	
 	@Override
 	public void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
-		resolve(vm, methodExecutor);
 		XGenericClass[] solvedGenerics = new XGenericClass[generics.length];
 		for(int i=0; i<solvedGenerics.length; i++){
 			solvedGenerics[i] = generics[i].getXClass(vm, methodExecutor.getDeclaringClass(), methodExecutor);
@@ -102,7 +101,8 @@ public class XInstructionInvokeConstructor extends XInstruction {
 		return method;
 	}
 	
-	private void resolve(XVirtualMachine vm, XMethodExecutor methodExecutor){
+	@Override
+	public void resolve(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
 		if(method==null){
 			XClass xClass = vm.getClassProvider().getXClass(className);
 			method = xClass.getMethod("<init>"+makeDesk());

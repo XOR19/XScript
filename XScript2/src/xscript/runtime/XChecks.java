@@ -55,17 +55,17 @@ public final class XChecks {
 		while(checkClass2.getOuterClassOrMethodDeclClass()!=null){
 			checkClass2 = checkClass2.getOuterClassOrMethodDeclClass();
 		}
-		boolean sameOuterClass = checkClass1==checkClass2;
+		if(checkClass1==checkClass2){
+			return;
+		}
 		if(XModifier.isPrivate(modifier)){
-			if(!sameOuterClass){
-				throw new XRuntimeException("%s can't access %s", xClass, xClass2);
-			}
+			throw new XRuntimeException("%s can't access %s", xClass, xClass2);
 		}else if(XModifier.isProtected(modifier)){
-			if(!sameOuterClass && xClass.canCastTo(xClass2) && xClass.getPackage()!=xClass2.getPackage()){
+			if(!xClass.canCastTo(xClass2) && xClass.getPackage()!=xClass2.getPackage()){
 				throw new XRuntimeException("%s can't access %s", xClass, xClass2);
 			}
 		}else if(!XModifier.isPublic(modifier)){
-			if(!sameOuterClass && xClass.getPackage()!=xClass2.getPackage()){
+			if(xClass.getPackage()!=xClass2.getPackage()){
 				throw new XRuntimeException("%s can't access %s", xClass, xClass2);
 			}
 		}
@@ -117,17 +117,17 @@ public final class XChecks {
 		while(checkClass2.getOuterClassOrMethodDeclClass()!=null){
 			checkClass2 = checkClass2.getOuterClassOrMethodDeclClass();
 		}
-		boolean sameOuterClass = checkClass1==checkClass2;
+		if(checkClass1==checkClass2){
+			return;
+		}
 		if(XModifier.isPrivate(modifier) || XModifier.isPrivate(fModifier)){
-			if(!sameOuterClass){
-				throw new XRuntimeException("%s can't access %s", xClass, field);
-			}
+			throw new XRuntimeException("%s can't access %s", xClass, field);
 		}else if(XModifier.isProtected(modifier) || XModifier.isProtected(fModifier)){
-			if(!sameOuterClass && xClass.canCastTo(xClass2) && xClass.getPackage()!=xClass2.getPackage()){
+			if(!xClass.canCastTo(xClass2) && xClass.getPackage()!=xClass2.getPackage()){
 				throw new XRuntimeException("%s can't access %s", xClass, field);
 			}
 		}else if(!XModifier.isPublic(modifier) || !XModifier.isPublic(fModifier)){
-			if(!sameOuterClass && xClass.getPackage()!=xClass2.getPackage()){
+			if(xClass.getPackage()!=xClass2.getPackage()){
 				throw new XRuntimeException("%s can't access %s", xClass, field);
 			}
 		}
@@ -148,18 +148,17 @@ public final class XChecks {
 		while(checkClass2.getOuterClassOrMethodDeclClass()!=null){
 			checkClass2 = checkClass2.getOuterClassOrMethodDeclClass();
 		}
-		boolean sameOuterClass = checkClass1==checkClass2;
+		if(checkClass1==checkClass2){
+			return;
+		}
 		if(XModifier.isPrivate(modifier) || XModifier.isPrivate(fModifier)){
-			if(!sameOuterClass){
-				throw new XRuntimeException("%s can't access %s", xClass, method);
-			}
+			throw new XRuntimeException("%s can't access %s", xClass, method);
 		}else if(XModifier.isProtected(modifier) || XModifier.isProtected(fModifier)){
-			if(!sameOuterClass && xClass.canCastTo(xClass2) && xClass.getPackage()!=xClass2.getPackage()){
+			if(!xClass.canCastTo(xClass2) && xClass.getPackage()!=xClass2.getPackage()){
 				throw new XRuntimeException("%s can't access %s", xClass, method);
 			}
 		}else if(!XModifier.isPublic(modifier) || !XModifier.isPublic(fModifier)){
-			if(!sameOuterClass && xClass.getPackage()!=xClass2.getPackage()){
-				System.out.println("cm:"+XModifier.getSource(modifier)+", mm:"+XModifier.getSource(fModifier));
+			if(xClass.getPackage()!=xClass2.getPackage()){
 				throw new XRuntimeException("%s can't access %s", xClass, method);
 			}
 		}

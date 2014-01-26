@@ -61,7 +61,6 @@ public class XInstructionInvokeStatic extends XInstruction {
 	
 	@Override
 	public void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
-		resolve(vm, methodExecutor);
 		final XGenericClass[] solvedGenerics = new XGenericClass[generics.length];
 		for(int i=0; i<solvedGenerics.length; i++){
 			solvedGenerics[i] = generics[i].getXClass(vm, methodExecutor.getDeclaringClass(), methodExecutor);
@@ -80,7 +79,8 @@ public class XInstructionInvokeStatic extends XInstruction {
 		thread.call(method, solvedGenerics, params);
 	}
 
-	private void resolve(XVirtualMachine vm, XMethodExecutor methodExecutor){
+	@Override
+	public void resolve(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
 		if(method==null){
 			XClass xClass = vm.getClassProvider().getXClass(className);
 			method = xClass.getMethod(methodName+makeDesk());

@@ -5,7 +5,6 @@ import java.io.IOException;
 import xscript.runtime.clazz.XInputStream;
 import xscript.runtime.clazz.XOutputStream;
 
-
 public class XAnnotation {
 
 	private String name;

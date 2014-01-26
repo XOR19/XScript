@@ -77,7 +77,7 @@ public class XImportHelper {
 
 	private boolean endsWith(String s, String with){
 		if(s.endsWith(with)){
-			return s.lastIndexOf('.') == s.length()-with.length();
+			return s.lastIndexOf('.') == s.length()-with.length()-1;
 		}
 		return false;
 	}

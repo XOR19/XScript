@@ -1720,7 +1720,9 @@ public class XParser {
 		XLineDesk line = new XLineDesk(token.lineDesk);
 		String name = ident();
 		if(token.kind==XTokenKind.LGROUP){
-			return makeAnnotationElementDecl(line, modifier, typeParam, type, name);
+			XTree tree = makeAnnotationElementDecl(line, modifier, typeParam, type, name);
+			expected(XTokenKind.SEMICOLON);
+			return tree;
 		}else{
 			XTree tree = makeVarDecls(line, modifier, type, name);
 			expected(XTokenKind.SEMICOLON);
@@ -1770,7 +1772,7 @@ public class XParser {
 		String name = ident();
 		XLineDesk line = endLineBlock();
 		List<XTreeType> superClasses = new ArrayList<XTree.XTreeType>();
-		superClasses.add(new XTreeType(line, new XTreeIdent(line, "xscript.lang.Annotation"), null, 0));
+		superClasses.add(new XTreeType(line, new XTreeIdent(line, "xscript.lang.annotation.Annotation"), null, 0));
 		List<XTree> body = annotationBody(name);
 		return new XTreeClassDecl(line, modifier, name, null, superClasses, body);
 	}

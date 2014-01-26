@@ -38,7 +38,6 @@ public class XInstructionGetField extends XInstruction {
 	
 	@Override
 	public void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
-		resolve(vm, methodExecutor);
 		long pointer = methodExecutor.oPop();
 		XObject object = vm.getObjectProvider().getObject(pointer);
 		long value = field.get(object);
@@ -52,7 +51,8 @@ public class XInstructionGetField extends XInstruction {
 		return XPrimitive.getPrimitiveID(xClass);
 	}
 	
-	private void resolve(XVirtualMachine vm, XMethodExecutor methodExecutor){
+	@Override
+	public void resolve(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
 		if(field==null){
 			XClass xClass = vm.getClassProvider().getXClass(className);
 			field = xClass.getField(fieldName);

@@ -34,6 +34,11 @@ public class XInstructionInstanceof extends XInstruction {
 			methodExecutor.zPush(false);
 		}
 	}
+	
+	@Override
+	public void resolve(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
+		xClass.getXClass(vm);
+	}
 
 	@Override
 	protected void save(XOutputStream outputStream) throws IOException {

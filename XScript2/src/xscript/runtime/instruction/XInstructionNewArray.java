@@ -38,6 +38,11 @@ public class XInstructionNewArray extends XInstruction {
 		methodExecutor.oPush(pointer);
 	}
 
+	@Override
+	public void resolve(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
+		xClass.getXClass(vm);
+	}
+	
 	private long createArray(XGenericClass c, int pos, int[] size, XVirtualMachine vm, XMethodExecutor methodExecutor){
 		XChecks.checkAccess(methodExecutor.getMethod().getDeclaringClass(), c.getXClass());
 		int s = size[pos];

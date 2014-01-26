@@ -27,8 +27,7 @@ public class Test {
 		XClass c = vm.getClassProvider().getXClass("test.Test");
 		System.out.println(c.dump());
 		
-		XClass c2 = vm.getClassProvider().getXClass("xscript.lang.String");
-		System.out.println(c2.dump());
+		//vm.getClassProvider().getXClass("xscript.lang.annotation.RetentionPolicy");
 		
 		vm.getThreadProvider().start("main", c.getMethod("test()void"), new XGenericClass[0], new long[0]);
 		

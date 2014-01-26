@@ -15,7 +15,7 @@ public class XThreadProvider {
 	private List<XInterruptTerminatedListener> interruptTerminatedListeners = new ArrayList<XInterruptTerminatedListener>();
 	private int nextThreadID=1;
 	private int activeThreadID;
-	private XThread current;
+	private boolean newImportantInterrupt;
 	
 	public XThreadProvider(XVirtualMachine virtualMachine){
 		this.virtualMachine = virtualMachine;
@@ -92,7 +92,8 @@ public class XThreadProvider {
 	
 	public int run(int numInstructions, int numBlocks){
 		while(numBlocks>0){
-			current = getNextInterrupt();
+			newImportantInterrupt = false;
+			XThread current = getNextInterrupt();
 			if(current==null){
 				current = getNextThread();
 			}
@@ -102,7 +103,6 @@ public class XThreadProvider {
 			current.run(numInstructions);
 			numBlocks--;
 		}
-		current = null;
 		return 0;
 	}
 	
@@ -120,13 +120,15 @@ public class XThreadProvider {
 	public void importantInterrupt(String name, XMethod method, XGenericClass[] generics, long[] params){
 		XThread interrupt = new XThread(virtualMachine, name, method, generics, params);
 		interrupts.add(0, interrupt);
-		if(current!=null){
-			current.sleep(1);
-		}
+		newImportantInterrupt = true;
 	}
 	
 	public String getNextDefaultThreadName() {
 		return "Thread-"+nextThreadID++;
+	}
+	
+	public boolean isNewImportantInterrupt(){
+		return newImportantInterrupt;
 	}
 	
 }

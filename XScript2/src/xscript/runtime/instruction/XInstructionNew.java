@@ -32,6 +32,11 @@ public class XInstructionNew extends XInstruction {
 	}
 
 	@Override
+	public void resolve(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
+		xClass.getXClass(vm);
+	}
+	
+	@Override
 	protected void save(XOutputStream outputStream) throws IOException {
 		xClass.save(outputStream);
 	}

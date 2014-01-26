@@ -1,0 +1,10 @@
+package xscript.lang.annotation;
+
+public enum RetentionPolicy{
+	
+	SOURCE,
+	CLASS,
+	RUNTIME
+	
+	
+}

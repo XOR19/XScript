@@ -1,10 +1,11 @@
 package test;
 
+import xscript.lang.annotation.RetentionPolicy;
+
 public class Test{
 	
 	public static void test(){
-		Object b = true;
-		VM.println("out:"+b);
+		VM.println(RetentionPolicy.SOURCE.toString());
 	}
 	
 }

@@ -1,0 +1,14 @@
+package xscript.lang.annotation;
+
+public enum ElementType{
+	
+	TYPE,
+	FIELD,
+	METHOD,
+	PARAMETER,
+	CONSTRUCTOR,
+	ANNOTATION_TYPE,
+	LOCAL_VARIABLE
+	
+	
+}

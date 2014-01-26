@@ -12,7 +12,8 @@ import xscript.runtime.threads.XThread;
 
 public class XInstructionLoadConstClass extends XInstruction {
 
-	private XClassPtr xClass;
+	private final XClassPtr xClass;
+	private XClass c;
 	
 	public XInstructionLoadConstClass(XClassPtr xClass){
 		this.xClass = xClass;
@@ -24,10 +25,14 @@ public class XInstructionLoadConstClass extends XInstruction {
 	
 	@Override
 	public void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
-		XClass c = xClass.getXClass(vm, methodExecutor.getDeclaringClass(), methodExecutor).getXClass();
 		methodExecutor.oPush(c.getClassObject());
 	}
 
+	@Override
+	public void resolve(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
+		c = xClass.getXClass(vm, methodExecutor.getDeclaringClass(), methodExecutor).getXClass();
+	}
+	
 	@Override
 	protected void save(XOutputStream outputStream) throws IOException {
 		xClass.save(outputStream);

@@ -246,6 +246,10 @@ public class XMethodExecutor implements XGenericMethodProvider {
 		this.programPointer = programPointer;
 	}
 	
+	public void setProgramPointerBack(){
+		programPointer--;
+	}
+	
 	public XInstruction getNextInstruction(){
 		return method.getInstruction(programPointer++);
 	}

@@ -61,29 +61,32 @@ public class XInstructionInvokeDynamic extends XInstruction {
 	
 	@Override
 	public void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
-		resolve(vm, methodExecutor);
 		final XGenericClass[] solvedGenerics = new XGenericClass[generics.length];
 		for(int i=0; i<solvedGenerics.length; i++){
 			solvedGenerics[i] = generics[i].getXClass(vm, methodExecutor.getDeclaringClass(), methodExecutor);
 		}
-		XGenericClass[] paramTypes = method.getParams(null, new XGenericMethodProviderImp(method, solvedGenerics));
-		long[] params = new long[paramTypes.length+1];
+		long[] params = new long[method.getParamCount()+1];
+		for(int i=params.length-2; i>=0; i--){
+			int pID = XPrimitive.getPrimitiveID(method.getParams()[i].getXClass(vm));
+			params[i+1] = methodExecutor.pop(pID);
+		}
+		params[0] = methodExecutor.oPop();
+		XObject _this = vm.getObjectProvider().getObject(params[0]);
+		XGenericClass[] paramTypes = method.getParams(_this.getXClass(), new XGenericMethodProviderImp(method, solvedGenerics));
 		for(int i=paramTypes.length-1; i>=0; i--){
 			int pID = XPrimitive.getPrimitiveID(paramTypes[i].getXClass());
-			params[i+1] = methodExecutor.pop(pID);
 			if(pID==XPrimitive.OBJECT){
 				XObject obj = vm.getObjectProvider().getObject(params[i+1]);
 				if(obj!=null)
 					XChecks.checkCast(obj.getXClass(), paramTypes[i]);
 			}
 		}
-		params[0] = methodExecutor.oPop();
-		XObject _this = vm.getObjectProvider().getObject(params[0]);
 		XMethod xMethod = method.getMethod(_this);
 		thread.call(xMethod, solvedGenerics, params);
 	}
 
-	private void resolve(XVirtualMachine vm, XMethodExecutor methodExecutor){
+	@Override
+	public void resolve(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
 		if(method==null){
 			XClass xClass = vm.getClassProvider().getXClass(className);
 			method = xClass.getMethod(methodName+makeDesk());

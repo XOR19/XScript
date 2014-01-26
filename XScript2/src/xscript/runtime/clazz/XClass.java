@@ -51,6 +51,8 @@ public class XClass extends XPackage{
 	protected int methodCount;
 	protected int enumCount;
 	
+	private int objectSize;
+	
 	private byte[] staticData;
 	
 	protected int state;
@@ -171,7 +173,7 @@ public class XClass extends XPackage{
 	}
 
 	public int getObjectSize() {
-		return fieldCount;
+		return objectSize;
 	}
 
 	public int getGenericID(String genericName) {
@@ -381,9 +383,9 @@ public class XClass extends XPackage{
 			addMethod(methods, m, classes);
 		}
 		virtualMethods = methods.toArray(new XMethod[methods.size()]);
-		int fieldStartID = 0;
+		objectSize = 0;
 		for(XGenericClass gc : classes){
-			fieldStartID = gc.getXClass().makeClassTable(this, fieldStartID, gc);
+			objectSize = gc.getXClass().makeClassTable(this, objectSize, gc);
 		}
 	}
 	

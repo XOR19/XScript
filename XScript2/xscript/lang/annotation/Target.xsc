@@ -1,0 +1,7 @@
+package xscript.lang.annotation;
+
+public @interface Target{
+	
+	public ElementType[] value();
+	
+}

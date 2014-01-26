@@ -527,6 +527,7 @@ public class XStatementCompiler implements XVisitor {
 						varAccess.declaringClass = getVarTypeForFieldType(rv.field, varAccess.declaringClass);
 					}
 					varAccess.name = spName[i];
+					varAccess.isStatic = false;
 				}
 				setReturn(XAnyType.type, xType);
 			}
@@ -863,6 +864,10 @@ public class XStatementCompiler implements XVisitor {
 				}
 			}else{
 				addInstructions(visitTree(xMethodDecl.paramTypes));
+			}
+			if(methodCompiler.isConstructor() && !XModifier.isStatic(methodCompiler.getModifier())){
+				XTreeBlock block = new XTreeBlock(XLineDesk.NULL, decl.getInitStatements());
+				addInstructions(visitTree(block, null));
 			}
 			if(xMethodDecl.block!=null){
 				addInstructions(visitTree(xMethodDecl.block, null));
@@ -1411,14 +1416,18 @@ public class XStatementCompiler implements XVisitor {
 		XClass c = newType.getXClass();
 		if(c.isArray()){
 			compilerError(XMessageLevel.ERROR, "cant.instanciate.array", xNew.line, c);
-		}else if(c.isEnum()){
+		}else if(c.isEnum() && xNew.line!=XLineDesk.NULL){
 			compilerError(XMessageLevel.ERROR, "cant.instanciate.enum", xNew.line, c);
 		}else if(c.getOuterMethod()!=null && c.getOuterMethod()!=methodCompiler){
 			compilerError(XMessageLevel.ERROR, "cant.instanciate.class", xNew.line, c);
 		}else{
+			if(c.isEnum())
+				xNew.line  = xNew.type.line;
 			if(c.getOuterClass()!=null && !XModifier.isStatic(c.getOuterClass().getModifier())){
 				if(c.getOuterClass()!=methodCompiler.getDeclaringClass()){
 					compilerError(XMessageLevel.ERROR, "cant.instanciate.class", xNew.line, c);
+					if(c.isEnum())
+						xNew.line = XLineDesk.NULL;
 					return;
 				}
 			}else if(elem!=null){
@@ -1491,6 +1500,8 @@ public class XStatementCompiler implements XVisitor {
 			search.applyReturn(getPrimitiveType(XPrimitive.VOID));
 			makeCall(search, xNew, codeGens);
 			setReturn(newType, xNew);
+			if(c.isEnum())
+				xNew.line = XLineDesk.NULL;
 		}
 	}
 	

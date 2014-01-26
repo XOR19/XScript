@@ -34,6 +34,11 @@ public class XInstructionCheckCast extends XInstruction {
 			XChecks.checkCast(genericClass, xClass.getXClass(vm, methodExecutor.getDeclaringClass(), methodExecutor));
 		}
 	}
+	
+	@Override
+	public void resolve(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
+		xClass.getXClass(vm);
+	}
 
 	@Override
 	protected void save(XOutputStream outputStream) throws IOException {

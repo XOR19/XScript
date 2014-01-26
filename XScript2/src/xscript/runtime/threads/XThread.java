@@ -58,6 +58,11 @@ public class XThread {
 				}
 				if(instruction!=null){
 					try{
+						instruction.resolve(virtualMachine, this, methodExecutor);
+						if(virtualMachine.getThreadProvider().isNewImportantInterrupt()){
+							methodExecutor.setProgramPointerBack();
+							return;
+						}
 						instruction.run(virtualMachine, this, methodExecutor);
 					}catch(XRuntimeException e){
 						e.printStackTrace();

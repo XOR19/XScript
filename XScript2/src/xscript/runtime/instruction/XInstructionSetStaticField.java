@@ -37,7 +37,6 @@ public class XInstructionSetStaticField extends XInstruction {
 	
 	@Override
 	public void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
-		resolve(vm, methodExecutor);
 		long value = methodExecutor.pop(getPrimitiveID(vm));
 		if(XModifier.isFinal(field.getModifier())){
 			if(methodExecutor.getMethod().isConstructor() && XModifier.isStatic(methodExecutor.getMethod().getModifier()) && methodExecutor.getMethod().getDeclaringClass()==field.getDeclaringClass()){
@@ -58,7 +57,8 @@ public class XInstructionSetStaticField extends XInstruction {
 		return XPrimitive.getPrimitiveID(xClass);
 	}
 	
-	private void resolve(XVirtualMachine vm, XMethodExecutor methodExecutor){
+	@Override
+	public void resolve(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
 		if(field==null){
 			XClass xClass = vm.getClassProvider().getXClass(className);
 			field = xClass.getField(fieldName);

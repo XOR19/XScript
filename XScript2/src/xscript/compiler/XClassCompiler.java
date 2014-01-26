@@ -376,8 +376,9 @@ public class XClassCompiler extends XClass implements XVisitor {
 			}
 			modifier = xClassDef.modifier==null?0:xClassDef.modifier.modifier;
 			if(isEnum()){
-				modifier |= XModifier.STATIC;
+				modifier |= XModifier.FINAL;
 			}
+			annotations = makeAnnotations(xClassDef.modifier);
 			methodList = new ArrayList<XMethod>();
 			fieldList = new ArrayList<XField>();
 			syntheticFields = new HashMap<String, XSyntheticField>();
@@ -408,7 +409,8 @@ public class XClassCompiler extends XClass implements XVisitor {
 						"values", array);
 				if(staticInit != null){
 					XCodeGen codeGen = new XCodeGen();
-					codeGen.addInstruction(new XInstructionNewArray(array, enumNames.size()), 0);
+					codeGen.addInstruction(new XInstructionLoadConstInt(enumNames.size()), 0);
+					codeGen.addInstruction(new XInstructionNewArray(array, 1), 0);
 					XMethod method = getVirtualMachine().getClassProvider().getXClass("xscript.lang.Array").getMethod("operator[](int, T)T");
 					for(int i=0; i<enumNames.size(); i++){
 						codeGen.addInstruction(new XInstructionODup(), 0);
@@ -485,6 +487,12 @@ public class XClassCompiler extends XClass implements XVisitor {
 		XError.shouldNeverCalled();
 	}
 	
+	private XAnnotation[] makeAnnotations(XTreeModifier modifier){
+		if(modifier==null)
+			return new XAnnotation[0];
+		return makeAnnotations(modifier.annotations);
+	}
+	
 	private XAnnotation[] makeAnnotations(List<XTreeAnnotation> annotations){
 		if(annotations==null)
 			return new XAnnotation[0];
@@ -496,7 +504,6 @@ public class XClassCompiler extends XClass implements XVisitor {
 	}
 	
 	private XAnnotation makeAnnotation(XTreeAnnotation annotation){
-		String name = annotation.annotation.name;
 		XClassPtr cp = getGenericClass(new XTreeType(annotation.annotation.line, annotation.annotation, null, 0), null);
 		XClass c = cp.getXClassNonNull(virtualMachine);
 		XAnnotationEntry[] entries;
@@ -508,7 +515,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 				entries[i] = makeAnnotationEntry(annotation.entries.get(i));
 			}
 		}
-		return new XAnnotation(name, entries);
+		return new XAnnotation(c.getName(), entries);
 	}
 	
 	private XAnnotationEntry makeAnnotationEntry(XTreeAnnotationEntry annotationEntry){
@@ -606,7 +613,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 			modifier = xVarDecl.modifier.modifier;
 		}
 		XClassPtr type = getGenericClass(xVarDecl.type, null);
-		xscript.runtime.XAnnotation[] annotations = new xscript.runtime.XAnnotation[0];
+		xscript.runtime.XAnnotation[] annotations = makeAnnotations(xVarDecl.modifier);
 		try{
 			XField field = new XFieldCompiler(this, modifier, xVarDecl.name, type, annotations, xVarDecl.line);
 			XPackage c = getChild(field.getSimpleName());
@@ -676,6 +683,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 		if(xMethodDecl.varargs){
 			modifier |= XModifier.VARARGS;
 		}
+		xscript.runtime.XAnnotation[] annotations = makeAnnotations(xMethodDecl.modifier);
 		List<XClassPtr> classes = new ArrayList<XClassPtr>();
 		XGenericInfo[] genericInfos;
 		if(xMethodDecl.typeParam==null){
@@ -695,7 +703,6 @@ public class XClassCompiler extends XClass implements XVisitor {
 		}
 		XClassPtr returnType = getGenericClass(xMethodDecl.returnType, genericInfos);
 		classes.add(returnType);
-		xscript.runtime.XAnnotation[] annotations = new xscript.runtime.XAnnotation[0];
 		XClassPtr[] paramTypes;
 		int size = xMethodDecl.paramTypes==null?0:xMethodDecl.paramTypes.size();
 		int ss = 0;
@@ -748,7 +755,13 @@ public class XClassCompiler extends XClass implements XVisitor {
 		if(xMethodDecl.name.equals(XMethod.INIT)){
 			visitConstructor = true;
 		}
-		xscript.runtime.XAnnotation[][] paramAnnotations = new xscript.runtime.XAnnotation[paramTypes.length][0];
+		XAnnotation[][] paramAnnotations = new XAnnotation[paramTypes.length][];
+		for(int i=0; i<ss; i++){
+			paramAnnotations[i] = new XAnnotation[0];
+		}
+		for(int i=0; i<size; i++){
+			paramAnnotations[i+ss] = makeAnnotations(xMethodDecl.paramTypes.get(i).modifier);
+		}
 		XClassPtr[] throwTypes = getGenericClasses(xMethodDecl.throwList, genericInfos);
 		classes.addAll(Arrays.asList(throwTypes));
 		try{
@@ -882,7 +895,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 			XTreeIdent left = new XTreeIdent(xNew.line, xNew.type.name.name);
 			xNew.params.add(0, new XTreeConstant(xNew.line, new XConstantValue(enumNames.size())));
 			xNew.params.add(0, new XTreeConstant(xNew.line, new XConstantValue(xNew.type.name.name)));
-			XTreeNew right = new XTreeNew(xNew.line, new XTreeType(xNew.line, new XTreeIdent(xNew.line, getName()), null, 0), xNew.params, xNew.classDecl);
+			XTreeNew right = new XTreeNew(XLineDesk.NULL, new XTreeType(xNew.line, new XTreeIdent(xNew.line, getName()), null, 0), xNew.params, xNew.classDecl);
 			staticInit.add(new XTreeOperatorStatement(xNew.line, left, XOperator.LET, right));
 			enumNames.add(xNew.type.name.name);
 		}else{
@@ -1065,6 +1078,10 @@ public class XClassCompiler extends XClass implements XVisitor {
 				compilerError(XMessageLevel.ERROR, "unable.to.access", line, this, c);
 			}
 		}
+	}
+
+	public List<XTreeStatement> getInitStatements() {
+		return init;
 	}
 	
 }

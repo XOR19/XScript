@@ -157,6 +157,10 @@ public abstract class XInstruction {
 	
 	public abstract void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor);
 
+	public void resolve(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor){
+		
+	}
+	
 	protected abstract void save(XOutputStream outputStream) throws IOException;
 
 	public abstract String getSource();
