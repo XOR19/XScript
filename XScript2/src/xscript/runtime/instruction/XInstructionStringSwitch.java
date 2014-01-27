@@ -13,8 +13,8 @@ import xscript.runtime.threads.XThread;
 
 public class XInstructionStringSwitch extends XInstruction {
 
-	private final int def;
-	private final int[] locArray;
+	public final int def;
+	public final int[] locArray;
 	private final String[] strSwitch;
 	
 	public XInstructionStringSwitch(int def, int[] locArray, String[] strSwitch) {

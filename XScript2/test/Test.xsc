@@ -6,6 +6,23 @@ public class Test{
 	
 	public static void test(){
 		VM.println(RetentionPolicy.SOURCE);
+		Object o = null;
+		int i=1;
+		if(o!=null){
+			i=0;
+		}
+		switch(i){
+		case 0:
+			VM.println("Toll");
+		case 1:
+			VM.println("Toll2");
+			break;
+		case 2:
+			VM.println("TollNever");
+		default:
+			VM.println("Oh");
+			break;
+		}
 	}
 	
 }

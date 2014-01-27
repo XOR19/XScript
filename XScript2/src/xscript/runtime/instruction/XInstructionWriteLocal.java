@@ -8,6 +8,7 @@ import xscript.runtime.clazz.XInputStream;
 import xscript.runtime.clazz.XOutputStream;
 import xscript.runtime.clazz.XPrimitive;
 import xscript.runtime.genericclass.XClassPtr;
+import xscript.runtime.object.XObject;
 import xscript.runtime.threads.XMethodExecutor;
 import xscript.runtime.threads.XThread;
 
@@ -33,7 +34,9 @@ public class XInstructionWriteLocal extends XInstruction {
 		}
 		long value = methodExecutor.pop(prim);
 		if(prim==XPrimitive.OBJECT){
-			XChecks.checkCast(vm.getObjectProvider().getObject(value).getXClass(), localType.getXClass(vm, methodExecutor.getDeclaringClass(), methodExecutor));
+			XObject obj = vm.getObjectProvider().getObject(value);
+			if(obj!=null)
+				XChecks.checkCast(obj.getXClass(), localType.getXClass(vm, methodExecutor.getDeclaringClass(), methodExecutor));
 		}
 		methodExecutor.setLocal(local, value);
 		methodExecutor.push(value, prim);

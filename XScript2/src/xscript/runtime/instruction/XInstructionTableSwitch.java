@@ -13,8 +13,8 @@ import xscript.runtime.threads.XThread;
 public class XInstructionTableSwitch extends XInstruction {
 
 	private final int min;
-	private final int def;
-	private final int[] locArray;
+	public final int def;
+	public final int[] locArray;
 	
 	public XInstructionTableSwitch(int min, int def, int[] locArray) {
 		this.min = min;

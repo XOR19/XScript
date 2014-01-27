@@ -7,11 +7,16 @@ import java.util.ListIterator;
 import xscript.compiler.dumyinstruction.XInstructionDumy;
 import xscript.compiler.dumyinstruction.XInstructionDumyDelete;
 import xscript.compiler.dumyinstruction.XInstructionDumyJump;
+import xscript.compiler.dumyinstruction.XInstructionDumyStringSwitch;
+import xscript.compiler.dumyinstruction.XInstructionDumySwitch;
 import xscript.runtime.XVirtualMachine;
 import xscript.runtime.instruction.XInstruction;
+import xscript.runtime.instruction.XInstructionBinSwitch;
 import xscript.runtime.instruction.XInstructionIf;
 import xscript.runtime.instruction.XInstructionJump;
 import xscript.runtime.instruction.XInstructionNIf;
+import xscript.runtime.instruction.XInstructionStringSwitch;
+import xscript.runtime.instruction.XInstructionTableSwitch;
 import xscript.runtime.instruction.XInstructionVarJump;
 import xscript.runtime.method.XCatchEntry;
 import xscript.runtime.method.XLineEntry;
@@ -97,17 +102,7 @@ public class XCodeGen{
 					}
 					if(wasJump){
 						deleted = true;
-						for(XInstruction inst2:instructions){
-							if(inst2 instanceof XInstructionDumy){
-								((XInstructionDumy) inst2).deleteInstruction(this, instructions, inst);
-							}
-						}
-						for(XTryHandle tryHandle:tryHandles){
-							tryHandle.deleteInstruction(this, instructions, inst);
-						}
-						for(XVariable variable:variables){
-							variable.deleteInstruction(this, instructions, inst);
-						}
+						delete(inst);
 						i.remove();
 						i2.remove();
 					}
@@ -123,21 +118,13 @@ public class XCodeGen{
 						}
 						if(inst instanceof XInstructionDumy && ((XInstructionDumy) inst).pointingTo(next)){
 							deleted = true;
-							for(XInstruction inst2:instructions){
-								if(inst2 instanceof XInstructionDumy){
-									((XInstructionDumy) inst2).deleteInstruction(this, instructions, inst);
-								}
-							}
-							for(XTryHandle tryHandle:tryHandles){
-								tryHandle.deleteInstruction(this, instructions, inst);
-							}
-							for(XVariable variable:variables){
-								variable.deleteInstruction(this, instructions, inst);
-							}
+							delete(inst);
 							i.remove();
 							i2.remove();
 							wasJump = false;
 						}
+					}else if(inst.getClass() == XInstructionDumySwitch.class || inst.getClass() == XInstructionDumyStringSwitch.class){
+						wasJump = true;
 					}
 				}
 			}
@@ -170,6 +157,38 @@ public class XCodeGen{
 		}
 	}
 	
+	private void delete(XInstruction instruction){
+		ListIterator<XInstruction> i = instructions.listIterator();
+		while(i.hasNext()){
+			XInstruction inst = i.next();
+			if(inst instanceof XInstructionDumy){
+				((XInstructionDumy) inst).deleteInstruction(this, instructions, instruction);
+			}
+		}
+		for(XTryHandle tryHandle:tryHandles){
+			tryHandle.deleteInstruction(this, instructions, instruction);
+		}
+		for(XVariable variable:variables){
+			variable.deleteInstruction(this, instructions, instruction);
+		}
+	}
+	
+	private void replace(XInstruction instruction, XInstruction with){
+		ListIterator<XInstruction> i = instructions.listIterator();
+		while(i.hasNext()){
+			XInstruction inst = i.next();
+			if(inst instanceof XInstructionDumy){
+				((XInstructionDumy) inst).replace(this, instruction, with, instructions);
+			}
+		}
+		for(XTryHandle tryHandle:tryHandles){
+			tryHandle.replace(this, instruction, with, instructions);
+		}
+		for(XVariable variable:variables){
+			variable.replace(this, instruction, with, instructions);
+		}
+	}
+	
 	private void makeEasy(){
 		
 	}
@@ -196,6 +215,8 @@ public class XCodeGen{
 			int[] size = sizes[programPointer];
 			stackSize += inst.getStackChange(vm, cgmi);
 			objectStackSize += inst.getObjectStackChange(vm, cgmi);
+			if(stackSize<0 || objectStackSize<0)
+				throw new AssertionError();
 			if(size==null){
 				size = new int[]{stackSize, objectStackSize};
 				sizes[programPointer] = size;
@@ -208,9 +229,29 @@ public class XCodeGen{
 			programPointer++;
 			if(inst instanceof XInstructionIf || inst instanceof XInstructionNIf){
 				tryWay(vm, cgmi, ((XInstructionJump) inst).target, stackSize, objectStackSize, sizes);
+			}else if(inst instanceof XInstructionBinSwitch){
+				for(int i:((XInstructionBinSwitch) inst).locArray){
+					tryWay(vm, cgmi, i, stackSize, objectStackSize, sizes);
+				}
+				programPointer = ((XInstructionBinSwitch) inst).def;
+			}else if(inst instanceof XInstructionTableSwitch){
+				for(int i:((XInstructionTableSwitch) inst).locArray){
+					tryWay(vm, cgmi, i, stackSize, objectStackSize, sizes);
+				}
+				programPointer = ((XInstructionTableSwitch) inst).def;
+			}else if(inst instanceof XInstructionStringSwitch){
+				for(int i:((XInstructionStringSwitch) inst).locArray){
+					tryWay(vm, cgmi, i, stackSize, objectStackSize, sizes);
+				}
+				programPointer = ((XInstructionStringSwitch) inst).def;
 			}else if(inst instanceof XInstructionJump){
 				programPointer = ((XInstructionJump) inst).target;
 			}
+		}
+		if(stackSize!=0 || objectStackSize!=0){
+			System.out.println(instructions);
+			System.out.println(stackSize+", "+objectStackSize);
+			throw new AssertionError();
 		}
 	}
 	

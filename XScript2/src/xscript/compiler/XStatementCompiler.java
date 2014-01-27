@@ -110,6 +110,8 @@ import xscript.runtime.instruction.XInstructionInstanceof;
 import xscript.runtime.instruction.XInstructionInvokeDynamic;
 import xscript.runtime.instruction.XInstructionInvokeSpecial;
 import xscript.runtime.instruction.XInstructionInvokeStatic;
+import xscript.runtime.instruction.XInstructionIsNNull;
+import xscript.runtime.instruction.XInstructionIsNull;
 import xscript.runtime.instruction.XInstructionL2D;
 import xscript.runtime.instruction.XInstructionL2F;
 import xscript.runtime.instruction.XInstructionL2I;
@@ -172,6 +174,8 @@ public class XStatementCompiler implements XVisitor {
 	private XInstructionDumyJump blockFinallyEndJump;
 	
 	private int classNum;
+	
+	private boolean doneCodeGen;
 	
 	public XStatementCompiler(XVarType returnExpected, XStatementCompiler parent, XMethodCompiler methodCompiler){
 		this.returnExpected = returnExpected;
@@ -270,7 +274,7 @@ public class XStatementCompiler implements XVisitor {
 	}
 
 	public XCodeGen getCodeGen(){
-		if(varAccess!=null){
+		if(varAccess!=null && !doneCodeGen){
 			XResolvedVariable rv = getVariable(varAccess, varAccess.tree);
 			if(rv.field==null){
 				if(rv.variable!=null){
@@ -303,6 +307,7 @@ public class XStatementCompiler implements XVisitor {
 				setReturn(null, varAccess.tree);
 			}
 		}
+		doneCodeGen = true;
 		return codeGen;
 	}
 	
@@ -2053,25 +2058,44 @@ public class XStatementCompiler implements XVisitor {
 			}
 		}else{
 			XStatementCompiler cl = visitTree(xOperatorStatement.left, XAnyType.type);
-			addInstructions(cl);
+			cl.getCodeGen();
 			int t1 = cl.returnType.getPrimitiveID();
 			if(t1 == XPrimitive.OBJECT){
 				XStatementCompiler cr = visitTree(xOperatorStatement.right, XAnyType.type);
 				if(op == XOperator.EQ || op == XOperator.NEQ){
-					addInstructions(cr);
-					if(op == XOperator.EQ){
-						addInstruction(new XInstructionEqObject(), xOperatorStatement);
+					if(xOperatorStatement.left instanceof XTreeConstant && ((XTreeConstant)xOperatorStatement.left).value.getType() == null){
+						addInstructions(cr);
+						if(op == XOperator.EQ){
+							addInstruction(new XInstructionIsNull(), xOperatorStatement);
+						}else{
+							addInstruction(new XInstructionIsNNull(), xOperatorStatement);
+						}
+					}else if(xOperatorStatement.right instanceof XTreeConstant && ((XTreeConstant)xOperatorStatement.right).value.getType() == null){
+						addInstructions(cl);
+						if(op == XOperator.EQ){
+							addInstruction(new XInstructionIsNull(), xOperatorStatement);
+						}else{
+							addInstruction(new XInstructionIsNNull(), xOperatorStatement);
+						}
 					}else{
-						addInstruction(new XInstructionNEqObject(), xOperatorStatement);
+						addInstructions(cl);
+						addInstructions(cr);
+						if(op == XOperator.EQ){
+							addInstruction(new XInstructionEqObject(), xOperatorStatement);
+						}else{
+							addInstruction(new XInstructionNEqObject(), xOperatorStatement);
+						}
 					}
 					setReturn(getPrimitiveType(XPrimitive.BOOL), xOperatorStatement);
 				}else{
+					addInstructions(cl);
 					XCodeGen[] codeGens = {cr.getCodeGen()};
 					XMethodSearch methodSearch = searchMethod(cl.returnType, "operator"+op.op);
 					methodSearch.applyTypes(cr.returnType);
 					setReturn(makeCall(methodSearch, xOperatorStatement, codeGens), xOperatorStatement);
 				}
 			}else{
+				addInstructions(cl);
 				if(t1==XPrimitive.BOOL && op==XOperator.OR){
 					XStatementCompiler cr = visitTree(xOperatorStatement.right, getPrimitiveType(XPrimitive.BOOL));
 					XInstructionDumyIf iif = new XInstructionDumyIf();

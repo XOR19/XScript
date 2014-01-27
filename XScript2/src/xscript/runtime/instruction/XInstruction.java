@@ -154,6 +154,10 @@ public abstract class XInstruction {
 		instructions[134] = XInstructionLoadConstClass.class;
 		instructions[135] = XInstructionInvokeConstructor.class;
 		instructions[136] = XInstructionStringSwitch.class;
+		instructions[137] = XInstructionUShrInt.class;
+		instructions[138] = XInstructionUShrLong.class;
+		instructions[139] = XInstructionIsNNull.class;
+		instructions[140] = XInstructionIsNull.class;
 	}
 	
 	public abstract void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor);
@@ -319,6 +323,10 @@ public abstract class XInstruction {
 		case 134: return new XInstructionLoadConstClass(inputStream);
 		case 135: return new XInstructionInvokeConstructor(inputStream);
 		case 136: return new XInstructionStringSwitch(inputStream);
+		case 137: return new XInstructionUShrInt();
+		case 138: return new XInstructionUShrLong();
+		case 139: return new XInstructionIsNNull();
+		case 140: return new XInstructionIsNull();
 		}
 		throw new XRuntimeException("Unknow instruction %s", instruction);
 	}

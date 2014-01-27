@@ -12,8 +12,8 @@ import xscript.runtime.threads.XThread;
 
 public class XInstructionBinSwitch extends XInstruction {
 
-	private final int def;
-	private final int[] locArray;
+	public final int def;
+	public final int[] locArray;
 	private final int[] binSwitch;
 	
 	public XInstructionBinSwitch(int def, int[] locArray, int[] binSwitch) {

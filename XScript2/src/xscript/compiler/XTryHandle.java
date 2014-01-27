@@ -68,5 +68,19 @@ public class XTryHandle {
 	public boolean pointingTo(XInstruction inst) {
 		return jumpTargets.containsValue(inst);
 	}
+
+	public void replace(XCodeGen xCodeGen, XInstruction instruction, XInstruction with, List<XInstruction> instructions) {
+		if(startInstruction==instruction){
+			startInstruction = with;
+		}
+		if(endInstruction==instruction){
+			endInstruction = with;
+		}
+		for(Entry<XClassPtr, XInstruction> jumpTarget:jumpTargets.entrySet()){
+			if(jumpTarget.getValue()==instruction){
+				jumpTarget.setValue(with);
+			}
+		}
+	}
 	
 }

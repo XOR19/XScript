@@ -61,5 +61,14 @@ public class XVariable {
 			throw new AssertionError();
 		return t;
 	}
+
+	public void replace(XCodeGen xCodeGen, XInstruction instruction, XInstruction with, List<XInstruction> instructions) {
+		if(start==instruction){
+			start = with;
+		}
+		if(end==instruction){
+			end = with;
+		}
+	}
 	
 }

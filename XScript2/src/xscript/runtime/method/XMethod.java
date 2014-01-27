@@ -486,6 +486,7 @@ public class XMethod extends XPackage {
 			for(int i=0; i<localEntries.length; i++){
 				out += "\n"+localEntries[i].dump();
 			}
+			out += "\nmaxStackSize:"+maxStackSize+", "+maxObjectStackSize;
 			out += "\n}";
 		}else{
 			out += ";";
