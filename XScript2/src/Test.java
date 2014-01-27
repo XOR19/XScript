@@ -31,7 +31,7 @@ public class Test {
 		
 		vm.getThreadProvider().start("main", c.getMethod("test()void"), new XGenericClass[0], new long[0]);
 		
-		vm.getThreadProvider().run(10, 100);
+		vm.getThreadProvider().run(1000, 100);
 		
 		/*for(int i=0; i<100; i++){
 		

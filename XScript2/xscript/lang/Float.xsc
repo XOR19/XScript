@@ -12,6 +12,13 @@ public class Float{
 		return value;
 	}
 	
+	@Override
+	public String toString(){
+		return toString(value);
+	}
+	
+	public static native String toString(float value);
+	
 	public static Float valueOf(float f){
 		return new Float(f);
 	}

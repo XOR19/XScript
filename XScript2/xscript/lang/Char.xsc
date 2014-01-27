@@ -12,6 +12,15 @@ public class Char{
 		return value;
 	}
 	
+	@Override
+	public String toString(){
+		return toString(value);
+	}
+	
+	public static String toString(char c){
+		return new String(new char[]{c});
+	}
+	
 	public static Char valueOf(char c){
 		return new Char(c);
 	}

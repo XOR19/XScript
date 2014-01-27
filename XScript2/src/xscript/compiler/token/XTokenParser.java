@@ -235,8 +235,9 @@ public class XTokenParser {
 					return makeToken(XTokenKind.DIV);
 				}
 			}else if(scannChar=='"' || scannChar=='\''){
+				boolean isChar = scannChar=='\'';
 				scannChar();
-				return scannString(scannChar=='\'');
+				return scannString(isChar);
 			}else if(!(scannChar==' ' || scannChar=='\t' || scannChar=='\n' || scannChar=='\r')){
 				XTokenKind tokenKind = XTokenKind.getCharToken(scannChar);
 				if(tokenKind!=null){

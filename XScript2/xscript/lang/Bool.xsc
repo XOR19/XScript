@@ -17,7 +17,11 @@ public class Bool{
 	
 	@Override
 	public String toString(){
-		return value?"true":"false";
+		return toString(value);
+	}
+	
+	public static String toString(bool b){
+		return b?"true":"false";
 	}
 	
 	public static Bool valueOf(bool b){

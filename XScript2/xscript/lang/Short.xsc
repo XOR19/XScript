@@ -12,6 +12,11 @@ public class Short{
 		return value;
 	}
 	
+	@Override
+	public String toString(){
+		return Int.toString(value);
+	}
+	
 	public static Short valueOf(short s){
 		return new Short(s);
 	}

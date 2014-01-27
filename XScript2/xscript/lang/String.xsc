@@ -4,6 +4,10 @@ public final class String{
 
 	private final char[] value;
 
+	public String(char[] value){
+		this.value = value;
+	}
+	
 	private String(int size){
 		value = new char[size];
 	}

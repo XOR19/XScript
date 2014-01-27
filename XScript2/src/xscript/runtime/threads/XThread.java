@@ -65,11 +65,15 @@ public class XThread {
 						}
 						instruction.run(virtualMachine, this, methodExecutor);
 					}catch(XRuntimeException e){
+						exception = 1;
 						e.printStackTrace();
 						System.err.println(methodExecutor.getMethod()+":"+methodExecutor.getLine()+":"+instruction.getSource());
+						return;
 					}catch(Throwable e){
+						exception = 1;
 						e.printStackTrace();
 						System.err.println(methodExecutor.getMethod()+":"+methodExecutor.getLine()+":"+instruction.getSource());
+						return;
 					}
 					XObject obj = virtualMachine.getObjectProvider().getObject(exception);
 					if(obj!=null){

@@ -83,6 +83,11 @@ public class XPrimitive extends XClass {
 		return null;
 	}
 
+	@Override
+	public void markVisible(){
+		
+	}
+	
 	public static int getPrimitiveID(XClass xClass){
 		if(xClass instanceof XPrimitive){
 			return ((XPrimitive) xClass).primitiveID;

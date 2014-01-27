@@ -12,6 +12,11 @@ public class Byte{
 		return value;
 	}
 	
+	@Override
+	public String toString(){
+		return Int.toString(value);
+	}
+	
 	public static Byte valueOf(byte b){
 		return new Byte(b);
 	}

@@ -13,6 +13,7 @@ import xscript.runtime.instruction.XInstruction;
 import xscript.runtime.method.XCatchInfo;
 import xscript.runtime.method.XMethod;
 import xscript.runtime.object.XObject;
+import xscript.runtime.object.XObjectProvider;
 
 public class XMethodExecutor implements XGenericMethodProvider {
 
@@ -125,7 +126,7 @@ public class XMethodExecutor implements XGenericMethodProvider {
 	public long lPop(){
 		long l = iPop();
 		long l2 = iPop();
-		return l2<<32 | l;
+		return (l2 & 0xFFFFFFFF)<<32 | (l & 0xFFFFFFFF);
 	}
 	
 	public boolean zPop() {
@@ -170,7 +171,7 @@ public class XMethodExecutor implements XGenericMethodProvider {
 	public long lRead(int pos){
 		long l = iRead(pos+1);
 		long l2 = iRead(pos);
-		return l2<<32 | l;
+		return (l2 & 0xFFFFFFFF)<<32 | (l & 0xFFFFFFFF);
 	}
 	
 	public boolean zRead(int pos) {
@@ -209,7 +210,7 @@ public class XMethodExecutor implements XGenericMethodProvider {
 	
 	public void lPush(long value) {
 		long l = value&0xFFFFFFFF;
-		long l2 = value>>32;
+		long l2 = (value>>32)&0xFFFFFFFF;
 		iPush((int) l2);
 		iPush((int) l);
 	}
@@ -258,15 +259,26 @@ public class XMethodExecutor implements XGenericMethodProvider {
 		if(parent!=null){
 			parent.markVisible();
 		}
+		XObjectProvider op = method.getDeclaringClass().getVirtualMachine().getObjectProvider();
 		if(method.getReturnTypePrimitive()==XPrimitive.OBJECT){
-			XObject obj = method.getDeclaringClass().getVirtualMachine().getObjectProvider().getObject(ret);
+			XObject obj = op.getObject(ret);
 			if(obj!=null)
 				obj.markVisible();
 		}
 		for(int i=0; i<objectStackPointer; i++){
-			XObject obj = method.getDeclaringClass().getVirtualMachine().getObjectProvider().getObject(objectStack[i]);
+			XObject obj = op.getObject(objectStack[i]);
 			if(obj!=null)
 				obj.markVisible();
+		}
+		for(int i=0; i<method.getMaxLocalSize(); i++){
+			XClassPtr type = method.getLocalType(programPointer, i);
+			if(type!=null){
+				if(XPrimitive.getPrimitiveID(type.getXClass(method.getDeclaringClass().getVirtualMachine()))==XPrimitive.OBJECT){
+					XObject obj = op.getObject(local[i]);
+					if(obj!=null)
+						obj.markVisible();
+				}
+			}
 		}
 	}
 

@@ -43,6 +43,8 @@ public class XConstantValue {
 	public byte getByte(){
 		if(value instanceof Byte){
 			return (Byte)value;
+		}else if(value instanceof Character){
+			return (byte)(char)(Character)value;
 		}
 		throw new RuntimeException(getTypeName()+" not compatible with byte");
 	}
@@ -52,6 +54,8 @@ public class XConstantValue {
 			return (byte)(Byte)value;
 		}else if(value instanceof Short){
 			return (Short)value;
+		}else if(value instanceof Character){
+			return (short)(char)(Character)value;
 		}
 		throw new RuntimeException(getTypeName()+" can't be cast to short");
 	}
@@ -63,6 +67,8 @@ public class XConstantValue {
 			return (short)(Short)value;
 		}else if(value instanceof Integer){
 			return (Integer)value;
+		}else if(value instanceof Character){
+			return (char)(Character)value;
 		}
 		throw new RuntimeException(getTypeName()+" can't be cast to int");
 	}
@@ -76,6 +82,8 @@ public class XConstantValue {
 			return (int)(Integer)value;
 		}else if(value instanceof Long){
 			return (Long)value;
+		}else if(value instanceof Character){
+			return (char)(Character)value;
 		}
 		throw new RuntimeException(getTypeName()+" can't be cast to long");
 	}
@@ -91,6 +99,8 @@ public class XConstantValue {
 			return (long)(Long)value;
 		}else if(value instanceof Float){
 			return (Float)value;
+		}else if(value instanceof Character){
+			return (char)(Character)value;
 		}
 		throw new RuntimeException(getTypeName()+" can't be cast to float");
 	}
@@ -108,6 +118,8 @@ public class XConstantValue {
 			return (float)(Float)value;
 		}else if(value instanceof Double){
 			return (Double)value;
+		}else if(value instanceof Character){
+			return (char)(Character)value;
 		}
 		throw new RuntimeException(getTypeName()+" can't be cast to double");
 	}
@@ -411,7 +423,9 @@ public class XConstantValue {
 	}
 	
 	private int numberid(){
-		if(value instanceof Byte){
+		if(value instanceof Character){
+			return 0;
+		}else if(value instanceof Byte){
 			return 1;
 		}else if(value instanceof Short){
 			return 1;
@@ -424,7 +438,7 @@ public class XConstantValue {
 		}else if(value instanceof Double){
 			return 4;
 		}
-		return 0;
+		return -1;
 	}
 	
 	private static int compNID(int nid1, int nid2){
@@ -432,6 +446,10 @@ public class XConstantValue {
 			if(nid1<nid2)
 				return nid2;
 			return nid1;
+		}else if(nid1>0 && nid2==0){
+			return nid1;
+		}else if(nid1==0 && nid2>0){
+			return nid2;
 		}
 		return 0;
 	}

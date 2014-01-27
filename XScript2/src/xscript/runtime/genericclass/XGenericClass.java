@@ -50,9 +50,9 @@ public class XGenericClass implements List<Object>, Callable<Map<String, Object>
 			return true;
 		XClassTable classTable = oClass.getClassTable(xClass);
 		for(int i=0; i<to.generics.length; i++){
-			if(!classTable.getGenericPtr(i).getXClass(xClass.getVirtualMachine(), generics[i], null).equals(to.generics[i])){
-				return false;
-			}
+			//if(!classTable.getGenericPtr(i).getXClass(xClass.getVirtualMachine(), generics[i], null).equals(to.generics[i])){
+				//return false;
+			//}
 		}
 		return true;
 	}

@@ -139,6 +139,11 @@ public class XObject extends XMap<Object, Object> implements Callable<Callable<M
 			thread.setWaiting(true);
 		}
 	}
+	
+	@Override
+	public String toString() {
+		return getXClass().toString();
+	}
 
 	@Override
 	public boolean containsKey(Object name) {

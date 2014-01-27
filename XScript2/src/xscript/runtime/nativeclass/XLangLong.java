@@ -8,11 +8,11 @@ import xscript.runtime.object.XObject;
 import xscript.runtime.threads.XMethodExecutor;
 import xscript.runtime.threads.XThread;
 
-public class XLangInt  {
+public class XLangLong  {
 
 	public static void registerNatives(XNativeProvider nativeProvider) {
-		nativeProvider.addNativeMethod("xscript.lang.Int", "toString(int, int)xscript.lang.String", new XMethodToString());
-		nativeProvider.addNativeMethod("xscript.lang.Int", "toUnsignedString(int, int)xscript.lang.String", new XMethodToUnsigendString());
+		nativeProvider.addNativeMethod("xscript.lang.Long", "toString(long, int)xscript.lang.String", new XMethodToString());
+		nativeProvider.addNativeMethod("xscript.lang.Long", "toUnsignedString(long, int)xscript.lang.String", new XMethodToUnsigendString());
 	}
 	
 	private static class XMethodToString implements XNativeMethod{
@@ -21,7 +21,7 @@ public class XLangInt  {
 		public Object invoke(XVirtualMachine virtualMachine, XThread thread,
 				XMethodExecutor methodExecutor, XGenericClass[] generics,
 				XObject _this, Object[] params) {
-			return Integer.toString((Integer)params[0], (Integer)params[1]);
+			return Long.toString((Long)params[0], (Integer)params[1]);
 		}
 		
 	}
@@ -32,20 +32,20 @@ public class XLangInt  {
 		public Object invoke(XVirtualMachine virtualMachine, XThread thread,
 				XMethodExecutor methodExecutor, XGenericClass[] generics,
 				XObject _this, Object[] params) {
-			return toUnsignedString((Integer)params[0], (Integer)params[1]);
+			return toUnsignedString((Long)params[0], (Integer)params[1]);
 		}
 		
-		private static String toUnsignedString(int i, int shift) {
-	        char[] buf = new char[32];
-	        int charPos = 32;
+		private static String toUnsignedString(long i, int shift) {
+	        char[] buf = new char[64];
+	        int charPos = 64;
 	        int radix = 1 << shift;
 	        int mask = radix - 1;
 	        do {
-	            buf[--charPos] = digits[i & mask];
+	            buf[--charPos] = digits[(int) (i & mask)];
 	            i >>>= shift;
 	        } while (i != 0);
 
-	        return new String(buf, charPos, (32 - charPos));
+	        return new String(buf, charPos, (64 - charPos));
 	    }
 		
 		 final static char[] digits = {

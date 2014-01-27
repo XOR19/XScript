@@ -215,8 +215,10 @@ public class XCodeGen{
 			int[] size = sizes[programPointer];
 			stackSize += inst.getStackChange(vm, cgmi);
 			objectStackSize += inst.getObjectStackChange(vm, cgmi);
-			if(stackSize<0 || objectStackSize<0)
-				throw new AssertionError();
+			if(stackSize<0 || objectStackSize<0){
+				System.out.println(instructions);
+				throw new AssertionError("stacksize smaller than 0 at "+programPointer);
+			}
 			if(size==null){
 				size = new int[]{stackSize, objectStackSize};
 				sizes[programPointer] = size;

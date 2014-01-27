@@ -12,6 +12,13 @@ public class Double{
 		return value;
 	}
 	
+	@Override
+	public String toString(){
+		return toString(value);
+	}
+	
+	public static native String toString(double value);
+	
 	public static Double valueOf(double d){
 		return new Double(d);
 	}

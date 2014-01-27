@@ -1,5 +1,7 @@
 package xscript.runtime.object;
 
+import java.util.Arrays;
+
 import xscript.runtime.XRuntimeException;
 import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XClass;
@@ -33,6 +35,7 @@ public class XObjectProvider {
 	}
 	
 	public void gc() {
+		long startTest1 = System.nanoTime();
 		for(int i=0; i<objects.length; i++){
 			if(objects[i]!=null){
 				objects[i].resetVisibility();
@@ -40,11 +43,15 @@ public class XObjectProvider {
 		}
 		virtualMachine.getClassProvider().markVisible();
 		virtualMachine.getThreadProvider().markVisible();
+		int n=0;
 		for(int i=0; i<objects.length; i++){
 			if(objects[i]!=null && !objects[i].isVisible()){
+				n++;
 				objects[i] = null;
 			}
 		}
+		long endTest1 = System.nanoTime();
+		System.out.println("gc deleted "+n+" objects in "+(endTest1-startTest1)+"ns");
 	}
 	
 	private long getNextFreePointer(){
@@ -84,6 +91,9 @@ public class XObjectProvider {
 		long s = createObject(gc);
 		XGenericClass ac = new XGenericClass(virtualMachine.getClassProvider().getXClass("xscript.lang.ArrayChar"));
 		long v = createArray(ac, value.length());
+		if(getObject(s)==null){
+			s = createObject(gc);
+		}
 		XObject array = getObject(v);
 		for(int i=0; i<value.length(); i++){
 			array.setArrayElement(i, value.charAt(i));

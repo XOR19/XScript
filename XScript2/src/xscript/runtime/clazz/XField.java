@@ -131,7 +131,7 @@ public class XField extends XPackage {
 		long l = 0;
 		for(int j=0; j<size; j++){
 			l <<= 8;
-			l |= data[i+j];
+			l |= data[i+j] & 0xFF;
 		}
 		return l;
 	}
@@ -166,7 +166,7 @@ public class XField extends XPackage {
 		}
 		int size = getSizeInObject();
 		for(int j=size-1; j>=0; j--){
-			data[i+j] = (byte) (value & 255);
+			data[i+j] = (byte) (value & 0xFF);
 			value >>>= 8;
 		}
 	}
