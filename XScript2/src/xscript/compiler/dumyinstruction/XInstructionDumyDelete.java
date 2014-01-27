@@ -13,15 +13,14 @@ public class XInstructionDumyDelete extends XInstructionDumy {
 	}
 
 	@Override
-	public void deleteInstruction(XCodeGen compiler, List<XInstruction> instructions, XInstruction instruction) {
-		
-	}
+	public void deleteInstruction(XCodeGen compiler, List<XInstruction> instructions, XInstruction instruction) {}
 
 	@Override
-	public void resolve(XCodeGen xCodeGen, List<XInstruction> instructions) {
-		
-	}
+	public void resolve(XCodeGen xCodeGen, List<XInstruction> instructions) {}
 
+	@Override
+	public void replace(XCodeGen compiler, XInstruction instruction, XInstruction with, List<XInstruction> instructions) {}
+	
 	@Override
 	public boolean pointingTo(XInstruction inst) {
 		return false;

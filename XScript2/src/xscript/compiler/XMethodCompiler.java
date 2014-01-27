@@ -149,7 +149,7 @@ public class XMethodCompiler extends XMethod {
 	
 	public void gen(){
 		if(codeGen!=null){
-			codeGen.generateFinalCode();
+			codeGen.generateFinalCode(this);
 			instructions = codeGen.getInstructions();
 			lineEntries = codeGen.getLineEntries();
 			catchEntries = codeGen.getCatchEntries();
@@ -159,8 +159,8 @@ public class XMethodCompiler extends XMethod {
 					maxLocalSize = localEntries[i].getIndex()+1;
 				}
 			}
-			maxStackSize = 100;
-			maxObjectStackSize = 100;
+			maxStackSize = codeGen.getMaxStackSize();
+			maxObjectStackSize = codeGen.getMaxObjectStackSize();
 			codeGen = null;
 		}
 	}

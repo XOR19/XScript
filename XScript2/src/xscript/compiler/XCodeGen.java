@@ -7,18 +7,25 @@ import java.util.ListIterator;
 import xscript.compiler.dumyinstruction.XInstructionDumy;
 import xscript.compiler.dumyinstruction.XInstructionDumyDelete;
 import xscript.compiler.dumyinstruction.XInstructionDumyJump;
+import xscript.runtime.XVirtualMachine;
 import xscript.runtime.instruction.XInstruction;
+import xscript.runtime.instruction.XInstructionIf;
+import xscript.runtime.instruction.XInstructionJump;
+import xscript.runtime.instruction.XInstructionNIf;
 import xscript.runtime.instruction.XInstructionVarJump;
 import xscript.runtime.method.XCatchEntry;
 import xscript.runtime.method.XLineEntry;
 import xscript.runtime.method.XLocalEntry;
+import xscript.runtime.threads.XMethodInfo;
 
-public class XCodeGen {
+public class XCodeGen{
 
 	protected List<XInstruction> instructions = new ArrayList<XInstruction>();
 	protected List<Integer> lines = new ArrayList<Integer>();
 	protected List<XTryHandle> tryHandles = new ArrayList<XTryHandle>();
 	protected List<XVariable> variables = new ArrayList<XVariable>();
+	private int maxStackSize;
+	private int maxObjectStackSize;
 	
 	public void addInstruction(int pos, XInstruction instruction, int line){
 		instructions.add(pos, instruction);
@@ -163,11 +170,87 @@ public class XCodeGen {
 		}
 	}
 	
-	public void generateFinalCode(){
+	private void makeEasy(){
+		
+	}
+	
+	private void calculateMaxStackSize(XMethodCompiler mc){
+		int[][] sizes = new int[instructions.size()][];
+		tryWay(mc.getDeclaringClass().getVirtualMachine(), new XCodeGenMethodInfo(mc), 0, 0, 0, sizes);
+		maxStackSize = 0;
+		maxObjectStackSize = 0;
+		for(int[] size:sizes){
+			if(maxStackSize<size[0]){
+				maxStackSize = size[0];
+			}
+			if(maxObjectStackSize<size[1]){
+				maxObjectStackSize = size[1];
+			}
+		}
+	}
+	
+	private void tryWay(XVirtualMachine vm, XCodeGenMethodInfo cgmi, int programPointer, int stackSize, int objectStackSize, int[][] sizes){
+		while(instructions.size()>programPointer){
+			cgmi.setProgramPointer(programPointer);
+			XInstruction inst = instructions.get(programPointer);
+			int[] size = sizes[programPointer];
+			stackSize += inst.getStackChange(vm, cgmi);
+			objectStackSize += inst.getObjectStackChange(vm, cgmi);
+			if(size==null){
+				size = new int[]{stackSize, objectStackSize};
+				sizes[programPointer] = size;
+			}else{
+				if(size[0] != stackSize || size[1] != objectStackSize){
+					throw new AssertionError();
+				}
+				return;
+			}
+			programPointer++;
+			if(inst instanceof XInstructionIf || inst instanceof XInstructionNIf){
+				tryWay(vm, cgmi, ((XInstructionJump) inst).target, stackSize, objectStackSize, sizes);
+			}else if(inst instanceof XInstructionJump){
+				programPointer = ((XInstructionJump) inst).target;
+			}
+		}
+	}
+	
+	private class XCodeGenMethodInfo implements XMethodInfo{
+
+		private XMethodCompiler mc;
+		private int programPointer = 0;
+		
+		public XCodeGenMethodInfo(XMethodCompiler mc) {
+			this.mc = mc;
+		}
+
+		public void setProgramPointer(int programPointer) {
+			this.programPointer = programPointer;
+		}
+
+		@Override
+		public int getLocalPrimitveID(int local) {
+			for(XVariable var:variables){
+				if(var.id==local && var.localEntry.isIn(programPointer)){
+					return var.type.getPrimitiveID();
+				}
+			}
+			throw new AssertionError("local not found "+local);
+		}
+
+		@Override
+		public int getMethodReturnPrimitveID() {
+			return mc.getReturnTypePrimitive();
+		}
+		
+	}
+	
+	public void generateFinalCode(XMethodCompiler mc){
 		deleteDumies();
 		deleteDeadCode();
+		makeEasy();
 		resolve();
 		replace();
+		calculateMaxStackSize(mc);
 		System.out.println("gen:"+instructions);
 	}
 	
@@ -204,6 +287,14 @@ public class XCodeGen {
 		return localEntries;
 	}
 
+	public int getMaxStackSize(){
+		return maxStackSize;
+	}
+	
+	public int getMaxObjectStackSize(){
+		return maxObjectStackSize;
+	}
+	
 	public boolean isEmpty() {
 		return instructions.isEmpty();
 	}

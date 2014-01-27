@@ -1,32 +1,16 @@
 package xscript.runtime.instruction;
 
-import java.io.IOException;
 
-import xscript.runtime.XVirtualMachine;
-import xscript.runtime.clazz.XInputStream;
-import xscript.runtime.clazz.XOutputStream;
-import xscript.runtime.threads.XMethodExecutor;
-import xscript.runtime.threads.XThread;
+public class XInstructionOrBool extends XInstructionBMathBool {
 
-public class XInstructionOrBool extends XInstruction {
-
-	public XInstructionOrBool(){}
-	
-	public XInstructionOrBool(XInputStream inputStream) throws IOException{}
-	
 	@Override
-	public void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
-		boolean right = methodExecutor.zPop();
-		boolean left = methodExecutor.zPop();
-		methodExecutor.zPush(left||right);
+	public boolean calc(boolean left, boolean right) {
+		return left||right;
 	}
 
 	@Override
-	protected void save(XOutputStream outputStream) throws IOException {}
-
-	@Override
-	public String getSource() {
-		return "orz";
+	public String name() {
+		return "or";
 	}
 
 }

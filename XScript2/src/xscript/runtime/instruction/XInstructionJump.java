@@ -10,7 +10,7 @@ import xscript.runtime.threads.XThread;
 
 public class XInstructionJump extends XInstruction {
 
-	private final int target;
+	public final int target;
 	
 	public XInstructionJump(int target){
 		this.target = target;

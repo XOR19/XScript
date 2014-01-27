@@ -9,6 +9,7 @@ import xscript.runtime.clazz.XOutputStream;
 import xscript.runtime.genericclass.XClassPtr;
 import xscript.runtime.genericclass.XGenericClass;
 import xscript.runtime.threads.XMethodExecutor;
+import xscript.runtime.threads.XMethodInfo;
 import xscript.runtime.threads.XThread;
 
 public class XInstructionNew extends XInstruction {
@@ -46,4 +47,9 @@ public class XInstructionNew extends XInstruction {
 		return "new "+xClass;
 	}
 
+	@Override
+	public int getObjectStackChange(XVirtualMachine vm, XMethodInfo mi) {
+		return 1;
+	}
+	
 }

@@ -48,5 +48,5 @@ public class XInstructionWriteLocal extends XInstruction {
 	public String getSource() {
 		return "wl "+local;
 	}
-
+	
 }

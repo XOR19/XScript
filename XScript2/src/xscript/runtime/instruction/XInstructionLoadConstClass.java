@@ -8,6 +8,7 @@ import xscript.runtime.clazz.XInputStream;
 import xscript.runtime.clazz.XOutputStream;
 import xscript.runtime.genericclass.XClassPtr;
 import xscript.runtime.threads.XMethodExecutor;
+import xscript.runtime.threads.XMethodInfo;
 import xscript.runtime.threads.XThread;
 
 public class XInstructionLoadConstClass extends XInstruction {
@@ -43,4 +44,9 @@ public class XInstructionLoadConstClass extends XInstruction {
 		return "lcc "+xClass;
 	}
 
+	@Override
+	public int getObjectStackChange(XVirtualMachine vm, XMethodInfo mi) {
+		return 1;
+	}
+	
 }

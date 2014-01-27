@@ -2,6 +2,10 @@ package xscript.lang;
 
 public class VM{
 	
+	public static void println(Object out){
+		println(String.toString(out));
+	}
+	
 	public static native void println(String out);
 	
 }

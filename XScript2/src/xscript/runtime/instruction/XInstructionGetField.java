@@ -14,6 +14,7 @@ import xscript.runtime.clazz.XPrimitive;
 import xscript.runtime.genericclass.XClassPtr;
 import xscript.runtime.object.XObject;
 import xscript.runtime.threads.XMethodExecutor;
+import xscript.runtime.threads.XMethodInfo;
 import xscript.runtime.threads.XThread;
 
 public class XInstructionGetField extends XInstruction {
@@ -76,6 +77,16 @@ public class XInstructionGetField extends XInstruction {
 	@Override
 	public String getSource() {
 		return "rf "+className+"."+fieldName+":"+fieldType;
+	}
+	
+	@Override
+	public int getStackChange(XVirtualMachine vm, XMethodInfo mi) {
+		return getPrimitiveID(vm)==XPrimitive.OBJECT?0:1;
+	}
+
+	@Override
+	public int getObjectStackChange(XVirtualMachine vm, XMethodInfo mi) {
+		return getPrimitiveID(vm)==XPrimitive.OBJECT?0:-1;
 	}
 	
 }

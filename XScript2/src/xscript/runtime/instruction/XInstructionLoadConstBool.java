@@ -6,6 +6,7 @@ import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XInputStream;
 import xscript.runtime.clazz.XOutputStream;
 import xscript.runtime.threads.XMethodExecutor;
+import xscript.runtime.threads.XMethodInfo;
 import xscript.runtime.threads.XThread;
 
 public class XInstructionLoadConstBool extends XInstruction {
@@ -35,4 +36,9 @@ public class XInstructionLoadConstBool extends XInstruction {
 		return "lcz "+value;
 	}
 
+	@Override
+	public int getStackChange(XVirtualMachine vm, XMethodInfo mi) {
+		return 1;
+	}
+	
 }

@@ -105,4 +105,13 @@ public class XInstructionDumySwitch extends XInstructionDumy {
 		return table.containsValue(inst);
 	}
 
+	@Override
+	public void replace(XCodeGen compiler, XInstruction instruction, XInstruction with, List<XInstruction> instructions) {
+		for(Entry<Integer, XInstruction> e : table.entrySet()){
+			if(e.getValue()==instruction){
+				e.setValue(with);
+			}
+		}
+	}
+	
 }

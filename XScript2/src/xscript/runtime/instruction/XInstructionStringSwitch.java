@@ -8,6 +8,7 @@ import xscript.runtime.clazz.XInputStream;
 import xscript.runtime.clazz.XOutputStream;
 import xscript.runtime.object.XObject;
 import xscript.runtime.threads.XMethodExecutor;
+import xscript.runtime.threads.XMethodInfo;
 import xscript.runtime.threads.XThread;
 
 public class XInstructionStringSwitch extends XInstruction {
@@ -77,4 +78,9 @@ public class XInstructionStringSwitch extends XInstruction {
 		return "stringswitch "+def+":"+Arrays.toString(strSwitch)+Arrays.toString(locArray);
 	}
 
+	@Override
+	public int getObjectStackChange(XVirtualMachine vm, XMethodInfo mi) {
+		return -1;
+	}
+	
 }

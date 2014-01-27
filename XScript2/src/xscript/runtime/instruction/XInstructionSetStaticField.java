@@ -83,5 +83,5 @@ public class XInstructionSetStaticField extends XInstruction {
 	public String getSource() {
 		return "ssf "+className+"."+fieldName+":"+fieldType;
 	}
-
+	
 }

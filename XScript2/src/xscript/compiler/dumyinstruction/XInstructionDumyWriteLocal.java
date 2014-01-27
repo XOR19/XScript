@@ -35,4 +35,7 @@ public class XInstructionDumyWriteLocal extends XInstructionDumy {
 		return false;
 	}
 
+	@Override
+	public void replace(XCodeGen compiler, XInstruction instruction, XInstruction with, List<XInstruction> instructions) {}
+	
 }

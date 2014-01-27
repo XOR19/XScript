@@ -6,6 +6,7 @@ import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XInputStream;
 import xscript.runtime.clazz.XOutputStream;
 import xscript.runtime.threads.XMethodExecutor;
+import xscript.runtime.threads.XMethodInfo;
 import xscript.runtime.threads.XThread;
 
 public class XInstructionLoadConstString extends XInstruction {
@@ -34,6 +35,11 @@ public class XInstructionLoadConstString extends XInstruction {
 	@Override
 	public String getSource() {
 		return "lcsc \""+value+"\"";
+	}
+	
+	@Override
+	public int getObjectStackChange(XVirtualMachine vm, XMethodInfo mi) {
+		return 1;
 	}
 
 }

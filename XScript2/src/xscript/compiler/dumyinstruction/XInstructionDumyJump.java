@@ -52,4 +52,11 @@ public class XInstructionDumyJump extends XInstructionDumy {
 		return inst==target;
 	}
 
+	@Override
+	public void replace(XCodeGen compiler, XInstruction instruction, XInstruction with, List<XInstruction> instructions) {
+		if(instruction==target){
+			target = with;
+		}
+	}
+	
 }

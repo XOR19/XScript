@@ -14,6 +14,7 @@ import xscript.runtime.clazz.XPrimitive;
 import xscript.runtime.genericclass.XClassPtr;
 import xscript.runtime.object.XObject;
 import xscript.runtime.threads.XMethodExecutor;
+import xscript.runtime.threads.XMethodInfo;
 import xscript.runtime.threads.XThread;
 
 public class XInstructionSetField extends XInstruction {
@@ -79,4 +80,9 @@ public class XInstructionSetField extends XInstruction {
 		return "sf "+className+"."+fieldName+":"+fieldType;
 	}
 
+	@Override
+	public int getObjectStackChange(XVirtualMachine vm, XMethodInfo mi) {
+		return -1;
+	}
+	
 }

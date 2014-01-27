@@ -17,6 +17,7 @@ import xscript.runtime.genericclass.XGenericMethodProviderImp;
 import xscript.runtime.method.XMethod;
 import xscript.runtime.object.XObject;
 import xscript.runtime.threads.XMethodExecutor;
+import xscript.runtime.threads.XMethodInfo;
 import xscript.runtime.threads.XThread;
 
 public class XInstructionInvokeConstructor extends XInstruction {
@@ -159,4 +160,26 @@ public class XInstructionInvokeConstructor extends XInstruction {
 		return s;
 	}
 
+	@Override
+	public int getStackChange(XVirtualMachine vm, XMethodInfo mi) {
+		XClassPtr params[] = method.getParams();
+		int change = 0;
+		for(int i=0; i<params.length; i++){
+			if(XPrimitive.getPrimitiveID(params[i].getXClass(vm))!=XPrimitive.OBJECT)
+				change++;
+		}
+		return -change;
+	}
+
+	@Override
+	public int getObjectStackChange(XVirtualMachine vm, XMethodInfo mi) {
+		XClassPtr params[] = method.getParams();
+		int change = 0;
+		for(int i=0; i<params.length; i++){
+			if(XPrimitive.getPrimitiveID(params[i].getXClass(vm))==XPrimitive.OBJECT)
+				change++;
+		}
+		return -change;
+	}
+	
 }

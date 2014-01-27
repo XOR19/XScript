@@ -6,6 +6,7 @@ import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XInputStream;
 import xscript.runtime.clazz.XOutputStream;
 import xscript.runtime.threads.XMethodExecutor;
+import xscript.runtime.threads.XMethodInfo;
 import xscript.runtime.threads.XThread;
 
 public class XInstructionToTop extends XInstruction {
@@ -36,4 +37,9 @@ public class XInstructionToTop extends XInstruction {
 		return "tt "+pos;
 	}
 
+	@Override
+	public int getStackChange(XVirtualMachine vm, XMethodInfo mi) {
+		return 1;
+	}
+	
 }

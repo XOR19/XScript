@@ -7,6 +7,7 @@ import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XInputStream;
 import xscript.runtime.clazz.XOutputStream;
 import xscript.runtime.threads.XMethodExecutor;
+import xscript.runtime.threads.XMethodInfo;
 import xscript.runtime.threads.XThread;
 
 public class XInstructionBinSwitch extends XInstruction {
@@ -73,4 +74,9 @@ public class XInstructionBinSwitch extends XInstruction {
 		return "binswitch "+def+":"+Arrays.toString(binSwitch)+Arrays.toString(locArray);
 	}
 
+	@Override
+	public int getStackChange(XVirtualMachine vm, XMethodInfo mi) {
+		return -1;
+	}
+	
 }

@@ -20,6 +20,8 @@ public abstract class XInstructionDumy extends XInstruction {
 	
 	public abstract boolean pointingTo(XInstruction inst);
 	
+	public abstract void replace(XCodeGen compiler, XInstruction instruction, XInstruction with, List<XInstruction> instructions);
+	
 	@Override
 	public final void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
 		shouldNeverCalled();

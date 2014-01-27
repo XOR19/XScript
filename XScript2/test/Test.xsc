@@ -5,7 +5,7 @@ import xscript.lang.annotation.RetentionPolicy;
 public class Test{
 	
 	public static void test(){
-		VM.println(RetentionPolicy.SOURCE.toString());
+		VM.println(RetentionPolicy.SOURCE);
 	}
 	
 }

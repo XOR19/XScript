@@ -3,16 +3,12 @@ package xscript.runtime.instruction;
 import java.io.IOException;
 
 import xscript.runtime.XVirtualMachine;
-import xscript.runtime.clazz.XInputStream;
 import xscript.runtime.clazz.XOutputStream;
 import xscript.runtime.threads.XMethodExecutor;
+import xscript.runtime.threads.XMethodInfo;
 import xscript.runtime.threads.XThread;
 
 public class XInstructionPop extends XInstruction {
-	
-	public XInstructionPop(){}
-	
-	public XInstructionPop(XInputStream inputStream){}
 	
 	@Override
 	public void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
@@ -27,4 +23,9 @@ public class XInstructionPop extends XInstruction {
 		return "pop";
 	}
 
+	@Override
+	public int getStackChange(XVirtualMachine vm, XMethodInfo mi) {
+		return -1;
+	}
+	
 }

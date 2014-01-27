@@ -7,6 +7,7 @@ import xscript.runtime.clazz.XInputStream;
 import xscript.runtime.clazz.XOutputStream;
 import xscript.runtime.clazz.XPrimitive;
 import xscript.runtime.threads.XMethodExecutor;
+import xscript.runtime.threads.XMethodInfo;
 import xscript.runtime.threads.XThread;
 
 public class XInstructionReturn extends XInstruction {
@@ -31,4 +32,15 @@ public class XInstructionReturn extends XInstruction {
 		return "ret";
 	}
 
+	@Override
+	public int getStackChange(XVirtualMachine vm, XMethodInfo mi) {
+		int prim = mi.getMethodReturnPrimitveID();
+		return prim==XPrimitive.OBJECT?0:prim==XPrimitive.VOID?0:-1;
+	}
+
+	@Override
+	public int getObjectStackChange(XVirtualMachine vm, XMethodInfo mi) {
+		return mi.getMethodReturnPrimitveID()==XPrimitive.OBJECT?-1:0;
+	}
+	
 }
