@@ -1,7 +1,5 @@
 package xscript.runtime.object;
 
-import java.util.Arrays;
-
 import xscript.runtime.XRuntimeException;
 import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XClass;

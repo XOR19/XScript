@@ -97,10 +97,10 @@ public class XMethod extends XPackage {
 				XChecks.checkModifier(declaringClass, modifier, STATICALLOWEDMODIFIFER);
 			}
 		}else {
-			index = declaringClass.getMethodIndex();
 			if(name.equals(INIT)){
 				XChecks.checkModifier(declaringClass, modifier, CONSTRUCTORMODIFIER);
 			}else{
+				index = declaringClass.getMethodIndex();
 				XChecks.checkModifier(declaringClass, modifier, ALLOWEDMODIFIFER);
 			}
 		}
@@ -249,7 +249,7 @@ public class XMethod extends XPackage {
 	}
 	
 	public XMethod getMethod(XObject object){
-		if(XModifier.isStatic(modifier)){
+		if(XModifier.isStatic(modifier) || isConstructor()){
 			return this;
 		}
 		XClass xClass = object.getXClass().getXClass();
@@ -311,6 +311,8 @@ public class XMethod extends XPackage {
 				return lineEntries[i-1].getLine();
 			}
 		}
+		if(lineEntries.length==0)
+			return 0;
 		return lineEntries[lineEntries.length-1].getLine();
 	}
 	

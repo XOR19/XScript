@@ -88,6 +88,11 @@ public class XPrimitive extends XClass {
 		
 	}
 	
+	@Override
+	public boolean canCastTo(XClass xClass) {
+		return xClass == this;
+	}
+
 	public static int getPrimitiveID(XClass xClass){
 		if(xClass instanceof XPrimitive){
 			return ((XPrimitive) xClass).primitiveID;

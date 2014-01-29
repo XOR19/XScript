@@ -1,0 +1,14 @@
+package test;
+
+public enum Test2{
+	
+	T("Test") ,
+	T2("Test2");
+	
+	public String n;
+	
+	Test2(String s){
+		n = s;
+	}
+	
+}

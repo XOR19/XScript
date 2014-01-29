@@ -7,6 +7,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
+import xscript.compiler.classtypes.XVarType;
+import xscript.compiler.dumyinstruction.XInstructionDumyGetLocalField;
+import xscript.compiler.dumyinstruction.XInstructionDumyReadLocal;
 import xscript.compiler.message.XMessageLevel;
 import xscript.compiler.message.XMessageList;
 import xscript.compiler.token.XLineDesk;
@@ -121,10 +124,15 @@ public class XClassCompiler extends XClass implements XVisitor {
 	
 	private XLineDesk declLine;
 	
-	protected XClassCompiler(XVirtualMachine virtualMachine, String name, XMessageList messages, XImportHelper importHelper, XPackage p) {
+	private boolean hasEnumChildClasses;
+	
+	private XMethodSearch superEnumCall;
+	
+	protected XClassCompiler(XVirtualMachine virtualMachine, String name, XMessageList messages, XImportHelper importHelper, XPackage p, XMethodSearch search) {
 		super(virtualMachine, name, p);
 		this.messages = messages;
 		this.importHelper = importHelper;
+		this.superEnumCall = search;
 		state = STATE_TOGEN;
 	}
 	
@@ -251,7 +259,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 			if(tree instanceof XTreeClassDecl){
 				XTreeClassDecl decl = (XTreeClassDecl)tree;
 				String name = getName()+"."+decl.name;
-				XClassCompiler compiler = new XClassCompiler(virtualMachine, decl.name, new XMessageClass((XCompiler) virtualMachine, name), importHelper, this);
+				XClassCompiler compiler = new XClassCompiler(virtualMachine, decl.name, new XMessageClass((XCompiler) virtualMachine, name), importHelper, this, null);
 				if(childs.containsKey(decl.name)){
 					compilerError(XMessageLevel.ERROR, "duplicatedclass", decl.line, decl.name);
 				}else{
@@ -270,7 +278,7 @@ public class XClassCompiler extends XClass implements XVisitor {
 				XTreeClassDecl decl = (XTreeClassDecl)tree;
 				if(gotFirst){
 					String name = xPackage.getName()+"."+decl.name;
-					XClassCompiler compiler = new XClassCompiler(virtualMachine, decl.name, new XMessageClass((XCompiler) virtualMachine, name), importHelper, this);
+					XClassCompiler compiler = new XClassCompiler(virtualMachine, decl.name, new XMessageClass((XCompiler) virtualMachine, name), importHelper, this, null);
 					if(xPackage.getChild(decl.name)==null){
 						xPackage.addChild(compiler);
 						compiler.registerClasses(decl.defs);
@@ -375,8 +383,10 @@ public class XClassCompiler extends XClass implements XVisitor {
 				}
 			}
 			modifier = xClassDef.modifier==null?0:xClassDef.modifier.modifier;
-			if(isEnum()){
+			if(isAnnotation()){
 				modifier |= XModifier.FINAL;
+			}else if(isIndirectEnum()){
+				modifier |= XModifier.FINAL | XModifier.STATIC;
 			}
 			annotations = makeAnnotations(xClassDef.modifier);
 			methodList = new ArrayList<XMethod>();
@@ -384,10 +394,30 @@ public class XClassCompiler extends XClass implements XVisitor {
 			syntheticFields = new HashMap<String, XSyntheticField>();
 			syntheticVars = new HashMap<String, XSyntheticField>();
 			visitTree(xClassDef.defs);
+			if(!hasEnumChildClasses && isEnum()){
+				modifier |= XModifier.FINAL;
+			}
 			if(!visitConstructor){
-				XTreeMethodDecl decl = new XTreeMethodDecl(XLineDesk.NULL, new XTreeModifier(XLineDesk.NULL, XModifier.PUBLIC), 
-						XMethod.INIT, null, new XTreeType(XLineDesk.NULL, new XTreeIdent(XLineDesk.NULL, XPrimitive.VOID_NAME), null, 0), null, null, null, null, false);
-				decl.accept(this);
+				if(isIndirectEnum() && superEnumCall!=null){
+					try{
+						XVarType[] types = superEnumCall.getTypes();
+						XClassPtr params[] = new XClassPtr[types.length];
+						XAnnotation paramAnnotations[][] = new XAnnotation[types.length][0];
+						for(int i=0; i<types.length; i++){
+							params[i] = types[i].getXClassPtr();
+						}
+						XMethodCompiler method = new XMethodCompiler(this, XModifier.PRIVATE, XMethod.INIT, new XClassPtrClass(XPrimitive.VOID_NAME), 
+								new XAnnotation[0], params, paramAnnotations, new XClassPtr[0], new XGenericInfo[0], null, importHelper, superEnumCall);
+						addChild(method);
+						methodList.add(method);
+					}catch(XRuntimeException e){
+						compilerError(XMessageLevel.ERROR, "intern", XLineDesk.NULL, e.getMessage());
+					}
+				}else{
+					XTreeMethodDecl decl = new XTreeMethodDecl(XLineDesk.NULL, new XTreeModifier(XLineDesk.NULL, XModifier.PUBLIC), 
+							XMethod.INIT, null, new XTreeType(XLineDesk.NULL, new XTreeIdent(XLineDesk.NULL, XPrimitive.VOID_NAME), null, 0), null, null, null, null, false);
+					decl.accept(this);
+				}
 			}
 			XCodeGen assertionCodeGen = null;
 			if(hasAssertions){
@@ -478,7 +508,6 @@ public class XClassCompiler extends XClass implements XVisitor {
 			fieldList = null;
 			methodList = null;
 			((XCompiler)virtualMachine).toCompile(this);
-			
 		}
 	}
 	
@@ -878,6 +907,9 @@ public class XClassCompiler extends XClass implements XVisitor {
 		if(isEnum()){
 			if(staticInit==null){
 				staticInit = new ArrayList<XTree.XTreeStatement>();
+			}
+			if(xNew.classDecl!=null){
+				hasEnumChildClasses = true;
 			}
 			XClassPtr type;
 			String name = getName();

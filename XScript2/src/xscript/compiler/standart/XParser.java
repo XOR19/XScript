@@ -1561,7 +1561,7 @@ public class XParser {
 		while(token.kind!=XTokenKind.EOF && token.kind!=XTokenKind.RBRAKET){
 			list.add(classAndInterfaceBodyDecl(isInterface, className));
 			if(unhandledUnexpected){
-				skip(true, true, false, true, false, true, true);
+				skip(true, true, false, true, false, true, false);
 			}
 		}
 		expected(XTokenKind.RBRAKET);
@@ -1614,7 +1614,7 @@ public class XParser {
 		return new XTreeClassDecl(line, modifier, name, typeParam, superClasses, body);
 	}
 	
-	public XTreeNew enumConstInit(){
+	public XTreeNew enumConstInit(String classname){
 		startLineBlock();
 		startLineBlock();
 		String n = ident();
@@ -1627,7 +1627,10 @@ public class XParser {
 		if(token.kind==XTokenKind.LBRAKET){
 			startLineBlock();
 			List<XTree> body = classAndInterfaceBody(false, null);
-			cdecl = new XTreeClassDecl(endLineBlock(), null, null, null, null, body);
+			XLineDesk line = endLineBlock();
+			List<XTreeType> superClasses = new ArrayList<XTree.XTreeType>();
+			superClasses.add(new XTreeType(line, new XTreeIdent(line, classname), null, 0));
+			cdecl = new XTreeClassDecl(line, null, null, null, superClasses, body);
 		}
 		return new XTreeNew(endLineBlock(), new XTreeType(name.line, name, null, 0), l, cdecl);
 	}
@@ -1641,7 +1644,7 @@ public class XParser {
 		}
 		List<XTree> list = new ArrayList<XTree>();
 		while(token.kind!=XTokenKind.SEMICOLON){
-			list.add(enumConstInit());
+			list.add(enumConstInit(name));
 			if(token.kind!=XTokenKind.COMMA)
 				break;
 			nextToken();
@@ -1651,7 +1654,7 @@ public class XParser {
 			while(token.kind!=XTokenKind.EOF && token.kind!=XTokenKind.RBRAKET){
 				list.add(classAndInterfaceBodyDecl(false, name));
 				if(unhandledUnexpected){
-					skip(true, true, false, true, false, true, true);
+					skip(true, true, false, true, false, true, false);
 				}
 			}
 		}
@@ -1662,7 +1665,6 @@ public class XParser {
 	public XTreeClassDecl enumDecl(XTreeModifier modifier){
 		startLineBlock();
 		expected(XTokenKind.ENUM);
-		modifier.modifier |= xscript.runtime.XModifier.FINAL;
 		startLineBlock();
 		String name = ident();
 		List<XTreeType> superClasses = new ArrayList<XTree.XTreeType>();
@@ -1694,7 +1696,7 @@ public class XParser {
 		while(token.kind!=XTokenKind.EOF && token.kind!=XTokenKind.RBRAKET){
 			list.add(annotationBodyDecl(name));
 			if(unhandledUnexpected){
-				skip(true, true, false, true, false, true, true);
+				skip(true, true, false, true, false, true, false);
 			}
 		}
 		expected(XTokenKind.RBRAKET);

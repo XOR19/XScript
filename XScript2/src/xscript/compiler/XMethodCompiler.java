@@ -1,9 +1,12 @@
 package xscript.compiler;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import xscript.compiler.classtypes.XVarType;
+import xscript.compiler.dumyinstruction.XInstructionDumyDelete;
 import xscript.compiler.dumyinstruction.XInstructionDumyInvokeConstructor;
+import xscript.compiler.dumyinstruction.XInstructionDumyReadLocal;
 import xscript.compiler.message.XMessageLevel;
 import xscript.compiler.token.XLineDesk;
 import xscript.compiler.tree.XTree.XTreeMethodDecl;
@@ -20,6 +23,7 @@ import xscript.runtime.genericclass.XClassPtrClassGeneric;
 import xscript.runtime.genericclass.XClassPtrGeneric;
 import xscript.runtime.genericclass.XClassPtrMethodGeneric;
 import xscript.runtime.instruction.XInstruction;
+import xscript.runtime.instruction.XInstructionInvokeConstructor;
 import xscript.runtime.instruction.XInstructionOPop;
 import xscript.runtime.instruction.XInstructionPop;
 import xscript.runtime.instruction.XInstructionReadLocal;
@@ -34,6 +38,10 @@ public class XMethodCompiler extends XMethod {
 	
 	private XCodeGen codeGen;
 	
+	private boolean hasChildClasses;
+	
+	private XMethodSearch search;
+	
 	public XMethodCompiler(XClass declaringClass, int modifier, String name,
 			XClassPtr returnType, xscript.runtime.XAnnotation[] annotations,
 			XClassPtr[] params, xscript.runtime.XAnnotation[][] paramAnnotations,
@@ -44,8 +52,58 @@ public class XMethodCompiler extends XMethod {
 		this.xMethodDecl = xMethodDecl;
 		this.importHelper = importHelper;
 	}
+	
+	public XMethodCompiler(XClass declaringClass, int modifier, String name,
+			XClassPtr returnType, xscript.runtime.XAnnotation[] annotations,
+			XClassPtr[] params, xscript.runtime.XAnnotation[][] paramAnnotations,
+			XClassPtr[] mThrows, XGenericInfo[] genericInfos, XTreeMethodDecl xMethodDecl, 
+			XImportHelper importHelper, XMethodSearch search) {
+		super(declaringClass, modifier, name, returnType, annotations, params,
+				paramAnnotations, mThrows, genericInfos);
+		this.xMethodDecl = xMethodDecl;
+		this.importHelper = importHelper;
+		this.search = search;
+	}
 
 	public void compile(){
+		if(xMethodDecl==null && isConstructor() && getDeclaringClass().isIndirectEnum() && search!=null){
+			codeGen = new XCodeGen();
+			XInstructionDumyDelete start = new XInstructionDumyDelete();
+			codeGen.addInstruction(start, 0);
+			List<XVariable> vars = new ArrayList<XVariable>();
+			XVariable var = new XVariable();
+			var.name = "this";
+			var.modifier = XModifier.FINAL;
+			var.type = getDeclaringClassVarType();
+			var.start = start;
+			codeGen.addVariable(var);
+			vars.add(var);
+			for(int i=0; i<params.length; i++){
+				XVariable param = new XVariable();
+				if(i==0){
+					param.name = "$name";
+				}else if(i==1){
+					param.name = "$ordinal";
+				}else{
+					param.name = "$param_"+(i-1);
+				}
+				param.modifier = XModifier.FINAL | XModifier.SYNTHETIC;
+				param.type = search.getTypes()[i];
+				param.start = start;
+				param.id = i+1;
+				vars.add(param);
+				codeGen.addVariable(param);
+				codeGen.addInstruction(new XInstructionDumyReadLocal(param), 0);
+			}
+			codeGen.addInstruction(new XInstructionInvokeConstructor(search.getMethod().method, new XClassPtr[0]), 0);
+			XInstructionDumyDelete end = new XInstructionDumyDelete();
+			codeGen.addInstruction(end, 0);
+			for(XVariable v:vars){
+				v.end = end;
+			}
+			System.out.println(getName());
+			return;
+		}
 		if(!isConstructor() && (xMethodDecl.block==null || xscript.runtime.XModifier.isAbstract(modifier) || xscript.runtime.XModifier.isNative(modifier)))
 			return;
 		XStatementCompiler statementCompiler = new XStatementCompiler(null, null, this);
@@ -57,7 +115,7 @@ public class XMethodCompiler extends XMethod {
 	public void change(){
 		if(codeGen!=null && isConstructor()){
 			XClassCompiler c = (XClassCompiler) getDeclaringClass();
-			if(!XModifier.isStatic(modifier) && c.getOuterMethod()!=null){
+			if(!XModifier.isStatic(modifier) && c.getOuterMethod()!=null && !c.isIndirectEnum()){
 				int off = XModifier.isStatic(c.getOuterMethod().getModifier())?1:2;
 				List<XSyntheticField> syntheticVars = c.getSyntheticVars();
 				int numVars = syntheticVars.size();
@@ -176,9 +234,14 @@ public class XMethodCompiler extends XMethod {
 		if(childs.containsKey(c.getSimpleName())){
 			compilerError(XMessageLevel.ERROR, "class.duplicated", line, c.getSimpleName());
 		}else{
+			hasChildClasses = true;
 			addChild(c);
 			classes.add(c);
 		}
+	}
+	
+	public boolean hasChildClasses(){
+		return hasChildClasses;
 	}
 	
 	private XClassPtr getGenericClass1(XClassCompiler xClassCompiler, XTreeType type, XMethod method, XGenericInfo[] extra, boolean doError) {

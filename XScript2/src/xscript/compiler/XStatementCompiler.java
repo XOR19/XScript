@@ -427,17 +427,22 @@ public class XStatementCompiler implements XVisitor {
 
 	@Override
 	public void visitClassDecl(XTreeClassDecl xClassDef) {
-		XCompiler compiler = (XCompiler) methodCompiler.getDeclaringClass().getVirtualMachine();
-		String fullName = methodCompiler.getName()+"."+xClassDef.name;
-		XClassCompiler classCompiler = new XClassCompiler(compiler, xClassDef.name, new XMessageClass(compiler, fullName), methodCompiler.getImportHelper(), methodCompiler);
-		HashMap<String, XVariable> vars = getAllVars();
-		methodCompiler.addClass(classCompiler, xClassDef.line);
-		classCompiler.registerClass(xClassDef);
-		classCompiler.onRequest();
-		classCompiler.addVars(vars);
-		classCompiler.gen();
+		classDecl(xClassDef, null);
 	}
 
+	private void classDecl(XTreeClassDecl xClassDecl, XMethodSearch search){
+		XCompiler compiler = (XCompiler) methodCompiler.getDeclaringClass().getVirtualMachine();
+		String fullName = methodCompiler.getName()+"."+xClassDecl.name;
+		XClassCompiler classCompiler = new XClassCompiler(compiler, xClassDecl.name, new XMessageClass(compiler, fullName), methodCompiler.getImportHelper(), methodCompiler, search);
+		HashMap<String, XVariable> vars = getAllVars();
+		methodCompiler.addClass(classCompiler, xClassDecl.line);
+		classCompiler.registerClass(xClassDecl);
+		classCompiler.onRequest();
+		if(!XModifier.isStatic(classCompiler.getModifier()))
+			classCompiler.addVars(vars);
+		compiler.toCompile(classCompiler);
+	}
+	
 	@Override
 	public void visitAnnotation(XTreeAnnotation xAnnotation) {
 		XError.shouldNeverCalled();
@@ -820,7 +825,7 @@ public class XStatementCompiler implements XVisitor {
 					}
 				}
 				if(!selvInvoke){
-					if(selvInvokeOk && decl.isEnum()){
+					if(selvInvokeOk && decl.isDirectEnum()){
 						XClass e = decl.getVirtualMachine().getClassProvider().getXClass("xscript.lang.Enum");
 						addInstruction(new XInstructionDumyReadLocal(enumNameID), xMethodDecl);
 						addInstruction(new XInstructionDumyReadLocal(enumOrdinalID), xMethodDecl);
@@ -844,6 +849,10 @@ public class XStatementCompiler implements XVisitor {
 								
 							}
 							search.applyTypes(types);
+						}else if(superClass.getXClass().isEnum()){
+							search.applyTypes(new XVarType[]{getVarTypeForName("xscript.lang.String"), getPrimitiveType(XPrimitive.INT)});
+							addInstruction(new XInstructionDumyReadLocal(enumNameID), xMethodDecl);
+							addInstruction(new XInstructionDumyReadLocal(enumOrdinalID), xMethodDecl);
 						}else{
 							search.applyTypes(new XVarType[0]);
 						}
@@ -1406,8 +1415,26 @@ public class XStatementCompiler implements XVisitor {
 		XVarType newType = null;
 		
 		if(xNew.classDecl!=null){
-			xNew.classDecl.name = "$"+addClassNum();
-			visitClassDecl(xNew.classDecl);
+			if(xNew.classDecl.name==null)
+				xNew.classDecl.name = "$"+addClassNum();
+			XMethodSearch search = searchMethod(methodCompiler.getDeclaringClassVarType(), false, XMethod.INIT, true, false);
+			XVarType[] types;
+			XCodeGen[] codeGens;
+			if(xNew.params!=null){
+				types = new XVarType[xNew.params.size()];
+				codeGens = new XCodeGen[types.length];
+				for(int i=0; i<types.length; i++){
+					XStatementCompiler sc = visitTree(xNew.params.get(i), XAnyType.type);
+					codeGens[i] = sc.getCodeGen();
+					types[i] = sc.returnType;
+				}
+			}else{
+				types = new XVarType[0];
+				codeGens = new XCodeGen[0];
+			}
+			search.applyTypes(types);
+			search.applyReturn(getPrimitiveType(XPrimitive.VOID));
+			classDecl(xNew.classDecl, search);
 			newType = getVarTypeForThis(new XTreeType(xNew.classDecl.line, new XTreeIdent(xNew.type.line, xNew.classDecl.name), null, 0), true);
 		}
 		
@@ -1455,9 +1482,9 @@ public class XStatementCompiler implements XVisitor {
 				types = new XVarType[0];
 				codeGens = new XCodeGen[0];
 			}
-			if(c.getOuterMethod()!=null){
+			if(c.getOuterMethod()!=null && !XModifier.isStatic(c.getOuterMethod().getModifier())){
 				XClassCompiler cc = (XClassCompiler) c;
-				cc.gen();
+				//cc.gen();
 				List<XSyntheticField> syntheticVars = cc.getSyntheticVars();
 				int numVars = syntheticVars.size();
 				boolean hasOuter = !XModifier.isStatic(c.getOuterMethod().getModifier());

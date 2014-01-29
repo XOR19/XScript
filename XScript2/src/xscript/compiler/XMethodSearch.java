@@ -102,7 +102,7 @@ public class XMethodSearch {
 		if(!m2.returnType.canCastTo(m1.returnType))
 			return 0;
 		for(int i=0; i<m2.params.length; i++){
-			if(!m2.params[i].canCastTo(m1.params[i]))
+			if(!m1.params[i].canCastTo(m2.params[i]))
 				return 0;
 		}
 		return ret;

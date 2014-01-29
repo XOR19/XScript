@@ -155,7 +155,7 @@ public class XCompiler extends XVirtualMachine{
 		public XClass makeClass(XPackage p) {
 			String name = getName();
 			XMessageClass messageClass = new XMessageClass(compiler, name);
-			XClassCompiler cc = new XClassCompiler(compiler, getSimpleName(), messageClass, null, p);
+			XClassCompiler cc = new XClassCompiler(compiler, getSimpleName(), messageClass, null, p, null);
 			compiler.classes2Save.put(cc, provider);
 			return cc;
 		}

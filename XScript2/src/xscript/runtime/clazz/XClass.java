@@ -2,6 +2,7 @@ package xscript.runtime.clazz;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
@@ -142,17 +143,20 @@ public class XClass extends XPackage{
 	}
 
 	public XClassTable getClassTable(XClass xClass){
-		if(XPrimitive.getPrimitiveID(xClass)!=XPrimitive.OBJECT)
+		if(XPrimitive.getPrimitiveID(xClass)!=XPrimitive.OBJECT){
 			return null;
+		}
 		if(isObjectClass()){
 			return classTable[0];
 		}
 		int ci = xClass.classIndex;
 		if(ci<classTable.length){
 			XClassTable ct = classTable[ci];
-			if(ct!=null && ct.getXClass()==xClass)
+			if(ct!=null && ct.getXClass()==xClass){
 				return ct;
+			}
 		}
+		System.err.println("e3:"+ci+":"+classTable.length+":"+getName());
 		return null;
 	}
 	
@@ -385,11 +389,13 @@ public class XClass extends XPackage{
 		virtualMethods = methods.toArray(new XMethod[methods.size()]);
 		objectSize = 0;
 		for(XGenericClass gc : classes){
-			objectSize = gc.getXClass().makeClassTable(this, objectSize, gc);
+			objectSize = gc.getXClass().makeClassTable(this, objectSize, gc, classes);
 		}
 	}
 	
 	private static void addMethod(List<XMethod> methods, XMethod method, List<XGenericClass> generics){
+		if(method.isConstructor() || XModifier.isStatic(method.getModifier()))
+			return;
 		ListIterator<XMethod> i = methods.listIterator();
 		while(i.hasNext()){
 			int res = isMethodCompatible(method, i.next(), generics);
@@ -425,7 +431,7 @@ public class XClass extends XPackage{
 		XClassPtr[] p2 = m2.getParams();
 		XVirtualMachine vm = m1.getDeclaringClass().getVirtualMachine();
 		for(int i=0; i<p1.length; i++){
-			if(!p2[i].getXClass(vm, g2, null).canCastTo(p1[i].getXClass(vm, g1, null)))
+			if(!p1[i].getXClass(vm, g2, null).canCastTo(p2[i].getXClass(vm, g1, null)))
 				return 0;
 		}
 		return ret;
@@ -450,13 +456,13 @@ public class XClass extends XPackage{
 		return false;
 	}
 	
-	private int makeClassTable(XClass c, int fieldStartID, XGenericClass gc){
+	private int makeClassTable(XClass c, int fieldStartID, XGenericClass gc, List<XGenericClass> generics){
 		if(isObjectClass() && !c.isObjectClass())
 			return fieldStartID;
 		int[] methodIDs = new int[methodCount];
 		for(int i=0; i<methods.length; i++){
-			if(!XModifier.isStatic(methods[i].getModifier())){
-				methodIDs[methods[i].getIndex()] = findIDFor(methods[i], gc, c);
+			if(!XModifier.isStatic(methods[i].getModifier()) && !methods[i].isConstructor()){
+				methodIDs[methods[i].getIndex()] = findIDFor(methods[i], gc, c, generics);
 			}
 		}
 		XClassTable ct = new XClassTable(c, fieldStartID, methodIDs, null);
@@ -469,20 +475,20 @@ public class XClass extends XPackage{
 		return fieldStartID + fieldCount;
 	}
 	
-	private int findIDFor(XMethod xMethod, XGenericClass gc, XClass c) {
+	private int findIDFor(XMethod xMethod, XGenericClass gc, XClass c, List<XGenericClass> generics) {
 		XMethod[] methods = c.virtualMethods;
 		int id=0;
 		for(XMethod m:methods){
-			if(m==xMethod){
+			if(isMethodCompatible(m, xMethod, generics)!=0){
 				return id;
 			}
 			id++;
 		}
-		return -1;
+		throw new XRuntimeException("Method not found %s %s", xMethod, Arrays.toString(methods));
 	}
 
 	private int getNextFreeID(int freeID) {
-		if(classTable.length<freeID && classTable[freeID]!=null){
+		if(classTable.length>freeID && classTable[freeID]!=null){
 			for(int i=freeID+1; i<classTable.length; i++){
 				if(classTable[i]==null)
 					return i;
