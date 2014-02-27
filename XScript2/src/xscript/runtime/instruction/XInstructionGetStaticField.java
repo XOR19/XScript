@@ -38,7 +38,7 @@ public class XInstructionGetStaticField extends XInstruction {
 	
 	@Override
 	public void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
-		long value = field.get(null);
+		long value = field.get(thread, methodExecutor, null);
 		methodExecutor.push(value, getPrimitiveID(vm));
 	}
 

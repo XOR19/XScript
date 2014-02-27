@@ -211,11 +211,11 @@ public class XVirtualMachine extends XMap<String, Map<String, Object>> implement
 			XGenericClass generic = makeGenericClass(name);
 			long obj;
 			if(generic.getXClass().isArray()){
-				obj = getObjectProvider().createArray(generic, XWrapper.castToInt(args[0]));
+				obj = getObjectProvider().createArray(null, null, generic, XWrapper.castToInt(args[0]));
 			}else if(generic.getXClass().getName().equals("xscript.lang.String")){
-				obj = getObjectProvider().createString((String)args[0]);
+				obj = getObjectProvider().createString(null, null, (String)args[0]);
 			}else{
-				obj = getObjectProvider().createObject(generic);
+				obj = getObjectProvider().createObject(null, null, generic);
 			}
 			return getObjectProvider().getObject(obj);
 		}else{

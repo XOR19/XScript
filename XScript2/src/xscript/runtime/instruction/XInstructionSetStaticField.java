@@ -40,12 +40,12 @@ public class XInstructionSetStaticField extends XInstruction {
 		long value = methodExecutor.pop(getPrimitiveID(vm));
 		if(XModifier.isFinal(field.getModifier())){
 			if(methodExecutor.getMethod().isConstructor() && XModifier.isStatic(methodExecutor.getMethod().getModifier()) && methodExecutor.getMethod().getDeclaringClass()==field.getDeclaringClass()){
-				field.finalSet(null, value);
+				field.finalSet(thread, methodExecutor, null, value);
 			}else{
 				throw new XRuntimeException("Try to write final field %s", field.getName());
 			}
 		}else{
-			field.set(null, value);
+			field.set(thread, methodExecutor, null, value);
 		}
 		methodExecutor.push(value, getPrimitiveID(vm));
 	}

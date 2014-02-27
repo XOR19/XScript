@@ -8,6 +8,6 @@ import xscript.runtime.threads.XThread;
 
 public interface XNativeMethod {
 
-	public Object invoke(XVirtualMachine virtualMachine, XThread thread, XMethodExecutor methodExecutor, XGenericClass[] generics, XObject _this, Object[] params);
+	public Object invoke(XVirtualMachine virtualMachine, XThread thread, XMethodExecutor methodExecutor, XGenericClass[] generics, String name, XObject _this, Object[] params);
 	
 }

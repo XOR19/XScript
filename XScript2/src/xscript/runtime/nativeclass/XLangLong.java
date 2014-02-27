@@ -20,7 +20,7 @@ public class XLangLong  {
 		@Override
 		public Object invoke(XVirtualMachine virtualMachine, XThread thread,
 				XMethodExecutor methodExecutor, XGenericClass[] generics,
-				XObject _this, Object[] params) {
+				String name, XObject _this, Object[] params) {
 			return Long.toString((Long)params[0], (Integer)params[1]);
 		}
 		
@@ -31,7 +31,7 @@ public class XLangLong  {
 		@Override
 		public Object invoke(XVirtualMachine virtualMachine, XThread thread,
 				XMethodExecutor methodExecutor, XGenericClass[] generics,
-				XObject _this, Object[] params) {
+				String name, XObject _this, Object[] params) {
 			return toUnsignedString((Long)params[0], (Integer)params[1]);
 		}
 		

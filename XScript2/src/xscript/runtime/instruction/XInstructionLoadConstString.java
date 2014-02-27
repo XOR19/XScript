@@ -23,7 +23,7 @@ public class XInstructionLoadConstString extends XInstruction {
 	
 	@Override
 	public void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
-		long pointer = vm.getObjectProvider().createString(value);
+		long pointer = vm.getObjectProvider().createString(thread, methodExecutor, value);
 		methodExecutor.oPush(pointer);
 	}
 

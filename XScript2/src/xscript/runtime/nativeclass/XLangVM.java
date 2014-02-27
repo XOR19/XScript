@@ -19,7 +19,7 @@ public class XLangVM {
 		@Override
 		public Object invoke(XVirtualMachine virtualMachine, XThread thread,
 				XMethodExecutor methodExecutor, XGenericClass[] generics,
-				XObject _this, Object[] params) {
+				String name, XObject _this, Object[] params) {
 			System.out.println((String)params[0]);
 			return null;
 		}

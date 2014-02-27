@@ -21,7 +21,7 @@ public class XLangArrayChar{
 		@Override
 		public Object invoke(XVirtualMachine virtualMachine, XThread thread,
 				XMethodExecutor methodExecutor, XGenericClass[] generics,
-				XObject _this, Object[] params) {
+				String name, XObject _this, Object[] params) {
 			return getIndex(virtualMachine, _this, (Integer)params[0]);
 		}
 		
@@ -36,7 +36,7 @@ public class XLangArrayChar{
 		@Override
 		public Object invoke(XVirtualMachine virtualMachine, XThread thread,
 				XMethodExecutor methodExecutor, XGenericClass[] generics,
-				XObject _this, Object[] params) {
+				String name, XObject _this, Object[] params) {
 			return setIndex(virtualMachine, _this, (Integer)params[0], (Character)params[1]);
 		}
 		

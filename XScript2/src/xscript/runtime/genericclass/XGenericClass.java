@@ -59,7 +59,15 @@ public class XGenericClass implements List<Object>, Callable<Map<String, Object>
 	
 	@Override
 	public String toString() {
-		return xClass.toString();
+		String ret = xClass.toString();
+		if(generics!=null && generics.length>0){
+			ret += "<"+generics[0];
+			for(int i=1; i<generics.length; i++){
+				ret += ", "+generics[i];
+			}
+			ret += ">";
+		}
+		return ret;
 	}
 
 	@Override

@@ -15,7 +15,10 @@ import xscript.runtime.XVirtualMachine;
 import xscript.runtime.genericclass.XClassPtr;
 import xscript.runtime.genericclass.XGenericClass;
 import xscript.runtime.method.XMethod;
+import xscript.runtime.nativemethod.XNativeFactory;
 import xscript.runtime.object.XObject;
+import xscript.runtime.threads.XMethodExecutor;
+import xscript.runtime.threads.XThread;
 
 public class XClass extends XPackage{
 
@@ -59,6 +62,10 @@ public class XClass extends XPackage{
 	protected int state;
 	
 	protected long classObject;
+	
+	protected XNativeFactory nativeFactory;
+	
+	protected boolean nativeSearched;
 	
 	public XClass(XVirtualMachine virtualMachine, String name, XPackage p) {
 		super(name);
@@ -720,16 +727,29 @@ public class XClass extends XPackage{
 		return fields;
 	}
 
-	public long getClassObject() {
+	public long getClassObject(XThread thread, XMethodExecutor methodExecutor) {
 		if(classObject==0){
 			XClass c = virtualMachine.getClassProvider().getXClass("xscript.lang.Class");
 			XGenericClass gc = new XGenericClass(c);
-			classObject = virtualMachine.getObjectProvider().createObject(gc);
-			long name = virtualMachine.getObjectProvider().createString(getName());
+			classObject = virtualMachine.getObjectProvider().createObject(thread, methodExecutor, gc);
+			long name = virtualMachine.getObjectProvider().createString(thread, methodExecutor, getName());
 			XField nameF = c.getField("name");
 			nameF.finalSet(virtualMachine.getObjectProvider().getObject(classObject), name);
 		}
 		return classObject;
+	}
+
+	public void setNativeFactory(XNativeFactory nativeFactory) {
+		this.nativeFactory = nativeFactory;
+		nativeSearched = true;
+	}
+	
+	public XNativeFactory getNativeFactory() {
+		if(!nativeSearched){
+			nativeFactory = virtualMachine.getNativeProvider().removeNativeFactory(getName());
+			nativeSearched = true;
+		}
+		return nativeFactory;
 	}
 	
 }

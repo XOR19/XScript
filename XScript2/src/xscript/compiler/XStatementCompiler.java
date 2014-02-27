@@ -2499,8 +2499,7 @@ public class XStatementCompiler implements XVisitor {
 
 	@Override
 	public void visitLambda(XTreeLambda xLambda) {
-		// TODO Auto-generated method stub
-		
+		compilerError(XMessageLevel.ERROR, "not.implemented.yet", xLambda.line);
 	}
 
 	@Override

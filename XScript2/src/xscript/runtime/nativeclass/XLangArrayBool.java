@@ -19,7 +19,7 @@ public class XLangArrayBool {
 
 		@Override
 		public Object invoke(XVirtualMachine virtualMachine, XThread thread,
-				XMethodExecutor methodExecutor, XGenericClass[] generics,
+				XMethodExecutor methodExecutor, XGenericClass[] generics, String name,
 				XObject _this, Object[] params) {
 			return getIndex(virtualMachine, _this, (Integer)params[0]);
 		}
@@ -34,7 +34,7 @@ public class XLangArrayBool {
 
 		@Override
 		public Object invoke(XVirtualMachine virtualMachine, XThread thread,
-				XMethodExecutor methodExecutor, XGenericClass[] generics,
+				XMethodExecutor methodExecutor, XGenericClass[] generics, String name,
 				XObject _this, Object[] params) {
 			return setIndex(virtualMachine, _this, (Integer)params[0], (Boolean)params[1]);
 		}

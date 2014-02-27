@@ -46,7 +46,7 @@ public class XWrapper {
 		switch(primitive){
 		case XPrimitive.OBJECT:
 			if(value instanceof String){
-				return objectProvider.createString((String)value);
+				return objectProvider.createString(null, null, (String)value);
 			}
 			return objectProvider.getPointer((XObject)value);
 		case XPrimitive.BOOL:

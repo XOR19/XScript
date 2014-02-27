@@ -13,7 +13,7 @@ import xscript.runtime.genericclass.XGenericClass;
 public class Test {
 	
 	public static void main(String[] args) throws IOException{
-		
+
 		File f = new File(".");
 		
 		XCompiler compiler = new XCompiler(new XZipClassLoader(new File(f, "rt.zip")));
@@ -29,6 +29,9 @@ public class Test {
 		
 		XClass c2 = vm.getClassProvider().getXClass("test.Test2");
 		System.out.println(c2.dump());
+		
+		XClass c3 = vm.getClassProvider().getXClass("test.Test.test()void.A");
+		System.out.println(c3.dump());
 		
 		//vm.getClassProvider().getXClass("xscript.lang.annotation.RetentionPolicy");
 		

@@ -28,7 +28,7 @@ public class XInstructionNew extends XInstruction {
 	public void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
 		XGenericClass rClass = xClass.getXClass(vm, methodExecutor.getDeclaringClass(), methodExecutor);
 		XChecks.checkAccess(methodExecutor.getMethod().getDeclaringClass(), rClass.getXClass());
-		long pointer = vm.getObjectProvider().createObject(rClass);
+		long pointer = vm.getObjectProvider().createObject(thread, methodExecutor, rClass);
 		methodExecutor.oPush(pointer);
 	}
 

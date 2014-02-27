@@ -5,6 +5,8 @@ import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XField;
 import xscript.runtime.genericclass.XGenericClass;
+import xscript.runtime.threads.XMethodExecutor;
+import xscript.runtime.threads.XThread;
 
 public class XObjectProvider {
 
@@ -75,22 +77,22 @@ public class XObjectProvider {
 		return pointer;
 	}
 	
-	public long createObject(XGenericClass xClass){
-		return createPointerForObject(new XObject(xClass));
+	public long createObject(XThread thread, XMethodExecutor methodExecutor, XGenericClass xClass){
+		return createPointerForObject(new XObject(thread, methodExecutor, xClass));
 	}
 	
-	public long createArray(XGenericClass xClass, int size){
-		return createPointerForObject(new XObject(xClass, size));
+	public long createArray(XThread thread, XMethodExecutor methodExecutor, XGenericClass xClass, int size){
+		return createPointerForObject(new XObject(thread, methodExecutor, xClass, size));
 	}
 
-	public long createString(String value) {
+	public long createString(XThread thread, XMethodExecutor methodExecutor, String value) {
 		XClass sc = virtualMachine.getClassProvider().getXClass("xscript.lang.String");
 		XGenericClass gc = new XGenericClass(sc);
-		long s = createObject(gc);
+		long s = createObject(thread, methodExecutor, gc);
 		XGenericClass ac = new XGenericClass(virtualMachine.getClassProvider().getXClass("xscript.lang.ArrayChar"));
-		long v = createArray(ac, value.length());
+		long v = createArray(thread, methodExecutor, ac, value.length());
 		if(getObject(s)==null){
-			s = createObject(gc);
+			s = createObject(thread, methodExecutor, gc);
 		}
 		XObject array = getObject(v);
 		for(int i=0; i<value.length(); i++){

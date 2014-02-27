@@ -44,7 +44,7 @@ public class XInstructionGetLocalField extends XInstruction {
 	public void run(XVirtualMachine vm, XThread thread, XMethodExecutor methodExecutor) {
 		long pointer = methodExecutor.getLocal(local);
 		XObject object = vm.getObjectProvider().getObject(pointer);
-		long value = field.get(object);
+		long value = field.get(thread, methodExecutor, object);
 		methodExecutor.push(value, getPrimitiveID(vm));
 	}
 

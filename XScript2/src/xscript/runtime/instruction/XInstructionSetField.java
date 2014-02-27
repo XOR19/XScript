@@ -42,7 +42,7 @@ public class XInstructionSetField extends XInstruction {
 		long value = methodExecutor.pop(getPrimitiveID(vm));
 		long pointer = methodExecutor.oPop();
 		XObject object = vm.getObjectProvider().getObject(pointer);
-		field.set(object, value);
+		field.set(thread, methodExecutor, object, value);
 		methodExecutor.push(value, getPrimitiveID(vm));
 	}
 

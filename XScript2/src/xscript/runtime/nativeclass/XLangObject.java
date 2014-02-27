@@ -20,8 +20,8 @@ public class XLangObject {
 		@Override
 		public Object invoke(XVirtualMachine virtualMachine, XThread thread,
 				XMethodExecutor methodExecutor, XGenericClass[] generics,
-				XObject _this, Object[] params) {
-			return virtualMachine.getObjectProvider().getObject(_this.getXClass().getXClass().getClassObject());
+				String name, XObject _this, Object[] params) {
+			return virtualMachine.getObjectProvider().getObject(_this.getXClass().getXClass().getClassObject(thread, methodExecutor));
 		}
 		
 	}
@@ -31,7 +31,7 @@ public class XLangObject {
 		@Override
 		public Object invoke(XVirtualMachine virtualMachine, XThread thread,
 				XMethodExecutor methodExecutor, XGenericClass[] generics,
-				XObject _this, Object[] params) {
+				String name, XObject _this, Object[] params) {
 			return virtualMachine.getObjectProvider().getPointer(_this);
 		}
 		

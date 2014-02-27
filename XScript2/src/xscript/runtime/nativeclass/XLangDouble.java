@@ -19,7 +19,7 @@ public class XLangDouble  {
 		@Override
 		public Object invoke(XVirtualMachine virtualMachine, XThread thread,
 				XMethodExecutor methodExecutor, XGenericClass[] generics,
-				XObject _this, Object[] params) {
+				String name, XObject _this, Object[] params) {
 			return Double.toString((Double)params[0]);
 		}
 		

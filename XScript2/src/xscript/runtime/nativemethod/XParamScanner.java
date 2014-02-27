@@ -3,9 +3,9 @@ package xscript.runtime.nativemethod;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
-import xscript.runtime.nativemethod.XNativeClass.XNativeMethod.XParamSpecial;
-import xscript.runtime.nativemethod.XNativeClass.XNativeMethod.XType;
-import xscript.runtime.nativemethod.XNativeClass.XNativeMethod.XParamSpecial.XParamTypes;
+import xscript.runtime.nativemethod.XNativeClass.XParamSpecial;
+import xscript.runtime.nativemethod.XNativeClass.XParamSpecial.XParamTypes;
+import xscript.runtime.nativemethod.XNativeClass.XType;
 
 public class XParamScanner {
 
@@ -54,7 +54,7 @@ public class XParamScanner {
 		return getClassName(getAnnotation(paramsAnnotations[pos], XType.class), params[pos]);
 	}
 	
-	private String getClassName(XType type, Class<?> param){
+	public static String getClassName(XType type, Class<?> param){
 		if(type==null){
 			if(param==Boolean.class || param==boolean.class){
 				return "bool";

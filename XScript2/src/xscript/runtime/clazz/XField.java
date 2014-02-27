@@ -8,20 +8,24 @@ import xscript.runtime.XModifier;
 import xscript.runtime.XRuntimeException;
 import xscript.runtime.genericclass.XClassPtr;
 import xscript.runtime.genericclass.XGenericClass;
+import xscript.runtime.nativemethod.XNativeField;
 import xscript.runtime.object.XObject;
+import xscript.runtime.threads.XMethodExecutor;
+import xscript.runtime.threads.XThread;
 
 public class XField extends XPackage {
 
 	public static final int ENUMFIELD = 4096;
 	
-	public static final int STATICALLOWEDMODIFIFER = XModifier.FINAL | XModifier.PRIVATE | XModifier.PROTECTED | XModifier.PUBLIC | XModifier.STATIC | ENUMFIELD;
-	public static final int ALLOWEDMODIFIFER = XModifier.FINAL | XModifier.PRIVATE | XModifier.PROTECTED | XModifier.PUBLIC;
+	public static final int STATICALLOWEDMODIFIFER = XModifier.FINAL | XModifier.PRIVATE | XModifier.PROTECTED | XModifier.PUBLIC | XModifier.STATIC | ENUMFIELD | XModifier.NATIVE;
+	public static final int ALLOWEDMODIFIFER = XModifier.FINAL | XModifier.PRIVATE | XModifier.PROTECTED | XModifier.PUBLIC | XModifier.NATIVE;
 	
 	protected int modifier;
 	protected XClassPtr type;
 	protected XAnnotation[] annotations;
 	protected int index;
 	protected int enumID = -1;
+	protected XNativeField nativeField;
 	
 	public XField(XClass declaringClass, XInputStream inputStream) throws IOException {
 		super(inputStream.readUTF());
@@ -32,15 +36,23 @@ public class XField extends XPackage {
 			annotations[i] = new XAnnotation(inputStream);
 		}
 		(type = XClassPtr.load(inputStream)).getXClass(declaringClass.getVirtualMachine());
-		if(XModifier.isStatic(modifier)){
-			index = declaringClass.getStaticFieldIndex(getSizeInObject());
-			if((modifier & ENUMFIELD)!=0){
-				enumID = declaringClass.getEnumIndex();
+		if(XModifier.isNative(modifier)){
+			if(XModifier.isStatic(modifier)){
+				XChecks.checkModifier(declaringClass, modifier, STATICALLOWEDMODIFIFER);
+			}else{
+				XChecks.checkModifier(declaringClass, modifier, ALLOWEDMODIFIFER);
 			}
-			XChecks.checkModifier(declaringClass, modifier, STATICALLOWEDMODIFIFER);
 		}else{
-			index = declaringClass.getFieldIndex(getSizeInObject());
-			XChecks.checkModifier(declaringClass, modifier, ALLOWEDMODIFIFER);
+			if(XModifier.isStatic(modifier)){
+				index = declaringClass.getStaticFieldIndex(getSizeInObject());
+				if((modifier & ENUMFIELD)!=0){
+					enumID = declaringClass.getEnumIndex();
+				}
+				XChecks.checkModifier(declaringClass, modifier, STATICALLOWEDMODIFIFER);
+			}else{
+				index = declaringClass.getFieldIndex(getSizeInObject());
+				XChecks.checkModifier(declaringClass, modifier, ALLOWEDMODIFIFER);
+			}
 		}
 	}
 
@@ -65,15 +77,23 @@ public class XField extends XPackage {
 	
 	protected void getIndex(){
 		XClass declaringClass = getDeclaringClass();
-		if(XModifier.isStatic(modifier)){
-			index = declaringClass.getStaticFieldIndex(getSizeInObject());
-			if((modifier & ENUMFIELD)!=0){
-				enumID = declaringClass.getEnumIndex();
+		if(XModifier.isNative(modifier)){
+			if(XModifier.isStatic(modifier)){
+				XChecks.checkModifier(declaringClass, modifier, STATICALLOWEDMODIFIFER);
+			}else{
+				XChecks.checkModifier(declaringClass, modifier, ALLOWEDMODIFIFER);
 			}
-			XChecks.checkModifier(declaringClass, modifier, STATICALLOWEDMODIFIFER);
 		}else{
-			index = declaringClass.getFieldIndex(getSizeInObject());
-			XChecks.checkModifier(declaringClass, modifier, ALLOWEDMODIFIFER);
+			if(XModifier.isStatic(modifier)){
+				index = declaringClass.getStaticFieldIndex(getSizeInObject());
+				if((modifier & ENUMFIELD)!=0){
+					enumID = declaringClass.getEnumIndex();
+				}
+				XChecks.checkModifier(declaringClass, modifier, STATICALLOWEDMODIFIFER);
+			}else{
+				index = declaringClass.getFieldIndex(getSizeInObject());
+				XChecks.checkModifier(declaringClass, modifier, ALLOWEDMODIFIFER);
+			}
 		}
 	}
 	
@@ -113,7 +133,14 @@ public class XField extends XPackage {
 		return XPrimitive.getSize(getTypePrimitive());
 	}
 	
-	public long get(XObject object){
+	public long get(XObject object) {
+		return get(null, null, object);
+	}
+	
+	public long get(XThread thread, XMethodExecutor methodExecutor, XObject object){
+		if(XModifier.isNative(modifier)){
+			return getDeclaringClass().virtualMachine.getNativeProvider().get(thread, methodExecutor, this, object);
+		}
 		int i;
 		byte[] data;
 		if(XModifier.isStatic(modifier)){
@@ -137,13 +164,25 @@ public class XField extends XPackage {
 	}
 
 	public void set(XObject object, long value) {
+		set(null, null, object, value);
+	}
+	
+	public void set(XThread thread, XMethodExecutor methodExecutor, XObject object, long value) {
 		if(XModifier.isFinal(modifier)){
 			throw new XRuntimeException("Try to write final field %s", getName());
 		}
-		finalSet(object, value);
+		finalSet(thread, methodExecutor, object, value);
 	}
 	
 	public void finalSet(XObject object, long value){
+		finalSet(null, null, object, value);
+	}
+	
+	public void finalSet(XThread thread, XMethodExecutor methodExecutor, XObject object, long value){
+		if(XModifier.isNative(modifier)){
+			getDeclaringClass().virtualMachine.getNativeProvider().set(thread, methodExecutor, this, object, value);
+			return;
+		}
 		int i;
 		byte[] data;
 		if(XModifier.isStatic(modifier)){
@@ -183,6 +222,22 @@ public class XField extends XPackage {
 
 	public String dump() {
 		return XModifier.getSource(modifier)+type+" "+name+";";
+	}
+
+	public XNativeField getNativeField() {
+		if(XModifier.isNative(modifier)){
+			if(nativeField==null){
+				nativeField = getDeclaringClass().getVirtualMachine().getNativeProvider().removeNativeField(getName());
+			}
+			return nativeField;
+		}
+		return null;
+	}
+	
+	public void setNativeField(XNativeField nativeField){
+		if(XModifier.isNative(modifier)){
+			this.nativeField = nativeField;
+		}
 	}
 	
 }

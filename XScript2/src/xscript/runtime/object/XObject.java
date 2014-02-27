@@ -13,6 +13,8 @@ import xscript.runtime.clazz.XField;
 import xscript.runtime.clazz.XWrapper;
 import xscript.runtime.genericclass.XClassPtr;
 import xscript.runtime.genericclass.XGenericClass;
+import xscript.runtime.nativemethod.XNativeFactory;
+import xscript.runtime.threads.XMethodExecutor;
 import xscript.runtime.threads.XThread;
 
 public class XObject extends XMap<Object, Object> implements Callable<Callable<Map<String, Object>>>{
@@ -24,17 +26,22 @@ public class XObject extends XMap<Object, Object> implements Callable<Callable<M
 	private int monitor;
 	private XThread thread;
 	private List<XThread> waiting;
+	private Object nativeObject;
 	
-	protected XObject(XGenericClass xClass){
+	protected XObject(XThread thread, XMethodExecutor methodExecutor, XGenericClass xClass){
 		if(XModifier.isAbstract(xClass.getXClass().getModifier()))
 			throw new XRuntimeException("Can't create Object form abstract class %s", xClass);
 		if(xClass.getXClass().isArray())
 			throw new XRuntimeException("%s is an array", xClass);
 		this.xClass = xClass;
 		data = new byte[xClass.getXClass().getObjectSize()];
+		XNativeFactory factory = xClass.getXClass().getNativeFactory();
+		if(factory!=null){
+			nativeObject = factory.makeObject(xClass.getXClass().getVirtualMachine(), thread, methodExecutor, xClass, this);
+		}
 	}
 	
-	protected XObject(XGenericClass xClass, int size) {
+	protected XObject(XThread thread, XMethodExecutor methodExecutor, XGenericClass xClass, int size) {
 		if(XModifier.isAbstract(xClass.getXClass().getModifier()))
 			throw new XRuntimeException("Can't create Object form abstract class %s", xClass);
 		if(!(xClass.getXClass().isArray()))
@@ -42,6 +49,10 @@ public class XObject extends XMap<Object, Object> implements Callable<Callable<M
 		this.xClass = xClass;
 		data = new byte[xClass.getXClass().getObjectSize()+size*xClass.getXClass().getArrayElementSize()];
 		xClass.getXClass().getLengthField().finalSet(this, size);
+		XNativeFactory factory = xClass.getXClass().getNativeFactory();
+		if(factory!=null){
+			nativeObject = factory.makeObject(xClass.getXClass().getVirtualMachine(), thread, methodExecutor, xClass, this);
+		}
 	}
 	
 	public XGenericClass getXClass(){
@@ -61,6 +72,14 @@ public class XObject extends XMap<Object, Object> implements Callable<Callable<M
 			return (int) xClass.getXClass().getLengthField().get(this);
 		}
 		return 0;
+	}
+	
+	public Object getNativeObject(){
+		return nativeObject;
+	}
+	
+	public void setNativeObject(Object nativeObject){
+		this.nativeObject = nativeObject;
 	}
 	
 	public long getArrayElement(int index){

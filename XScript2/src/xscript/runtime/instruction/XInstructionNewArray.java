@@ -35,7 +35,7 @@ public class XInstructionNewArray extends XInstruction {
 			size[i] = methodExecutor.iPop();
 		}
 		XGenericClass rClass = xClass.getXClass(vm, methodExecutor.getDeclaringClass(), methodExecutor);
-		long pointer = createArray(rClass, 0, size, vm, methodExecutor);
+		long pointer = createArray(thread, rClass, 0, size, vm, methodExecutor);
 		methodExecutor.oPush(pointer);
 	}
 
@@ -44,16 +44,16 @@ public class XInstructionNewArray extends XInstruction {
 		xClass.getXClass(vm);
 	}
 	
-	private long createArray(XGenericClass c, int pos, int[] size, XVirtualMachine vm, XMethodExecutor methodExecutor){
+	private long createArray(XThread thread, XGenericClass c, int pos, int[] size, XVirtualMachine vm, XMethodExecutor methodExecutor){
 		XChecks.checkAccess(methodExecutor.getMethod().getDeclaringClass(), c.getXClass());
 		int s = size[pos];
-		long pointer = vm.getObjectProvider().createArray(c, s);
+		long pointer = vm.getObjectProvider().createArray(thread, methodExecutor, c, s);
 		pos++;
 		if(pos<size.length){
 			XObject obj = vm.getObjectProvider().getObject(pointer);
 			XGenericClass cc = c.getGeneric(0);
 			for(int i=0; i<s; i++){
-				long ch = createArray(cc, pos, size, vm, methodExecutor);
+				long ch = createArray(thread, cc, pos, size, vm, methodExecutor);
 				obj.setArrayElement(i, ch);
 			}
 		}

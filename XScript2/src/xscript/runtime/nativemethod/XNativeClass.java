@@ -17,25 +17,37 @@ public @interface XNativeClass {
 		
 		public String value() default "";
 		
-		@Target({ElementType.PARAMETER, ElementType.METHOD})
-		@Retention(RetentionPolicy.RUNTIME)
-		public @interface XType{
-			
-			public String value();
-			
-		}
+	}
+	
+	@Target(ElementType.FIELD)
+	@Retention(RetentionPolicy.RUNTIME)
+	public @interface XNativeField{
 		
-		@Target({ElementType.PARAMETER})
-		@Retention(RetentionPolicy.RUNTIME)
-		public @interface XParamSpecial{
+		public String value() default "";
+		
+	}
+	
+	@Target(ElementType.METHOD)
+	@Retention(RetentionPolicy.RUNTIME)
+	public @interface XNativeFactory{}
+	
+	@Target({ElementType.PARAMETER, ElementType.METHOD, ElementType.FIELD})
+	@Retention(RetentionPolicy.RUNTIME)
+	public @interface XType{
+		
+		public String value();
+		
+	}
+	
+	@Target({ElementType.PARAMETER})
+	@Retention(RetentionPolicy.RUNTIME)
+	public @interface XParamSpecial{
+		
+		public XParamTypes value();
+		
+		public enum XParamTypes{
 			
-			public XParamTypes value();
-			
-			public enum XParamTypes{
-				
-				VM, THREAD, ME, GENERICS, THIS
-				
-			}
+			VM, THREAD, ME, GENERICS, THIS
 			
 		}
 		
