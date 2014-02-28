@@ -2,7 +2,7 @@ package xscript.runtime;
 
 public class XTimer {
 
-	public long getMiliSecounds(){
+	public long getMilliSeconds(){
 		return System.currentTimeMillis();
 	}
 	
