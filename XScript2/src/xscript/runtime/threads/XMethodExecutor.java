@@ -1,7 +1,5 @@
 package xscript.runtime.threads;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +8,8 @@ import xscript.runtime.XModifier;
 import xscript.runtime.XRuntimeException;
 import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XClass;
+import xscript.runtime.clazz.XInputStreamSave;
+import xscript.runtime.clazz.XOutputStreamSave;
 import xscript.runtime.clazz.XPrimitive;
 import xscript.runtime.genericclass.XClassPtr;
 import xscript.runtime.genericclass.XGenericClass;
@@ -80,7 +80,7 @@ public class XMethodExecutor implements XGenericMethodProvider {
 		catchObjectStackPointer = new int[method.getExceptionHanles()];
 	}
 
-	public XMethodExecutor(XVirtualMachine virtualMachine, DataInputStream dis, List<XClass> classes) throws IOException {
+	public XMethodExecutor(XVirtualMachine virtualMachine, XInputStreamSave dis, List<XClass> classes) throws IOException {
 		topConstructor = dis.readBoolean();
 		if(topConstructor){
 			classes = this.classes = new ArrayList<XClass>();
@@ -139,7 +139,7 @@ public class XMethodExecutor implements XGenericMethodProvider {
 		}
 	}
 
-	public void save(DataOutputStream dos) throws IOException {
+	public void save(XOutputStreamSave dos) throws IOException {
 		dos.writeBoolean(topConstructor);
 		if(topConstructor){
 			dos.writeInt(classes.size());

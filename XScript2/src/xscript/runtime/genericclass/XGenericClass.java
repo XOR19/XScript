@@ -1,7 +1,5 @@
 package xscript.runtime.genericclass;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -17,6 +15,8 @@ import xscript.runtime.XRuntimeException;
 import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XClassTable;
+import xscript.runtime.clazz.XInputStreamSave;
+import xscript.runtime.clazz.XOutputStreamSave;
 
 public class XGenericClass implements List<Object>, Callable<Map<String, Object>> {
 
@@ -38,7 +38,7 @@ public class XGenericClass implements List<Object>, Callable<Map<String, Object>
 		}
 	}
 
-	public XGenericClass(XVirtualMachine virtualMachine, DataInputStream dis) throws IOException {
+	public XGenericClass(XVirtualMachine virtualMachine, XInputStreamSave dis) throws IOException {
 		String className = dis.readUTF();
 		xClass = virtualMachine.getClassProvider().getLoadedXClass(className);
 		int s = dis.readInt();
@@ -52,7 +52,7 @@ public class XGenericClass implements List<Object>, Callable<Map<String, Object>
 		}
 	}
 
-	public void save(DataOutputStream dos) throws IOException {
+	public void save(XOutputStreamSave dos) throws IOException {
 		dos.writeUTF(xClass.getName());
 		if(generics==null){
 			dos.writeInt(-1);

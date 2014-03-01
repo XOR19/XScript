@@ -8,8 +8,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import xscript.compiler.classtypes.XVarType;
-import xscript.compiler.dumyinstruction.XInstructionDumyGetLocalField;
-import xscript.compiler.dumyinstruction.XInstructionDumyReadLocal;
 import xscript.compiler.message.XMessageLevel;
 import xscript.compiler.message.XMessageList;
 import xscript.compiler.token.XLineDesk;

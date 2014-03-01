@@ -1,13 +1,13 @@
 package xscript.runtime.object;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 
 import xscript.runtime.XRuntimeException;
 import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XField;
+import xscript.runtime.clazz.XInputStreamSave;
+import xscript.runtime.clazz.XOutputStreamSave;
 import xscript.runtime.genericclass.XGenericClass;
 import xscript.runtime.threads.XMethodExecutor;
 import xscript.runtime.threads.XThread;
@@ -22,7 +22,7 @@ public class XObjectProvider {
 		objects = new XObject[memSize];
 	}
 	
-	public XObjectProvider(XVirtualMachine virtualMachine, DataInputStream dis) throws IOException {
+	public XObjectProvider(XVirtualMachine virtualMachine, XInputStreamSave dis) throws IOException {
 		this.virtualMachine = virtualMachine;
 		objects = new XObject[dis.readInt()];
 		for(int i=0; i<objects.length; i++){
@@ -32,7 +32,7 @@ public class XObjectProvider {
 		}
 	}
 
-	public void save(DataOutputStream dos) throws IOException {
+	public void save(XOutputStreamSave dos) throws IOException {
 		gc();
 		dos.writeInt(objects.length);
 		for(int i=0; i<objects.length; i++){

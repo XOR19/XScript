@@ -1,7 +1,5 @@
 package xscript.runtime;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -16,6 +14,8 @@ import javax.script.Invocable;
 import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XClassLoader;
 import xscript.runtime.clazz.XClassProvider;
+import xscript.runtime.clazz.XInputStreamSave;
+import xscript.runtime.clazz.XOutputStreamSave;
 import xscript.runtime.clazz.XPrimitive;
 import xscript.runtime.clazz.XWrapper;
 import xscript.runtime.genericclass.XGenericClass;
@@ -44,12 +44,7 @@ public class XVirtualMachine extends XMap<String, Map<String, Object>> implement
 	}
 	
 	public XVirtualMachine(List<XClassLoader> classLoaders, InputStream is, XTimer timer) throws IOException{
-		DataInputStream dis;
-		if(is instanceof DataInputStream){
-			dis = (DataInputStream)is;
-		}else{
-			dis = new DataInputStream(is);
-		}
+		XInputStreamSave dis = new XInputStreamSave(is);
 		if(timer==null){
 			timer = new XTimer();
 		}
@@ -61,14 +56,12 @@ public class XVirtualMachine extends XMap<String, Map<String, Object>> implement
 	}
 	
 	public void save(OutputStream os) throws IOException{
-		if(os instanceof DataOutputStream){
-			save((DataOutputStream)os);
-		}else{
-			save(new DataOutputStream(os));
-		}
+		XOutputStreamSave outputStreamSave = new XOutputStreamSave();
+		save(outputStreamSave);
+		outputStreamSave.writeToOutputStream(os);
 	}
 	
-	private void save(DataOutputStream dos) throws IOException{
+	private void save(XOutputStreamSave dos) throws IOException{
 		classProvider.save(dos);
 		threadProvider.save(dos);
 		objectProvider.save(dos);

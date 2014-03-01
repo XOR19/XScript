@@ -1,13 +1,13 @@
 package xscript.runtime.threads;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import xscript.runtime.XRuntimeException;
 import xscript.runtime.XVirtualMachine;
+import xscript.runtime.clazz.XInputStreamSave;
+import xscript.runtime.clazz.XOutputStreamSave;
 import xscript.runtime.genericclass.XGenericClass;
 import xscript.runtime.method.XMethod;
 
@@ -26,7 +26,7 @@ public class XThreadProvider {
 		this.virtualMachine = virtualMachine;
 	}
 	
-	public XThreadProvider(XVirtualMachine virtualMachine, DataInputStream dis) throws IOException {
+	public XThreadProvider(XVirtualMachine virtualMachine, XInputStreamSave dis) throws IOException {
 		this.virtualMachine = virtualMachine;
 		threads.clear();
 		interrupts.clear();
@@ -44,7 +44,7 @@ public class XThreadProvider {
 		newImportantInterrupt = false;
 	}
 
-	public void save(DataOutputStream dos) throws IOException {
+	public void save(XOutputStreamSave dos) throws IOException {
 		dos.writeInt(threads.size());
 		for(XThread thread:threads){
 			thread.save(dos);

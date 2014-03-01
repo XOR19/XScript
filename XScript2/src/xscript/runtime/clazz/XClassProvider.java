@@ -1,7 +1,5 @@
 package xscript.runtime.clazz;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,7 +38,7 @@ public class XClassProvider {
 		VOID = createPrimitive(XPrimitive.VOID);
 	}
 	
-	public XClassProvider(XVirtualMachine virtualMachine, List<XClassLoader> classLoaders, DataInputStream dis) throws IOException {
+	public XClassProvider(XVirtualMachine virtualMachine, List<XClassLoader> classLoaders, XInputStreamSave dis) throws IOException {
 		this(virtualMachine);
 		this.classLoaders.addAll(classLoaders);
 		int s = dis.readInt();
@@ -50,7 +48,7 @@ public class XClassProvider {
 		}
 	}
 
-	public void save(DataOutputStream dos) throws IOException {
+	public void save(XOutputStreamSave dos) throws IOException {
 		List<XClass> allClasses = getAllLoadedClasses();
 		dos.writeInt(allClasses.size());
 		for(XClass c:allClasses){

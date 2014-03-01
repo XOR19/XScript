@@ -1,7 +1,5 @@
 package xscript.runtime.threads;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.List;
 
@@ -9,6 +7,8 @@ import xscript.runtime.XModifier;
 import xscript.runtime.XRuntimeException;
 import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XClass;
+import xscript.runtime.clazz.XInputStreamSave;
+import xscript.runtime.clazz.XOutputStreamSave;
 import xscript.runtime.clazz.XPrimitive;
 import xscript.runtime.genericclass.XGenericClass;
 import xscript.runtime.instruction.XInstruction;
@@ -36,7 +36,7 @@ public class XThread {
 		call(method, generics, params);
 	}
 
-	public XThread(XVirtualMachine virtualMachine, DataInputStream dis) throws IOException {
+	public XThread(XVirtualMachine virtualMachine, XInputStreamSave dis) throws IOException {
 		this.virtualMachine = virtualMachine;
 		name = dis.readUTF();
 		id = dis.readInt();
@@ -60,7 +60,7 @@ public class XThread {
 		}
 	}
 
-	public void save(DataOutputStream dos) throws IOException {
+	public void save(XOutputStreamSave dos) throws IOException {
 		dos.writeUTF(name);
 		dos.writeInt(id);
 		methodExecutor.save(dos);

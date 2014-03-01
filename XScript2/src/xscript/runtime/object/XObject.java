@@ -1,7 +1,5 @@
 package xscript.runtime.object;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +12,8 @@ import xscript.runtime.XRuntimeException;
 import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XField;
+import xscript.runtime.clazz.XInputStreamSave;
+import xscript.runtime.clazz.XOutputStreamSave;
 import xscript.runtime.clazz.XWrapper;
 import xscript.runtime.genericclass.XClassPtr;
 import xscript.runtime.genericclass.XGenericClass;
@@ -59,7 +59,7 @@ public class XObject extends XMap<Object, Object> implements Callable<Callable<M
 		}
 	}
 	
-	public XObject(XVirtualMachine virtualMachine, DataInputStream dis) throws IOException {
+	public XObject(XVirtualMachine virtualMachine, XInputStreamSave dis) throws IOException {
 		xClass = new XGenericClass(virtualMachine, dis);
 		data = new byte[dis.readInt()];
 		dis.read(data);
@@ -84,7 +84,7 @@ public class XObject extends XMap<Object, Object> implements Callable<Callable<M
 		}
 	}
 
-	public void save(DataOutputStream dos) throws IOException {
+	public void save(XOutputStreamSave dos) throws IOException {
 		xClass.save(dos);
 		dos.writeInt(data.length);
 		dos.write(data);
