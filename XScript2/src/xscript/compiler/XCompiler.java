@@ -124,6 +124,10 @@ public class XCompiler extends XVirtualMachine{
 		}
 	}
 	
+	public List<XMessageElement> getMessageList(){
+		return messageList;
+	}
+	
 	protected void postMessage(XMessageLevel level, String className, String key, XLineDesk lineDesk, Object...args) {
 		messageList.add(new XMessageElement(level, className, lineDesk, key, args));
 	}

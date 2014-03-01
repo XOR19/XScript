@@ -9,10 +9,14 @@ import java.util.zip.ZipFile;
 
 import xscript.runtime.XRuntimeException;
 
-public class XZipClassLoader extends XClassLoader {
+public class XZipClassLoader implements XClassLoader {
 
+	protected final File rootFile;
+	
 	public XZipClassLoader(File rootFile) throws IOException {
-		super(rootFile);
+		this.rootFile = rootFile;
+		if(!rootFile.exists())
+			throw new IOException("class root "+rootFile+" not found");
 	}
 
 	@Override
@@ -25,7 +29,7 @@ public class XZipClassLoader extends XClassLoader {
 				if(!entry.isDirectory()){
 					String className = entry.getName().substring(0, entry.getName().length()-5);
 					className = className.replace('\\', '.').replace('/', '.');
-					if(name.startsWith(className) && (name.length() == className.length() || name.charAt(className.length())=='.')){
+					if(name.startsWith(className) && (name.length() == className.length() || (name.length() > className.length() && name.charAt(className.length())=='.'))){
 						return new XInputStream(new XZipInputStream(file.getInputStream(entry), file), className);
 					}
 				}
