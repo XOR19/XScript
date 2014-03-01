@@ -1,5 +1,7 @@
 package xscript.runtime.clazz;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -750,6 +752,16 @@ public class XClass extends XPackage{
 			nativeSearched = true;
 		}
 		return nativeFactory;
+	}
+
+	public void load(DataInputStream dis) throws IOException {
+		dis.read(staticData);
+		classObject = dis.readLong();
+	}
+
+	public void save(DataOutputStream dos) throws IOException {
+		dos.write(staticData);
+		dos.writeLong(classObject);
 	}
 	
 }

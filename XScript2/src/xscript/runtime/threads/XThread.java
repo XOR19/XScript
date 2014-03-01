@@ -1,5 +1,8 @@
 package xscript.runtime.threads;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.List;
 
 import xscript.runtime.XModifier;
@@ -24,13 +27,61 @@ public class XThread {
 	protected long lastRunTime;
 	protected boolean waiting;
 	private byte[] userData;
+	private int id;
 	
-	protected XThread(XVirtualMachine virtualMachine, String name, XMethod method, XGenericClass[] generics, long[] params){
+	protected XThread(XVirtualMachine virtualMachine, String name, XMethod method, XGenericClass[] generics, long[] params, int id){
 		this.virtualMachine = virtualMachine;
 		this.name = name;
+		this.id = id;
 		call(method, generics, params);
 	}
 
+	public XThread(XVirtualMachine virtualMachine, DataInputStream dis) throws IOException {
+		this.virtualMachine = virtualMachine;
+		name = dis.readUTF();
+		id = dis.readInt();
+		methodExecutor = new XMethodExecutor(virtualMachine, dis, null);
+		int i = dis.readByte();
+		if(i==-1){
+			result = null;
+		}else{
+			result = new long[]{dis.readLong(), i};
+		}
+		exception = dis.readLong();
+		sleepTime = dis.readLong();
+		lastRunTime = virtualMachine.getTimer().getMilliSeconds()-dis.readLong();
+		waiting = dis.readBoolean();
+		int s = dis.readInt();
+		if(s==-1){
+			userData = null;
+		}else{
+			userData = new byte[s];
+			dis.read(userData);
+		}
+	}
+
+	public void save(DataOutputStream dos) throws IOException {
+		dos.writeUTF(name);
+		dos.writeInt(id);
+		methodExecutor.save(dos);
+		if(result==null){
+			dos.writeByte(-1);
+		}else{
+			dos.writeByte((int) result[1]);
+			dos.writeLong(result[0]);
+		}
+		dos.writeLong(exception);
+		dos.writeLong(sleepTime);
+		dos.writeLong(virtualMachine.getTimer().getMilliSeconds()-lastRunTime);
+		dos.writeBoolean(waiting);
+		if(userData==null){
+			dos.writeInt(-1);
+		}else{
+			dos.writeInt(userData.length);
+			dos.write(userData);
+		}
+	}
+	
 	public void setUserData(byte[] userData){
 		this.userData = userData;
 	}
@@ -160,6 +211,10 @@ public class XThread {
 		if(waiting)
 			return XThreadState.WAITING;
 		return XThreadState.RUNNING;
+	}
+	
+	public int getID(){
+		return id;
 	}
 	
 }

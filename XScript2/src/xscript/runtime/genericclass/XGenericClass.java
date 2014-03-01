@@ -1,5 +1,8 @@
 package xscript.runtime.genericclass;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,6 +14,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import xscript.runtime.XRuntimeException;
+import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XClassTable;
 
@@ -34,6 +38,32 @@ public class XGenericClass implements List<Object>, Callable<Map<String, Object>
 		}
 	}
 
+	public XGenericClass(XVirtualMachine virtualMachine, DataInputStream dis) throws IOException {
+		String className = dis.readUTF();
+		xClass = virtualMachine.getClassProvider().getLoadedXClass(className);
+		int s = dis.readInt();
+		if(s==-1){
+			generics = null;
+		}else{
+			generics = new XGenericClass[s];
+			for(int i=0; i<s; i++){
+				generics[i] = new XGenericClass(virtualMachine, dis);
+			}
+		}
+	}
+
+	public void save(DataOutputStream dos) throws IOException {
+		dos.writeUTF(xClass.getName());
+		if(generics==null){
+			dos.writeInt(-1);
+		}else{
+			dos.writeInt(generics.length);
+			for(XGenericClass generic:generics){
+				generic.save(dos);
+			}
+		}
+	}
+	
 	public XClass getXClass() {
 		return xClass;
 	}

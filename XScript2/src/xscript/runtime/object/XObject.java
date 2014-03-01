@@ -1,5 +1,8 @@
 package xscript.runtime.object;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -8,6 +11,7 @@ import java.util.concurrent.Callable;
 import xscript.runtime.XMap;
 import xscript.runtime.XModifier;
 import xscript.runtime.XRuntimeException;
+import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XField;
 import xscript.runtime.clazz.XWrapper;
@@ -52,6 +56,51 @@ public class XObject extends XMap<Object, Object> implements Callable<Callable<M
 		XNativeFactory factory = xClass.getXClass().getNativeFactory();
 		if(factory!=null){
 			nativeObject = factory.makeObject(xClass.getXClass().getVirtualMachine(), thread, methodExecutor, xClass, this);
+		}
+	}
+	
+	public XObject(XVirtualMachine virtualMachine, DataInputStream dis) throws IOException {
+		xClass = new XGenericClass(virtualMachine, dis);
+		data = new byte[dis.readInt()];
+		dis.read(data);
+		int s = dis.readInt();
+		if(s==-1){
+			userData = null;
+		}else{
+			userData = new byte[s];
+			dis.read(userData);
+		}
+		monitor = dis.readInt();
+		if(monitor>0){
+			thread = virtualMachine.getThreadProvider().getThread(dis.readInt());
+			s = dis.readInt();
+			waiting = new ArrayList<XThread>();
+			for(int i=0; i<s; i++){
+				waiting.add(virtualMachine.getThreadProvider().getThread(dis.readInt()));
+			}
+		}else{
+			thread = null;
+			waiting = null;
+		}
+	}
+
+	public void save(DataOutputStream dos) throws IOException {
+		xClass.save(dos);
+		dos.writeInt(data.length);
+		dos.write(data);
+		if(userData==null){
+			dos.writeInt(-1);
+		}else{
+			dos.writeInt(userData.length);
+			dos.write(userData);
+		}
+		dos.writeInt(monitor);
+		if(monitor>0){
+			dos.writeInt(thread.getID());
+			dos.writeInt(waiting.size());
+			for(XThread waitingt:waiting){
+				dos.writeInt(waitingt.getID());
+			}
 		}
 	}
 	

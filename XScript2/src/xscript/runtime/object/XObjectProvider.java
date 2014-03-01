@@ -1,5 +1,9 @@
 package xscript.runtime.object;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+
 import xscript.runtime.XRuntimeException;
 import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XClass;
@@ -16,6 +20,29 @@ public class XObjectProvider {
 	public XObjectProvider(XVirtualMachine virtualMachine, int memSize){
 		this.virtualMachine = virtualMachine;
 		objects = new XObject[memSize];
+	}
+	
+	public XObjectProvider(XVirtualMachine virtualMachine, DataInputStream dis) throws IOException {
+		this.virtualMachine = virtualMachine;
+		objects = new XObject[dis.readInt()];
+		for(int i=0; i<objects.length; i++){
+			if(dis.readBoolean()){
+				objects[i] = new XObject(virtualMachine, dis);
+			}
+		}
+	}
+
+	public void save(DataOutputStream dos) throws IOException {
+		gc();
+		dos.writeInt(objects.length);
+		for(int i=0; i<objects.length; i++){
+			if(objects[i]==null){
+				dos.writeBoolean(false);
+			}else{
+				dos.writeBoolean(true);
+				objects[i].save(dos);
+			}
+		}
 	}
 	
 	public XObject getObject(long pointer) {

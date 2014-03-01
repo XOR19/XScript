@@ -1,10 +1,14 @@
 package xscript.runtime.threads;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import xscript.runtime.XModifier;
 import xscript.runtime.XRuntimeException;
+import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XPrimitive;
 import xscript.runtime.genericclass.XClassPtr;
@@ -76,6 +80,112 @@ public class XMethodExecutor implements XGenericMethodProvider {
 		catchObjectStackPointer = new int[method.getExceptionHanles()];
 	}
 
+	public XMethodExecutor(XVirtualMachine virtualMachine, DataInputStream dis, List<XClass> classes) throws IOException {
+		topConstructor = dis.readBoolean();
+		if(topConstructor){
+			classes = this.classes = new ArrayList<XClass>();
+			int s = dis.readInt();
+			for(int i=0; i<s; i++){
+				String className = dis.readUTF();
+				classes.add(virtualMachine.getClassProvider().getLoadedXClass(className));
+			}
+		}else{
+			if(dis.readBoolean()){
+				classes = this.classes = null;
+			}else{
+				this.classes = classes;
+			}
+		}
+		declaringClass = new XGenericClass(virtualMachine, dis);
+		String methodName = dis.readUTF();
+		method = (XMethod)virtualMachine.getClassProvider().getLoadedXPackage(methodName);
+		int s = dis.readInt();
+		if(s==-1){
+			generics = null;
+		}else{
+			generics = new XGenericClass[s];
+			for(int i=0; i<s; i++){
+				generics[i] = new XGenericClass(virtualMachine, dis);
+			}
+		}
+		stackPointer = dis.readInt();
+		stack = new int[method.getMaxStackSize()];
+		for(int i=0; i<stackPointer; i++){
+			stack[i] = dis.readInt();
+		}
+		objectStackPointer = dis.readInt();
+		objectStack = new long[method.getMaxObjectStackSize()];
+		for(int i=0; i<objectStackPointer; i++){
+			objectStack[i] = dis.readLong();
+		}
+		local = new long[method.getMaxLocalSize()];
+		for(int i=0; i<local.length; i++){
+			local[i] = dis.readLong();
+		}
+		ret = dis.readLong();
+		programPointer = dis.readInt();
+		catchStackPointer = new int[method.getExceptionHanles()];
+		for(int i=0; i<catchStackPointer.length; i++){
+			catchStackPointer[i] = dis.readInt();
+		}
+		catchObjectStackPointer = new int[catchStackPointer.length];
+		for(int i=0; i<catchObjectStackPointer.length; i++){
+			catchObjectStackPointer[i] = dis.readInt();
+		}
+		if(dis.readBoolean()){
+			parent = new XMethodExecutor(virtualMachine, dis, classes);
+		}else{
+			parent = null;
+		}
+	}
+
+	public void save(DataOutputStream dos) throws IOException {
+		dos.writeBoolean(topConstructor);
+		if(topConstructor){
+			dos.writeInt(classes.size());
+			for(XClass xClass:classes){
+				dos.writeUTF(xClass.getName());
+			}
+		}else{
+			dos.writeBoolean(classes==null);
+		}
+		declaringClass.save(dos);
+		dos.writeUTF(method.getName());
+		if(generics==null){
+			dos.writeInt(-1);
+		}else{
+			dos.writeInt(generics.length);
+			for(XGenericClass generic:generics){
+				generic.save(dos);
+			}
+		}
+		dos.writeInt(stackPointer);
+		for(int i=0; i<stackPointer; i++){
+			dos.writeInt(stack[i]);
+		}
+		dos.writeInt(objectStackPointer);
+		for(int i=0; i<objectStackPointer; i++){
+			dos.writeLong(objectStack[i]);
+		}
+		for(int i=0; i<local.length; i++){
+			dos.writeLong(local[i]);
+		}
+		dos.writeLong(ret);
+		dos.writeInt(programPointer);
+		for(int i=0; i<catchStackPointer.length; i++){
+			dos.writeInt(catchStackPointer[i]);
+		}
+		for(int i=0; i<catchObjectStackPointer.length; i++){
+			dos.writeInt(catchObjectStackPointer[i]);
+		}
+		if(parent==null){
+			dos.writeBoolean(false);
+		}else{
+			dos.writeBoolean(true);
+			parent.save(dos);
+		}
+	}
+	
 	public List<XClass> getInitializizedClasses(){
 		return classes;
 	}

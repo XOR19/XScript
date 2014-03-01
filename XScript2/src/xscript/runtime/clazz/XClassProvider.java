@@ -1,5 +1,7 @@
 package xscript.runtime.clazz;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +38,26 @@ public class XClassProvider {
 		FLOAT = createPrimitive(XPrimitive.FLOAT);
 		DOUBLE = createPrimitive(XPrimitive.DOUBLE);
 		VOID = createPrimitive(XPrimitive.VOID);
+	}
+	
+	public XClassProvider(XVirtualMachine virtualMachine, List<XClassLoader> classLoaders, DataInputStream dis) throws IOException {
+		this(virtualMachine);
+		this.classLoaders.addAll(classLoaders);
+		int s = dis.readInt();
+		while(s-->0){
+			XClass c = getXClass(dis.readUTF());
+			c.load(dis);
+		}
+	}
+
+	public void save(DataOutputStream dos) throws IOException {
+		List<XClass> allClasses = getAllLoadedClasses();
+		dos.writeInt(allClasses.size());
+		for(XClass c:allClasses){
+			dos.writeUTF(c.getName());
+			c.save(dos);
+		}
+		
 	}
 	
 	private XPrimitive createPrimitive(int id){
@@ -170,8 +192,12 @@ public class XClassProvider {
 			classLoaders.add(classLoader);
 	}
 
+	public XPackage getLoadedXPackage(String name) {
+		return rootPackage.getChild(name);
+	}
+	
 	public XClass getLoadedXClass(String name) {
-		XPackage xPackage = rootPackage.getChild(name);
+		XPackage xPackage = getLoadedXPackage(name);
 		if(xPackage instanceof XClass){
 			XClass xClass = (XClass)xPackage;
 			if(xClass.getState()==XClass.STATE_RUNNABLE){
