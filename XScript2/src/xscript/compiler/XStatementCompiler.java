@@ -968,6 +968,9 @@ public class XStatementCompiler implements XVisitor {
 		XInstructionDumyNIf iif = new XInstructionDumyNIf();
 		addInstruction(iif, xWhile);
 		addInstructions(c2);
+		XInstructionDumyJump again = new XInstructionDumyJump();
+		again.target = continueTarget;
+		addInstruction(again, xWhile);
 		XInstructionDumyDelete breakTarget = new XInstructionDumyDelete();
 		addInstruction(breakTarget, xWhile);
 		iif.target = breakTarget;
@@ -2147,10 +2150,13 @@ public class XStatementCompiler implements XVisitor {
 					setReturn(getPrimitiveType(XPrimitive.BOOL), xOperatorStatement);
 				}else{
 					XStatementCompiler cr = visitTree(xOperatorStatement.right, XAnyType.type);
-					addInstructions(cr);
+					cr.getCodeGen();
 					int t2 = cr.returnType.getPrimitiveID();
 					int ret = compNID(t1, t2, xOperatorStatement.line);
 					int type = pid2iid(ret);
+					makeAutoCast(cl.returnType, getPrimitiveTypeByOperatorType(type), xOperatorStatement);
+					addInstructions(cr);
+					makeAutoCast(cr.returnType, getPrimitiveTypeByOperatorType(type), xOperatorStatement);
 					XInstruction inst = XOperatorHelper.makeInstructionForOperator(op, type);
 					if(inst==null)
 						compilerError(XMessageLevel.ERROR, "no.operator.for", xOperatorStatement.line, xOperatorStatement.operator, cl.returnType, cr.returnType);
@@ -2164,6 +2170,12 @@ public class XStatementCompiler implements XVisitor {
 				}
 			}
 		}
+	}
+	
+	private int IDS[] = {XPrimitive.BOOL, XPrimitive.INT, XPrimitive.LONG, XPrimitive.FLOAT, XPrimitive.DOUBLE};
+	
+	private XVarType getPrimitiveTypeByOperatorType(int id){
+		return getPrimitiveType(IDS[id]);
 	}
 	
 	private XClass getXClassFor(XClassPtr classPtr){
@@ -2313,6 +2325,10 @@ public class XStatementCompiler implements XVisitor {
 	public void visitOperatorPrefixSuffix(XTreeOperatorPrefixSuffix xOperatorPrefixSuffix) {
 		XStatementCompiler s = visitTree(xOperatorPrefixSuffix.statement, XAnyType.type);
 		XVarAccess varAccess = s.varAccess;
+		if(varAccess==null){
+			addInstructions(s);
+			returnType = s.returnType;
+		}
 		if(xOperatorPrefixSuffix.prefix!=null){
 			for(XOperator op:xOperatorPrefixSuffix.prefix){
 				if(varAccess!=null && (op==XOperator.INC || op==XOperator.DEC)){

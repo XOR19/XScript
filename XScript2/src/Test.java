@@ -8,7 +8,6 @@ import xscript.compiler.tree.XTreeMakeEasy;
 import xscript.runtime.XVirtualMachine;
 import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XZipClassLoader;
-import xscript.runtime.genericclass.XGenericClass;
 
 public class Test {
 	
@@ -35,7 +34,13 @@ public class Test {
 		
 		//vm.getClassProvider().getXClass("xscript.lang.annotation.RetentionPolicy");
 		
-		vm.getThreadProvider().start("main", c.getMethod("test()void"), new XGenericClass[0], new long[0]);
+		try {
+			vm.invokeFunction("test.Test.test()void");
+		} catch (NoSuchMethodException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		//vm.getThreadProvider().start("main", c.getMethod("test()void"), new XGenericClass[0], new long[0]);
 		
 		vm.getThreadProvider().run(10, 100);
 		

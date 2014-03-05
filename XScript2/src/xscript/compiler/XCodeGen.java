@@ -294,7 +294,7 @@ public class XCodeGen{
 		resolve();
 		replace();
 		calculateMaxStackSize(mc);
-		System.out.println("gen:"+instructions);
+		System.out.println("gen:"+mc.getName()+instructions);
 	}
 	
 	public XInstruction[] getInstructions(){

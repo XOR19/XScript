@@ -29,6 +29,7 @@ import xscript.runtime.nativeclass.XLangInt;
 import xscript.runtime.nativeclass.XLangLong;
 import xscript.runtime.nativeclass.XLangObject;
 import xscript.runtime.nativeclass.XLangString;
+import xscript.runtime.nativeclass.XLangThread;
 import xscript.runtime.nativeclass.XLangVM;
 import xscript.runtime.nativemethod.XNativeClass.XType;
 import xscript.runtime.object.XObject;
@@ -60,6 +61,7 @@ public class XNativeProvider {
 		XLangDouble.registerNatives(this);
 		XLangObject.registerNatives(this);
 		XLangString.registerNatives(this);
+		XLangThread.registerNatives(this);
 		XLangVM.registerNatives(this);
 	}
 

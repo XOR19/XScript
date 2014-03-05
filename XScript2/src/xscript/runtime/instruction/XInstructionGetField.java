@@ -81,7 +81,8 @@ public class XInstructionGetField extends XInstruction {
 	
 	@Override
 	public int getStackChange(XVirtualMachine vm, XMethodInfo mi) {
-		return getPrimitiveID(vm)==XPrimitive.OBJECT?0:1;
+		int primitive = getPrimitiveID(vm);
+		return primitive==XPrimitive.OBJECT?0:primitive==XPrimitive.DOUBLE || primitive==XPrimitive.LONG?2:1;
 	}
 
 	@Override

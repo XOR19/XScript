@@ -250,7 +250,7 @@ public class XVirtualMachine extends XMap<String, Map<String, Object>> implement
 		}else{
 			int g = name.indexOf('<');
 			int c;
-			if(g<i){
+			if(g<i && g!=-1){
 				c = g-1;
 			}else{
 				g = -1;
@@ -275,7 +275,7 @@ public class XVirtualMachine extends XMap<String, Map<String, Object>> implement
 				params[0] = getObjectProvider().getPointer(xThis);
 				j=1;
 			}
-			XGenericClass[] paramtypes = method.getParams(xThis==null?null:xThis.getXClass(), new XGenericMethodProviderImp(method, generics));
+			XGenericClass[] paramtypes = method.getParams(xThis==null?null:xThis.getXClass(), generics==null?null:new XGenericMethodProviderImp(method, generics));
 			for(int k=0; k<args.length; k++){
 				int primitive = XPrimitive.getPrimitiveID(paramtypes[k].getXClass());
 				long l = XWrapper.getXObject(objectProvider, primitive, args[k]);

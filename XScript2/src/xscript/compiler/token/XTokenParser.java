@@ -101,10 +101,13 @@ public class XTokenParser {
 		}
 		if(scannChar=='f' || scannChar=='F'){
 			kind = XTokenKind.FLOATLITERAL;
+			scannChar();
 		}else if(scannChar=='d' || scannChar=='D'){
 			kind = XTokenKind.DOUBLELITERAL;
+			scannChar();
 		}else if(scannChar=='l' || scannChar=='L'){
 			kind = XTokenKind.LONGLITERAL;
+			scannChar();
 		}
 		try{
 			if(kind==XTokenKind.INTLITERAL){

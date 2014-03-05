@@ -43,7 +43,8 @@ public class XInstructionReadLocal extends XInstruction {
 	
 	@Override
 	public int getStackChange(XVirtualMachine vm, XMethodInfo mi) {
-		return mi.getLocalPrimitveID(local)==XPrimitive.OBJECT?0:1;
+		int primitive = mi.getLocalPrimitveID(local);
+		return primitive==XPrimitive.OBJECT?0:primitive==XPrimitive.DOUBLE || primitive==XPrimitive.LONG?2:1;
 	}
 
 	@Override

@@ -149,11 +149,21 @@ public class XInstructionInvokeDynamic extends XInstruction {
 		XClassPtr params[] = method.getParams();
 		int change = 0;
 		for(int i=0; i<params.length; i++){
-			if(XPrimitive.getPrimitiveID(params[i].getXClass(vm))!=XPrimitive.OBJECT)
+			int primitive = XPrimitive.getPrimitiveID(params[i].getXClass(vm));
+			if(primitive!=XPrimitive.OBJECT){
+				if(primitive == XPrimitive.DOUBLE || primitive == XPrimitive.LONG){
+					change++;
+				}
 				change++;
+			}
 		}
-		if(method.getReturnTypePrimitive()!=XPrimitive.OBJECT && method.getReturnTypePrimitive()!=XPrimitive.VOID)
+		int primitive = method.getReturnTypePrimitive();
+		if(primitive!=XPrimitive.OBJECT && primitive!=XPrimitive.VOID){
+			if(primitive == XPrimitive.DOUBLE || primitive == XPrimitive.LONG){
+				change--;
+			}
 			change--;
+		}
 		return -change;
 	}
 
