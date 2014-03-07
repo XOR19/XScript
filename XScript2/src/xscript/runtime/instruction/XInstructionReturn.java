@@ -35,7 +35,7 @@ public class XInstructionReturn extends XInstruction {
 	@Override
 	public int getStackChange(XVirtualMachine vm, XMethodInfo mi) {
 		int prim = mi.getMethodReturnPrimitveID();
-		return prim==XPrimitive.OBJECT?0:prim==XPrimitive.VOID?0:-1;
+		return prim==XPrimitive.OBJECT || prim==XPrimitive.VOID?0:prim==XPrimitive.DOUBLE||prim==XPrimitive.LONG?-2:-1;
 	}
 
 	@Override

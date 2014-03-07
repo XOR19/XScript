@@ -1,0 +1,197 @@
+package xscript.lang;
+
+public abstract class List<E>:Collection<E>{
+
+	protected int modCount = 0;
+
+	public boolean add(E param) {
+		add(size(), param);
+		return true;
+	}
+
+	public abstract boolean addAll(int index, Collection<E> paramCollection) {
+		rangeCheckForAdd(paramInt);
+		bool b = false;
+		Iterator<E> i = paramCollection.iterator();
+		while (i.hasNext()) {
+			E obj = i.next();
+			add(index++, obj);
+			b = true;
+		}
+		return b;
+	}
+	
+	public void clear() {
+		removeRange(0, size());
+	}
+	
+	public abstract E get(int index);
+
+	public abstract E set(int index, E param);
+
+	public abstract void add(int index, E param);
+
+	public abstract E remove(int index);
+
+	public Iterator<E> iterator(){
+		return listIterator();
+	}
+
+	public ListIterator<E> listIterator(){
+		return listIterator(0);
+	}
+
+	public ListIterator<E> listIterator(int index){
+		rangeCheckForAdd(index);
+		return new Itr(index);
+	}
+
+	public List<E> subList(int start, int end) {
+		return new SubList(this, start, end);
+	}
+	
+	public boolean equals(Object param) {
+		if (param == this)
+			return true;
+		if (!(param instanceof List<E>))
+			return false;
+		Iterator<E> i1 = iterator();
+		Iterator<E> i2 = ((List<E>) param).iterator();
+		while (i1.hasNext() && i2.hasNext()) {
+			E obj1 = i1.next();
+			E obj2 = i2.next();
+			if (obj1 == null)
+				if (obj2 != null)
+					return false;
+			else if (!(obj1.equals(obj2)))
+				return false;
+		}
+		return !(i1.hasNext() || i2.hasNext());
+	}
+	
+	public int hashCode() {
+		int i = 1;
+		Iterator<E> i = iterator();
+		while (i.hasNext()) {
+			E obj = i.next();
+			i = 31 * i + ((obj == null) ? 0 : obj.hashCode());
+		}
+		return i;
+	}
+	
+	private void rangeCheckForAdd(int index) {
+		if ((index >= 0) && (index <= size()))
+			return;
+		throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
+	}
+
+	private String outOfBoundsMsg(int index) {
+		return "Index: " + index + ", Size: " + size();
+	}
+	
+	protected void removeRange(int start, int end) {
+		ListIterator<E> li = listIterator(start);
+		int i = 0;
+		int j = end - start;
+		while (i < j) {
+			li.next();
+			li.remove();
+			++i;
+		}
+	}
+	
+	private class Itr:ListIterator<E>{
+		
+		int cursor;
+		int lastRet = -1;
+		int expectedModCount = modCount;
+		
+		public Itr(int cursor){
+			this.cursor = cursor;
+		}
+		
+		public boolean hasNext() {
+			return this.cursor != size();
+		}
+	
+		public boolean hasPrevious() {
+			return this.cursor != 0;
+		}
+	
+		public E next(){
+			checkForComodification();
+			try{
+				lastRet = cursor;
+				return get(cursor++);
+			}catch(IndexOutOfBoundsException e){
+				checkForComodification();
+				throw new NoSuchElementException();
+			}
+		}
+		
+		public void remove(){
+			if (this.lastRet < 0)
+				throw new IllegalStateException();
+			checkForComodification();
+			try {
+				remove(lastRet);
+				if (this.lastRet < this.cursor)
+					--this.cursor;
+				lastRet = -1;
+				expectedModCount = modCount;
+			} catch (IndexOutOfBoundsException e) {
+				throw new ConcurrentModificationException();
+			}
+		}
+
+		public E previous(){
+			checkForComodification();
+			try {
+				lastRet = --cursor;
+				return get(cursor);
+			} catch (IndexOutOfBoundsException e) {
+				checkForComodification();
+				throw new NoSuchElementException();
+			}
+		}
+	
+		public int nextIndex(){
+			return cursor;
+		}
+	
+		public int previousIndex(){
+			return cursor-1;
+		}
+	
+		public void set(E param){
+			if (this.lastRet < 0)
+				throw new IllegalStateException();
+			checkForComodification();
+			try {
+				set(lastRet, param);
+				expectedModCount = modCount;
+			} catch (IndexOutOfBoundsException e) {
+				throw new ConcurrentModificationException();
+			}
+		}
+	
+		public void add(E param){
+			checkForComodification();
+			try {
+				add(cursor++, param);
+				lastRet = -1;
+				expectedModCount = modCount;
+			} catch (IndexOutOfBoundsException e) {
+				throw new ConcurrentModificationException();
+			}
+		}
+		
+		private void checkForComodification() {
+			if (modCount == expectedModCount)
+				return;
+			throw new ConcurrentModificationException();
+		}
+		
+	}
+	
+}

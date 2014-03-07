@@ -6,4 +6,6 @@ public abstract class Iterator<T>{
 	
 	public abstract T next();
 	
+	public abstract void remove();
+	
 }

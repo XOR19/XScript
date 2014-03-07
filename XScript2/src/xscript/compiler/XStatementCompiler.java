@@ -1512,7 +1512,7 @@ public class XStatementCompiler implements XVisitor {
 				}
 				types = params;
 				codeGens = cg;
-			}else if(c.getOuterClass()!=null && !XModifier.isStatic(c.getOuterClass().getModifier())){
+			}else if(c.getOuterClass()!=null && !XModifier.isStatic(c.getModifier())){
 				XClassCompiler cc = (XClassCompiler) c;
 				cc.gen();
 				XVarType[] params = new XVarType[types.length+1];
@@ -3046,9 +3046,13 @@ public class XStatementCompiler implements XVisitor {
 		}
 		if(returnExpected==null){
 			if(returnType!=null){
-				if(returnType.getPrimitiveID()==XPrimitive.OBJECT){
+				int primitive = returnType.getPrimitiveID();
+				if(primitive==XPrimitive.OBJECT){
 					addInstruction(new XInstructionOPop(), tree);
 				}else{
+					if(primitive==XPrimitive.LONG||primitive==XPrimitive.DOUBLE){
+						addInstruction(new XInstructionPop(), tree);
+					}
 					addInstruction(new XInstructionPop(), tree);
 				}
 			}

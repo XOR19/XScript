@@ -1,0 +1,159 @@
+package xscript.lang;
+
+public abstract class SubList<E>:List<E>{
+
+	private final List<E> l;
+	private final int offset;
+	private int size;
+
+	public SubList(List<E> l, int start, int end) {
+		if (start < 0)
+			throw new IndexOutOfBoundsException("fromIndex = " + start);
+		if (end > l.size())
+			throw new IndexOutOfBoundsException("toIndex = " + end);
+		if (start > end)
+			throw new IllegalArgumentException("fromIndex(" + start
+					+ ") > toIndex(" + end + ")");
+		this.l = l;
+		this.offset = start;
+		this.size = (end - start);
+		this.modCount = this.l.modCount;
+	}
+
+	public E set(int index, E param) {
+		rangeCheck(index);
+		checkForComodification();
+		return this.l.set(index + this.offset, param);
+	}
+
+	public E get(int index) {
+		rangeCheck(index);
+		checkForComodification();
+		return this.l.get(index + this.offset);
+	}
+
+	public int size() {
+		checkForComodification();
+		return this.size;
+	}
+
+	public void add(int index, E param) {
+		rangeCheckForAdd(index);
+		checkForComodification();
+		this.l.add(index + this.offset, param);
+		this.modCount = this.l.modCount;
+		this.size += 1;
+	}
+
+	public E remove(int index) {
+		rangeCheck(index);
+		checkForComodification();
+		E obj = this.l.remove(index + this.offset);
+		this.modCount = this.l.modCount;
+		this.size -= 1;
+		return obj;
+	}
+
+	protected void removeRange(int start, int end) {
+		checkForComodification();
+		this.l.removeRange(start + this.offset, end + this.offset);
+		this.modCount = this.l.modCount;
+		this.size -= end - start;
+	}
+
+	public boolean addAll(Collection<E> paramCollection) {
+		return addAll(this.size, paramCollection);
+	}
+
+	public boolean addAll(int index, Collection<E> paramCollection) {
+		rangeCheckForAdd(index);
+		int i = paramCollection.size();
+		if (i == 0)
+			return false;
+		checkForComodification();
+		this.l.addAll(this.offset + index, paramCollection);
+		this.modCount = this.l.modCount;
+		this.size += i;
+		return true;
+	}
+
+	public ListIterator<E> listIterator(final int index) {
+		checkForComodification();
+		rangeCheckForAdd(index);
+		return new ListIterator(index) {
+			private final ListIterator<E> i = SubList.this.l
+					.listIterator(index + SubList.this.offset);
+
+			public boolean hasNext() {
+				return (nextIndex() < SubList.this.size);
+			}
+
+			public E next() {
+				if (hasNext())
+					return this.i.next();
+				throw new NoSuchElementException();
+			}
+
+			public boolean hasPrevious() {
+				return (previousIndex() >= 0);
+			}
+
+			public E previous() {
+				if (hasPrevious())
+					return this.i.previous();
+				throw new NoSuchElementException();
+			}
+
+			public int nextIndex() {
+				return (this.i.nextIndex() - SubList.this.offset);
+			}
+
+			public int previousIndex() {
+				return (this.i.previousIndex() - SubList.this.offset);
+			}
+
+			public void remove() {
+				this.i.remove();
+				SubList.this.modCount = SubList.this.l.modCount;
+				size--;
+			}
+
+			public void set(E paramE) {
+				this.i.set(paramE);
+			}
+
+			public void add(E paramE) {
+				this.i.add(paramE);
+				SubList.this.modCount = SubList.this.l.modCount;
+				size++;
+			}
+		};
+	}
+
+	public List<E> subList(int start, int end) {
+		return new SubList(this, start, end);
+	}
+
+	private void rangeCheck(int index) {
+		if ((index >= 0) && (index < this.size))
+			return;
+		throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
+	}
+
+	private void rangeCheckForAdd(int index) {
+		if ((index >= 0) && (index <= this.size))
+			return;
+		throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
+	}
+
+	private String outOfBoundsMsg(int index) {
+		return "Index: " + index + ", Size: " + this.size;
+	}
+
+	private void checkForComodification() {
+		if (this.modCount == this.l.modCount)
+			return;
+		throw new ConcurrentModificationException();
+	}
+
+}

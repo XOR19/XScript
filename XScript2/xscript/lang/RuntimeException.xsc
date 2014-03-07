@@ -1,0 +1,17 @@
+package xscript.lang;
+
+public class RuntimeException:Exception{
+
+	public RuntimeException():Exception(){
+	}
+	
+	public RuntimeException(String message):Exception(message){
+	}
+	
+	public RuntimeException(Throwable cause):Exception(cause){
+	}
+	
+	public RuntimeException(String message, Throwable cause):Exception(message, cause){
+	}
+
+}

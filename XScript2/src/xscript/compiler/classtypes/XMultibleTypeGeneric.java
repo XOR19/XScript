@@ -1,12 +1,16 @@
 package xscript.compiler.classtypes;
 
+import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XPrimitive;
 
 
-public class XMultibleTypeGeneric extends XMultibleType {
+public abstract class XMultibleTypeGeneric extends XMultibleType {
 
-	public XMultibleTypeGeneric(XVarType[] classes) {
+	protected XClass xClass;
+	
+	public XMultibleTypeGeneric(XVarType[] classes, XClass xClass) {
 		super(classes);
+		this.xClass = xClass;
 	}
 	
 	public boolean canCastTo(XVarType varTypeFor){
@@ -15,5 +19,12 @@ public class XMultibleTypeGeneric extends XMultibleType {
 		}
 		return varTypeFor.getPrimitiveID()==XPrimitive.OBJECT;
 	}
+
+	@Override
+	public XClass getXClass() {
+		return xClass;
+	}
+	
+	
 	
 }

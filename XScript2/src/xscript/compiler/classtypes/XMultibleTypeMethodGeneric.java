@@ -1,5 +1,6 @@
 package xscript.compiler.classtypes;
 
+import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XGenericInfo;
 import xscript.runtime.genericclass.XClassPtr;
 import xscript.runtime.genericclass.XClassPtrClass;
@@ -12,11 +13,15 @@ public class XMultibleTypeMethodGeneric extends XMultibleTypeGeneric {
 	private int id;
 	
 	public XMultibleTypeMethodGeneric(XMethod m, int id) {
-		super(possibilidaded(m, id));
+		super(possibilidaded(m, id), baseClass(m));
 		this.m = m;
 		this.id = id;
 	}
 
+	private static XClass baseClass(XMethod m){
+		return m.getDeclaringClass().getVirtualMachine().getClassProvider().getXClass("xscript.lang.Object");
+	}
+	
 	private static XVarType[] possibilidaded(XMethod m, int id){
 		XGenericInfo info = m.getGenericInfo(id);
 		if(info.isSuper()){
@@ -39,6 +44,15 @@ public class XMultibleTypeMethodGeneric extends XMultibleTypeGeneric {
 		return m.getName()+":"+id;
 	}
 
+	@Override
+	public boolean equals(Object other) {
+		if(other instanceof XMultibleTypeMethodGeneric){
+			XMultibleTypeMethodGeneric o = (XMultibleTypeMethodGeneric)other;
+			return o.m == m && o.id==id;
+		}
+		return false;
+	}
+	
 	@Override
 	public XClassPtr getXClassPtr() {
 		return new XClassPtrMethodGeneric(m.getDeclaringClass().getName(), m.getRealName(), m.getParams(), m.getReturnTypePtr(), m.getGenericInfo(id).getName());

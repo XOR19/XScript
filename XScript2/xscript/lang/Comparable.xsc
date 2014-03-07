@@ -1,0 +1,7 @@
+package xscript.lang;
+
+public abstract class Comparable {
+
+	public abstract int compareTo(Object param);
+	
+}

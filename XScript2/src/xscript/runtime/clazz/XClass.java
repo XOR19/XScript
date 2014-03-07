@@ -13,6 +13,8 @@ import xscript.runtime.XModifier;
 import xscript.runtime.XRuntimeException;
 import xscript.runtime.XVirtualMachine;
 import xscript.runtime.genericclass.XClassPtr;
+import xscript.runtime.genericclass.XClassPtrClass;
+import xscript.runtime.genericclass.XClassPtrClassByID;
 import xscript.runtime.genericclass.XGenericClass;
 import xscript.runtime.method.XMethod;
 import xscript.runtime.nativemethod.XNativeFactory;
@@ -71,22 +73,41 @@ public class XClass extends XPackage{
 		super(name);
 		state = STATE_CREATED;
 		this.virtualMachine = virtualMachine;
-		isArray = (p.getName()+"."+name).startsWith("xscript.lang.Array");
-		if(isArray()){
-			int primitiveID = XPrimitive.OBJECT;
-			for(int i=0; i<9; i++){
-				if(getSimpleName().equals("Array"+XPrimitive.getWrapper(i))){
-					primitiveID = i;
-					break;
+		if(p.getName()!=null && p.getName().equals("xscript.lang")){
+			if(name.equals("Array")){
+				primitive = XPrimitive.OBJECT;
+				objectArray = true;
+				elementSize = XPrimitive.getSize(XPrimitive.OBJECT);
+				isArray = true;
+			}else if(name.startsWith("Array")){
+				int primitiveID = -1;
+				for(int i=0; i<9; i++){
+					if(getSimpleName().equals("Array"+XPrimitive.getWrapper(i))){
+						primitiveID = i;
+						break;
+					}
 				}
+				isArray = primitiveID!=-1;
+				if(isArray){
+					primitive = primitiveID;
+					objectArray = primitiveID==XPrimitive.OBJECT;
+					elementSize = XPrimitive.getSize(primitiveID);
+				}else{
+					objectArray = false;
+					elementSize = 0;
+					primitive = 0;
+				}
+			}else{
+				objectArray = false;
+				elementSize = 0;
+				primitive = 0;
+				isArray = false;
 			}
-			primitive = primitiveID;
-			objectArray = primitiveID==XPrimitive.OBJECT;
-			elementSize = XPrimitive.getSize(primitiveID);
 		}else{
 			objectArray = false;
 			elementSize = 0;
 			primitive = 0;
+			isArray = false;
 		}
 	}
 	
@@ -163,7 +184,8 @@ public class XClass extends XPackage{
 				return ct;
 			}
 		}
-		System.err.println("e3:"+ci+":"+classTable.length+":"+getName());
+		System.out.println(Arrays.toString(classTable));
+		System.err.println("e3:"+ci+":"+classTable.length+":"+getName()+" for "+xClass.getName());
 		return null;
 	}
 	
@@ -177,9 +199,9 @@ public class XClass extends XPackage{
 		if(genericClass.getXClass()==this){
 			return genericClass.getGeneric(genericID);
 		}
-		XClassTable classTable = genericClass.getXClass().getClassTable(this);
+		XClassTable classTable = getClassTable(this);
 		if(classTable==null)
-			throw new XRuntimeException("Can't get generic %s of class %s in class %s", "", this, genericClass);
+			throw new XRuntimeException("Can't get generic %s of class %s in class %s", genericID, this, genericClass);
 		return classTable.getGenericPtr(genericID).getXClass(virtualMachine, genericClass, null);
 	}
 
@@ -382,6 +404,9 @@ public class XClass extends XPackage{
 				}
 			}
 		}while(again);
+		for(XGenericClass gc : classes){
+			gc.getXClass().makeClassTable(this, gc, classes);
+		}
 		List<XMethod> methods = new ArrayList<XMethod>();
 		XClassPtr[] superClasses = getSuperClasses();
 		for(XClassPtr cp:superClasses){
@@ -396,7 +421,7 @@ public class XClass extends XPackage{
 		virtualMethods = methods.toArray(new XMethod[methods.size()]);
 		objectSize = 0;
 		for(XGenericClass gc : classes){
-			objectSize = gc.getXClass().makeClassTable(this, objectSize, gc, classes);
+			objectSize = gc.getXClass().makeClassTable2(this, objectSize, gc, classes);
 		}
 	}
 	
@@ -463,7 +488,33 @@ public class XClass extends XPackage{
 		return false;
 	}
 	
-	private int makeClassTable(XClass c, int fieldStartID, XGenericClass gc, List<XGenericClass> generics){
+	private void makeClassTable(XClass c, XGenericClass gc, List<XGenericClass> generics){
+		if(isObjectClass() && !c.isObjectClass())
+			return;
+		XClassPtr[] g = new XClassPtr[gc.getXClass().getGenericParams()];
+		for(int i=0; i<g.length; i++){
+			XGenericClass gcc = gc.getGeneric(i);
+			XClass xClass = gcc.getXClass();
+			if(xClass instanceof XClassClassGeneric){
+				g[i] = new XClassPtrClassByID(c.getGenericID(xClass.getName()));
+			}else{
+				if(xClass.getGenericParams()==0){
+					g[i] = new XClassPtrClass(xClass.getName());
+				}else{
+					throw new RuntimeException();
+				}
+			}
+		}
+		XClassTable ct = new XClassTable(c, g);
+		if(c.classIndex>=classTable.length){
+			XClassTable[] newClassTable = new XClassTable[c.classIndex+1];
+			System.arraycopy(classTable, 0, newClassTable, 0, classTable.length);
+			classTable = newClassTable;
+		}
+		classTable[c.classIndex] = ct;
+	}
+	
+	private int makeClassTable2(XClass c, int fieldStartID, XGenericClass gc, List<XGenericClass> generics){
 		if(isObjectClass() && !c.isObjectClass())
 			return fieldStartID;
 		int[] methodIDs = new int[methodCount];
@@ -472,13 +523,9 @@ public class XClass extends XPackage{
 				methodIDs[methods[i].getIndex()] = findIDFor(methods[i], gc, c, generics);
 			}
 		}
-		XClassTable ct = new XClassTable(c, fieldStartID, methodIDs, null);
-		if(c.classIndex>=classTable.length){
-			XClassTable[] newClassTable = new XClassTable[c.classIndex+1];
-			System.arraycopy(classTable, 0, newClassTable, 0, classTable.length);
-			classTable = newClassTable;
-		}
-		classTable[c.classIndex] = ct;
+		XClassTable ct = classTable[c.classIndex];
+		ct.setFieldStartID(fieldStartID);
+		ct.setMethodID(methodIDs);
 		return fieldStartID + fieldCount;
 	}
 	

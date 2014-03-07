@@ -33,7 +33,11 @@ public class XPrimitiveType extends XKnownType {
 		}
 		int prim = varTypeFor.getPrimitiveID();
 		if(prim==XPrimitive.OBJECT){
-			String cName = varTypeFor.getXClass().getName();
+			XClass xClass = varTypeFor.getXClass();
+			if(xClass==null){
+				return false;
+			}
+			String cName = xClass.getName();
 			if(cName.equals("xscript.lang.Object")){
 				return getPrimitiveID()!=XPrimitive.VOID;
 			}

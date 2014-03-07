@@ -1,5 +1,6 @@
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 
 import xscript.compiler.XCompiler;
 import xscript.compiler.XFileSourceProviderToZip;

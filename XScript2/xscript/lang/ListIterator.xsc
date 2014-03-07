@@ -1,0 +1,17 @@
+package xscript.lang;
+
+public abstract class ListIterator<T>:Iterator<T>{
+
+	public abstract boolean hasPrevious();
+
+	public abstract T previous();
+
+	public abstract int nextIndex();
+
+	public abstract int previousIndex();
+
+	public abstract void set(T param);
+
+	public abstract void add(T param);
+	
+}

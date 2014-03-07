@@ -1,0 +1,17 @@
+package xscript.lang;
+
+public class IllegalArgumentException:RuntimeException{
+
+	public IllegalArgumentException():RuntimeException(){
+	}
+	
+	public IllegalArgumentException(String message):RuntimeException(message){
+	}
+	
+	public IllegalArgumentException(Throwable cause):RuntimeException(cause){
+	}
+	
+	public IllegalArgumentException(String message, Throwable cause):RuntimeException(message, cause){
+	}
+
+}

@@ -30,11 +30,6 @@ public class XMultibleType extends XVarType {
 	}
 
 	@Override
-	public boolean equals(Object other) {
-		return false;
-	}
-
-	@Override
 	protected void getSuperClasses(List<XKnownType> superClasses) {
 		for(XVarType c:classes){
 			c.getSuperClasses(superClasses);
@@ -56,6 +51,11 @@ public class XMultibleType extends XVarType {
 	@Override
 	public XVarType[] getXVarTypes() {
 		return classes;
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		return false;
 	}
 	
 }

@@ -12,11 +12,15 @@ public class XMultibleTypeClassGeneric extends XMultibleTypeGeneric {
 	private int id;
 	
 	public XMultibleTypeClassGeneric(XClass c, int id) {
-		super(possibilidaded(c, id));
+		super(possibilidaded(c, id), baseClass(c));
 		this.c = c;
 		this.id = id;
 	}
 
+	private static XClass baseClass(XClass c){
+		return c.getVirtualMachine().getClassProvider().getXClass("xscript.lang.Object");
+	}
+	
 	private static XVarType[] possibilidaded(XClass c, int id){
 		XGenericInfo info = c.getGenericInfo(id);
 		if(info.isSuper()){
@@ -39,6 +43,15 @@ public class XMultibleTypeClassGeneric extends XMultibleTypeGeneric {
 		return c.getName()+":"+id;
 	}
 
+	@Override
+	public boolean equals(Object other) {
+		if(other instanceof XMultibleTypeClassGeneric){
+			XMultibleTypeClassGeneric o = (XMultibleTypeClassGeneric)other;
+			return o.c == c && o.id==id;
+		}
+		return false;
+	}
+	
 	@Override
 	public XClassPtr getXClassPtr() {
 		return new XClassPtrClassGeneric(c.getName(), c.getGenericInfo(id).getName());

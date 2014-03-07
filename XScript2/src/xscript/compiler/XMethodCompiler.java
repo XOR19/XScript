@@ -101,7 +101,6 @@ public class XMethodCompiler extends XMethod {
 			for(XVariable v:vars){
 				v.end = end;
 			}
-			System.out.println(getName());
 			return;
 		}
 		if(!isConstructor() && (xMethodDecl.block==null || xscript.runtime.XModifier.isAbstract(modifier) || xscript.runtime.XModifier.isNative(modifier)))
@@ -109,7 +108,6 @@ public class XMethodCompiler extends XMethod {
 		XStatementCompiler statementCompiler = new XStatementCompiler(null, null, this);
 		xMethodDecl.accept(statementCompiler);
 		codeGen = statementCompiler.getCodeGen();
-		System.out.println(getName());
 	}
 	
 	public void change(){

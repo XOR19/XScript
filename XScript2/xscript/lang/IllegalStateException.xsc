@@ -1,0 +1,17 @@
+package xscript.lang;
+
+public class IllegalStateException:RuntimeException{
+
+	public IllegalStateException():RuntimeException(){
+	}
+	
+	public IllegalStateException(String message):RuntimeException(message){
+	}
+	
+	public IllegalStateException(Throwable cause):RuntimeException(cause){
+	}
+	
+	public IllegalStateException(String message, Throwable cause):RuntimeException(message, cause){
+	}
+
+}
