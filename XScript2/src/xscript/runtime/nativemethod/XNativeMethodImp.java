@@ -59,7 +59,7 @@ public class XNativeMethodImp implements XNativeMethod {
 		}
 		Object ret;
 		try {
-			ret = method.invoke(_this.getNativeObject(), nparams);
+			ret = method.invoke(_this==null?null:_this.getNativeObject(), nparams);
 		} catch (IllegalAccessException e) {
 			throw new XRuntimeException(e, "Error while call Native");
 		} catch (IllegalArgumentException e) {
