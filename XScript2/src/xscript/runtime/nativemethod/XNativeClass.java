@@ -47,7 +47,7 @@ public @interface XNativeClass {
 		
 		public enum XParamTypes{
 			
-			VM, THREAD, ME, GENERICS, THIS
+			VM, THREAD, ME, GENERICS, THIS, USERDATA
 			
 		}
 		

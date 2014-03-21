@@ -15,6 +15,7 @@ public class XParamScanner {
 	private boolean needME;
 	private boolean needGenerics;
 	private boolean needThis;
+	private boolean needUserdata;
 	private String desk;
 	
 	public XParamScanner(){
@@ -28,6 +29,7 @@ public class XParamScanner {
 		needME = false;
 		needGenerics = false;
 		needThis = false;
+		needUserdata = false;
 		desk = null;
 	}
 	
@@ -108,6 +110,11 @@ public class XParamScanner {
 		if(special!=null && special.value()==XParamTypes.THIS){
 			needThis=true;
 			pos++;
+			special = getAnnotation(paramsAnnotations[pos], XParamSpecial.class);
+		}
+		if(special!=null && special.value()==XParamTypes.USERDATA){
+			needUserdata=true;
+			pos++;
 		}
 	}
 	
@@ -143,6 +150,10 @@ public class XParamScanner {
 
 	public boolean isNeedThis() {
 		return needThis;
+	}
+	
+	public boolean isNeedUserdata() {
+		return needUserdata;
 	}
 	
 }

@@ -18,15 +18,17 @@ public class XNativeMethodImp implements XNativeMethod {
 	private boolean needME;
 	private boolean needGenerics;
 	private boolean needThis;
+	private boolean needUserdata;
 	private int paramCount;
 	
-	public XNativeMethodImp(Method method, boolean needVM, boolean needThread, boolean needME, boolean needGenerics, boolean needThis) {
+	public XNativeMethodImp(Method method, boolean needVM, boolean needThread, boolean needME, boolean needGenerics, boolean needThis, boolean needUserdata) {
 		this.method = method;
 		this.needVM = needVM;
 		this.needThread = needThread;
 		this.needME = needME;
 		this.needGenerics = needGenerics;
 		this.needThis = needThis;
+		this.needUserdata = needUserdata;
 		paramCount = method.getParameterTypes().length;
 	}
 
@@ -48,6 +50,9 @@ public class XNativeMethodImp implements XNativeMethod {
 		}
 		if(needThis){
 			nparams[i++] = _this;
+		}
+		if(needUserdata){
+			nparams[i++] = virtualMachine.getUserData();
 		}
 		for(Object param:params){
 			nparams[i++] = param;

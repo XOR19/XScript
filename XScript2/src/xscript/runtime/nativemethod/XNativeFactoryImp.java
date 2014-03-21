@@ -17,14 +17,16 @@ public class XNativeFactoryImp implements XNativeFactory {
 	private boolean needThread;
 	private boolean needME;
 	private boolean needThis;
+	private boolean needUserdata;
 	private int paramCount;
 	
-	public XNativeFactoryImp(Method method, boolean needVM, boolean needThread, boolean needME, boolean needThis) {
+	public XNativeFactoryImp(Method method, boolean needVM, boolean needThread, boolean needME, boolean needThis, boolean needUserdata) {
 		this.method = method;
 		this.needVM = needVM;
 		this.needThread = needThread;
 		this.needME = needME;
 		this.needThis = needThis;
+		this.needUserdata = needUserdata;
 		paramCount = method.getParameterTypes().length;
 	}
 
@@ -43,6 +45,9 @@ public class XNativeFactoryImp implements XNativeFactory {
 		}
 		if(needThis){
 			nparams[i++] = _this;
+		}
+		if(needUserdata){
+			nparams[i++] = virtualMachine.getUserData();
 		}
 		Object ret;
 		try {

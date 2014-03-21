@@ -251,7 +251,7 @@ public class XNativeProvider {
 					System.out.println("add:"+name+paramScanner.getDesk());
 					
 					addNativeMethod(classInfo.value(), name+paramScanner.getDesk(), new XNativeMethodImp(method, paramScanner.isNeedVM(), 
-							paramScanner.isNeedThread(), paramScanner.isNeedME(), paramScanner.isNeedGenerics(), paramScanner.isNeedThis()));
+							paramScanner.isNeedThread(), paramScanner.isNeedME(), paramScanner.isNeedGenerics(), paramScanner.isNeedThis(), paramScanner.isNeedUserdata()));
 					
 				}else{
 					
@@ -266,7 +266,7 @@ public class XNativeProvider {
 						System.out.println("add:"+classInfo.value());
 						
 						addNativeFactroy(classInfo.value(), new XNativeFactoryImp(method, paramScanner.isNeedVM(), 
-								paramScanner.isNeedThread(), paramScanner.isNeedME(), paramScanner.isNeedThis()));
+								paramScanner.isNeedThread(), paramScanner.isNeedME(), paramScanner.isNeedThis(), paramScanner.isNeedUserdata()));
 						
 					}
 					
