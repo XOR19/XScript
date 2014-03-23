@@ -1,5 +1,6 @@
 package xscript.compiler.classtypes;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import xscript.runtime.clazz.XClass;
@@ -31,6 +32,13 @@ public abstract class XKnownType extends XVarType {
 	protected void getSuperClassesAndThis(List<XKnownType> superClasses) {
 		superClasses.add(this);
 		getSuperClasses(superClasses);
+	}
+	
+	@Override
+	public List<XKnownType> getKnownTypes(){
+		List<XKnownType> list = new ArrayList<XKnownType>();
+		list.add(this);
+		return list;
 	}
 	
 }

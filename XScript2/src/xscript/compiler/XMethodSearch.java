@@ -120,8 +120,13 @@ public class XMethodSearch {
 				for(XKnownType kt:superClasses){
 					addClassMethods(kt);
 				}
-			}else if(declaringClass instanceof XKnownType){
-				addClassMethods((XKnownType)declaringClass);
+			}else{
+				List<XKnownType> knownTypes = declaringClass.getKnownTypes();
+				if(knownTypes!=null){
+					for(XKnownType kt:knownTypes){
+						addClassMethods(kt);
+					}
+				}
 			}
 			search();
 		}

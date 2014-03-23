@@ -148,4 +148,8 @@ public abstract class XVarType {
 		return null;
 	}
 	
+	public List<XKnownType> getKnownTypes(){
+		return null;
+	}
+	
 }

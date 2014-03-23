@@ -1,5 +1,6 @@
 package xscript.compiler.classtypes;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -56,6 +57,18 @@ public class XMultibleType extends XVarType {
 	@Override
 	public boolean equals(Object other) {
 		return false;
+	}
+	
+	@Override
+	public List<XKnownType> getKnownTypes(){
+		List<XKnownType> list = new ArrayList<XKnownType>();
+		for(XVarType classs:classes){
+			List<XKnownType> l = classs.getKnownTypes();
+			if(l!=null){
+				list.addAll(l);
+			}
+		}
+		return list;
 	}
 	
 }
