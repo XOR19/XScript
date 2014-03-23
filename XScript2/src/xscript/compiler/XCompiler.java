@@ -42,6 +42,8 @@ public class XCompiler extends XVirtualMachine{
 	
 	private List<String> predefStaticIndirectImports = new ArrayList<String>();
 	
+	private boolean errored;
+	
 	static{
 		treeMakers.put("xscript", new XStandartTreeMaker());
 	}
@@ -78,7 +80,7 @@ public class XCompiler extends XVirtualMachine{
 		}
 	}
 	
-	public void compile(){
+	public boolean compile(){
 		while(!classes2Compile.isEmpty()){
 			String name = classes2Compile.remove(0);
 			try{
@@ -116,6 +118,7 @@ public class XCompiler extends XVirtualMachine{
 		for(XSourceProvider sp:sourceProviders){
 			sp.endSave();
 		}
+		return !errored;
 	}
 	
 	public void printMessages(XMessageFormatter formatter){
@@ -130,6 +133,8 @@ public class XCompiler extends XVirtualMachine{
 	
 	protected void postMessage(XMessageLevel level, String className, String key, XLineDesk lineDesk, Object...args) {
 		messageList.add(new XMessageElement(level, className, lineDesk, key, args));
+		if(level==XMessageLevel.ERROR)
+			errored = true;
 	}
 	
 	public static void registerTreeMaker(String lang, XTreeMaker treeMaker){
