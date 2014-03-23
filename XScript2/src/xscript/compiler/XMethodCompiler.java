@@ -1,6 +1,7 @@
 package xscript.compiler;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import xscript.compiler.classtypes.XVarType;
@@ -24,10 +25,17 @@ import xscript.runtime.genericclass.XClassPtrGeneric;
 import xscript.runtime.genericclass.XClassPtrMethodGeneric;
 import xscript.runtime.instruction.XInstruction;
 import xscript.runtime.instruction.XInstructionInvokeConstructor;
+import xscript.runtime.instruction.XInstructionInvokeSpecial;
+import xscript.runtime.instruction.XInstructionNew;
+import xscript.runtime.instruction.XInstructionODup;
 import xscript.runtime.instruction.XInstructionOPop;
 import xscript.runtime.instruction.XInstructionPop;
 import xscript.runtime.instruction.XInstructionReadLocal;
 import xscript.runtime.instruction.XInstructionSetLocalField;
+import xscript.runtime.instruction.XInstructionThrow;
+import xscript.runtime.method.XCatchEntry;
+import xscript.runtime.method.XLineEntry;
+import xscript.runtime.method.XLocalEntry;
 import xscript.runtime.method.XMethod;
 
 public class XMethodCompiler extends XMethod {
@@ -41,6 +49,8 @@ public class XMethodCompiler extends XMethod {
 	private boolean hasChildClasses;
 	
 	private XMethodSearch search;
+	
+	private boolean errored;
 	
 	public XMethodCompiler(XClass declaringClass, int modifier, String name,
 			XClassPtr returnType, xscript.runtime.XAnnotation[] annotations,
@@ -205,19 +215,50 @@ public class XMethodCompiler extends XMethod {
 	
 	public void gen(){
 		if(codeGen!=null){
-			codeGen.generateFinalCode(this);
-			instructions = codeGen.getInstructions();
-			lineEntries = codeGen.getLineEntries();
-			catchEntries = codeGen.getCatchEntries();
-			localEntries = codeGen.getLocalEntries();
-			for(int i=0; i<localEntries.length; i++){
-				if(maxLocalSize<localEntries[i].getIndex()+1){
-					maxLocalSize = localEntries[i].getIndex()+1;
+			if(errored){
+				XClassPtr classPtr = new XClassPtrClass("xscript.lang.CompilerError");
+				XClass c = classPtr.getXClassNonNull(getDeclaringClass().getVirtualMachine());
+				XMethod m = c.getMethod("<init>()void");
+				instructions = new XInstruction[4];
+				instructions[0] = new XInstructionNew(classPtr);
+				instructions[1] = new XInstructionODup();
+				instructions[2] = new XInstructionInvokeSpecial(m, new XClassPtr[0]);
+				instructions[3] = new XInstructionThrow();
+				System.out.println("gen:"+getName()+Arrays.toString(instructions));
+				if(codeGen.lines==null || codeGen.lines.isEmpty()){
+					lineEntries = new XLineEntry[0];
+				}else{
+					lineEntries = new XLineEntry[]{new XLineEntry(0, codeGen.lines.get(0))};
 				}
+				catchEntries = new XCatchEntry[0];
+				int num;
+				if(XModifier.isStatic(modifier)){
+					num = getParamCount();
+				}else{
+					num = getParamCount()+1;
+				}
+				localEntries = new XLocalEntry[num];
+				for(int i=0; i<num; i++){
+					XVariable variable = codeGen.variables.get(i);
+					localEntries[i] = new XLocalEntry(0, 3, variable.id, variable.modifier, variable.name, variable.type.getXClassPtr());
+				}
+				maxStackSize = 0;
+				maxObjectStackSize = 2;
+			}else{
+				codeGen.generateFinalCode(this);
+				instructions = codeGen.getInstructions();
+				lineEntries = codeGen.getLineEntries();
+				catchEntries = codeGen.getCatchEntries();
+				localEntries = codeGen.getLocalEntries();
+				for(int i=0; i<localEntries.length; i++){
+					if(maxLocalSize<localEntries[i].getIndex()+1){
+						maxLocalSize = localEntries[i].getIndex()+1;
+					}
+				}
+				maxStackSize = codeGen.getMaxStackSize();
+				maxObjectStackSize = codeGen.getMaxObjectStackSize();
+				codeGen = null;		
 			}
-			maxStackSize = codeGen.getMaxStackSize();
-			maxObjectStackSize = codeGen.getMaxObjectStackSize();
-			codeGen = null;
 		}
 	}
 	
@@ -226,6 +267,8 @@ public class XMethodCompiler extends XMethod {
 		o[0] = this;
 		System.arraycopy(args, 0, o, 1, args.length);
 		((XClassCompiler)getDeclaringClass()).compilerError(level, "method."+key, lineDesk, o);
+		if(level==XMessageLevel.ERROR)
+			errored = true;
 	} 
 	
 	public void addClass(XClass c, XLineDesk line){
