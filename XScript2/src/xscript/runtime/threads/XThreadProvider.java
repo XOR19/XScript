@@ -17,6 +17,7 @@ public class XThreadProvider {
 	private List<XThread> threads = new ArrayList<XThread>();
 	private List<XThread> interrupts = new ArrayList<XThread>();
 	private List<XInterruptTerminatedListener> interruptTerminatedListeners = new ArrayList<XInterruptTerminatedListener>();
+	private List<XThreadErroredListener> threadErroredListeners = new ArrayList<XThreadErroredListener>();
 	private int nextThreadIDName=1;
 	private int nextThreadID=1;
 	private int activeThreadID;
@@ -80,6 +81,11 @@ public class XThreadProvider {
 				for(XInterruptTerminatedListener interruptTerminatedListener:interruptTerminatedListeners){
 					interruptTerminatedListener.onInterruptTerminated(virtualMachine, interrupt);
 				}
+				if(interrupt.getThreadState()==XThreadState.ERRORED){
+					for(XThreadErroredListener threadErroredListener:threadErroredListeners){
+						threadErroredListener.onThreadErrored(virtualMachine, interrupt);
+					}
+				}
 				continue;
 			}
 			index++;
@@ -96,6 +102,11 @@ public class XThreadProvider {
 		if(thread.getThreadState()!=XThreadState.RUNNING){
 			if(thread.getThreadState()==XThreadState.ERRORED || thread.getThreadState()==XThreadState.TERMINATED){
 				threads.remove(activeThreadID);
+				if(thread.getThreadState()==XThreadState.ERRORED){
+					for(XThreadErroredListener threadErroredListener:threadErroredListeners){
+						threadErroredListener.onThreadErrored(virtualMachine, thread);
+					}
+				}
 				activeThreadID--;
 			}
 			int startThread = activeThreadID;
@@ -143,21 +154,24 @@ public class XThreadProvider {
 		return 0;
 	}
 	
-	public void start(String name, XMethod method, XGenericClass[] generics, long[] params) {
+	public XThread start(String name, XMethod method, XGenericClass[] generics, long[] params) {
 		XThread thread = new XThread(virtualMachine, name, method, generics, params, nextThreadID++);
 		threads.add(thread);
+		return thread;
 	}
 	
-	public void interrupt(String name, byte[] userData, XMethod method, XGenericClass[] generics, long[] params){
+	public XThread interrupt(String name, byte[] userData, XMethod method, XGenericClass[] generics, long[] params){
 		XThread interrupt = new XThread(virtualMachine, name, method, generics, params, nextThreadID++);
 		interrupts.add(interrupt);
 		interrupt.setUserData(userData);
+		return interrupt;
 	}
 	
-	public void importantInterrupt(String name, XMethod method, XGenericClass[] generics, long[] params){
+	public XThread importantInterrupt(String name, XMethod method, XGenericClass[] generics, long[] params){
 		XThread interrupt = new XThread(virtualMachine, name, method, generics, params, nextThreadID++);
 		interrupts.add(0, interrupt);
 		newImportantInterrupt = true;
+		return interrupt;
 	}
 	
 	public String getNextDefaultThreadName() {
@@ -182,4 +196,15 @@ public class XThreadProvider {
 		throw new XRuntimeException("Unknown Thread");
 	}
 	
+	public void registerInterruptTerminatedListener(XInterruptTerminatedListener interruptTerminatedListener){
+		if(!interruptTerminatedListeners.contains(interruptTerminatedListener)){
+			interruptTerminatedListeners.add(interruptTerminatedListener);
+		}
+	}
+	
+	public void registerThreadErroredListener(XThreadErroredListener threadErroredListener){
+		if(!threadErroredListeners.contains(threadErroredListener)){
+			threadErroredListeners.add(threadErroredListener);
+		}
+	}
 }

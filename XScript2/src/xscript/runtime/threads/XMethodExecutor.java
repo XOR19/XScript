@@ -22,7 +22,6 @@ import xscript.runtime.object.XObjectProvider;
 public class XMethodExecutor implements XGenericMethodProvider {
 
 	private XMethodExecutor parent;
-	private XGenericClass declaringClass;
 	private XMethod method;
 	private XGenericClass[] generics;
 	private int stackPointer;
@@ -96,7 +95,6 @@ public class XMethodExecutor implements XGenericMethodProvider {
 				this.classes = classes;
 			}
 		}
-		declaringClass = new XGenericClass(virtualMachine, dis);
 		String methodName = dis.readUTF();
 		method = (XMethod)virtualMachine.getClassProvider().getLoadedXPackage(methodName);
 		int s = dis.readInt();
@@ -149,7 +147,6 @@ public class XMethodExecutor implements XGenericMethodProvider {
 		}else{
 			dos.writeBoolean(classes==null);
 		}
-		declaringClass.save(dos);
 		dos.writeUTF(method.getName());
 		if(generics==null){
 			dos.writeInt(-1);
@@ -196,7 +193,7 @@ public class XMethodExecutor implements XGenericMethodProvider {
 	}
 
 	public XGenericClass getDeclaringClass(){
-		return declaringClass;
+		return XModifier.isStatic(method.getModifier())?null:method.getDeclaringClass().getVirtualMachine().getObjectProvider().getObject(local[0]).getXClass();
 	}
 	
 	public long getThis(){
@@ -402,7 +399,7 @@ public class XMethodExecutor implements XGenericMethodProvider {
 	}
 
 	public boolean jumpToExceptionHandlePoint(XGenericClass xClass, long exception) {
-		XCatchInfo ci = method.getExceptionHandlePoint(programPointer, xClass, declaringClass, this);
+		XCatchInfo ci = method.getExceptionHandlePoint(programPointer, xClass, getDeclaringClass(), this);
 		if(ci==null){
 			return false;
 		}

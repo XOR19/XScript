@@ -38,7 +38,7 @@ public class XVirtualMachine extends XMap<String, Map<String, Object>> implement
 	public XVirtualMachine(XClassLoader standartClassLoader, int memSize){
 		classProvider = new XClassProvider(this);
 		objectProvider = new XObjectProvider(this, memSize);
-		nativeProvider = new XNativeProvider(this);
+		nativeProvider = new XNativeProvider(this, true);
 		threadProvider = new XThreadProvider(this);
 		classProvider.addClassLoader(standartClassLoader);
 		timer = new XTimer();
@@ -50,8 +50,10 @@ public class XVirtualMachine extends XMap<String, Map<String, Object>> implement
 			timer = new XTimer();
 		}
 		this.timer = timer;
-		classProvider = new XClassProvider(this, classLoaders, dis);
-		nativeProvider = new XNativeProvider(this);
+		nativeProvider = new XNativeProvider(this, false);
+		classProvider = new XClassProvider(this, classLoaders);
+		classProvider.loadAll(dis);
+		nativeProvider.registerNatives();
 		threadProvider = new XThreadProvider(this, dis);
 		objectProvider = new XObjectProvider(this, dis);
 	}

@@ -88,6 +88,14 @@ public class XPrimitive extends XClass {
 		
 	}
 	
+	public void load(XInputStreamSave dis) throws IOException {
+		
+	}
+	
+	public void save(XOutputStreamSave dos) throws IOException {
+		
+	}
+	
 	@Override
 	public boolean canCastTo(XClass xClass) {
 		return xClass == this;

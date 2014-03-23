@@ -44,8 +44,13 @@ public class XNativeProvider {
 	private HashMap<String, XNativeField> nativeFields = new HashMap<String, XNativeField>();
 	private HashMap<String, XNativeFactory> nativeFactories = new HashMap<String, XNativeFactory>();
 	
-	public XNativeProvider(XVirtualMachine virtualMachine) {
+	public XNativeProvider(XVirtualMachine virtualMachine, boolean registerNatives) {
 		this.virtualMachine = virtualMachine;
+		if(registerNatives)
+			registerNatives();
+	}
+
+	public void registerNatives(){
 		XLangArray.registerNatives(this);
 		XLangArrayBool.registerNatives(this);
 		XLangArrayByte.registerNatives(this);
@@ -64,7 +69,7 @@ public class XNativeProvider {
 		XLangThread.registerNatives(this);
 		XLangVM.registerNatives(this);
 	}
-
+	
 	public void call(XThread thread, XMethodExecutor methodExecutor, XMethod method, XGenericClass[] generics, long[] params) {
 		XNativeMethod nativeMethod = method.getNativeMethod();
 		if(nativeMethod==null)

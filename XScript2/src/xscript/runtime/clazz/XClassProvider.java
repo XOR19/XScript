@@ -38,16 +38,19 @@ public class XClassProvider {
 		VOID = createPrimitive(XPrimitive.VOID);
 	}
 	
-	public XClassProvider(XVirtualMachine virtualMachine, List<XClassLoader> classLoaders, XInputStreamSave dis) throws IOException {
+	public XClassProvider(XVirtualMachine virtualMachine, List<XClassLoader> classLoaders) {
 		this(virtualMachine);
 		this.classLoaders.addAll(classLoaders);
+	}
+
+	public void loadAll(XInputStreamSave dis) throws IOException {
 		int s = dis.readInt();
 		while(s-->0){
 			XClass c = getXClass(dis.readUTF());
 			c.load(dis);
 		}
 	}
-
+	
 	public void save(XOutputStreamSave dos) throws IOException {
 		List<XClass> allClasses = getAllLoadedClasses();
 		dos.writeInt(allClasses.size());
