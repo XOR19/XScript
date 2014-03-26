@@ -47,6 +47,8 @@ public class XWrapper {
 		case XPrimitive.OBJECT:
 			if(value instanceof String){
 				return objectProvider.createString(null, null, (String)value);
+			}else if(value instanceof Long){
+				return (Long)value;
 			}
 			return objectProvider.getPointer((XObject)value);
 		case XPrimitive.BOOL:

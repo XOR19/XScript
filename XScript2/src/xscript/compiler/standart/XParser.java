@@ -65,7 +65,7 @@ public class XParser {
 	private XMessageList messages;
 	private List<XLineDesk> lines = new ArrayList<XLineDesk>();
 	private boolean unhandledUnexpected;
-	private List<MessageBuffer> messageBuffer;
+	private List<List<MessageBuffer>> messageBuffers;
 	
 	public XParser(XLexer lexer, XMessageList messages){
 		this.lexer = lexer;
@@ -282,7 +282,7 @@ public class XParser {
 		if(!isOperator(token.kind)){
 			if(token.kind==XTokenKind.LGROUP){
 				nextToken();
-				expected(XTokenKind.LGROUP);
+				expected(XTokenKind.RGROUP);
 				return "()";
 			}else if(token.kind==XTokenKind.LINDEX){
 				nextToken();
@@ -1126,7 +1126,9 @@ public class XParser {
 			nextToken();
 			if(token.kind==XTokenKind.LGROUP){
 				lexer.sure();
+				nextToken();
 				statement = makeInnerStatement();
+				expected(XTokenKind.RGROUP);
 				block = makeBlock();
 				return new XTreeSynchronized(endLineBlock(), statement, block);
 			}else{
@@ -1844,29 +1846,37 @@ public class XParser {
 	}
 	
 	private void parserMessage(XMessageLevel level, String key, XLineDesk lineDesk, Object...args){
-		if(messageBuffer!=null){
+		if(messageBuffers!=null){
 			MessageBuffer buffer = new MessageBuffer();
 			buffer.level = level;
 			buffer.key = key;
 			buffer.lineDesk = lineDesk;
 			buffer.args = args;
-			messageBuffer.add(buffer);
+			messageBuffers.get(0).add(buffer);
 		}else{
 			messages.postMessage(level, "parser."+key, lineDesk, args);
 		}
 	}
 	
 	private void startMessageBuffer(){
-		messageBuffer = new ArrayList<XParser.MessageBuffer>();
+		if(messageBuffers==null)
+			messageBuffers = new ArrayList<List<XParser.MessageBuffer>>();
+		messageBuffers.add(0, new ArrayList<XParser.MessageBuffer>());
 	}
 	
 	private void endMessageBuffer(boolean post){
 		if(post){
-			for(MessageBuffer message:messageBuffer){
-				messages.postMessage(message.level, "parser."+message.key, message.lineDesk, message.args);
+			if(messageBuffers.size()>1){
+				messageBuffers.get(1).addAll(messageBuffers.get(0));
+			}else{
+				for(MessageBuffer message:messageBuffers.get(0)){
+					messages.postMessage(message.level, "parser."+message.key, message.lineDesk, message.args);
+				}
 			}
 		}
-		messageBuffer = null;
+		messageBuffers.remove(0);
+		if(messageBuffers.isEmpty())
+			messageBuffers = null;
 	}
 	
 	private static class MessageBuffer{

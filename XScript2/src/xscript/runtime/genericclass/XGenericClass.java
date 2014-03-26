@@ -310,4 +310,21 @@ public class XGenericClass implements List<Object>, Callable<Map<String, Object>
 		return to;
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if(obj instanceof XGenericClass){
+			XGenericClass gc = (XGenericClass)obj;
+			if(gc.xClass != xClass)
+				return false;
+			if(generics!=null){
+				for(int i=0; i<generics.length; i++){
+					if(!generics[i].equals(gc.generics[i]))
+						return false;
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+	
 }

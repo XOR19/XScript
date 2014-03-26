@@ -10,6 +10,7 @@ import xscript.runtime.clazz.XInputStreamSave;
 import xscript.runtime.clazz.XOutputStreamSave;
 import xscript.runtime.genericclass.XGenericClass;
 import xscript.runtime.method.XMethod;
+import xscript.runtime.object.XObject;
 
 public class XThreadProvider {
 
@@ -22,6 +23,7 @@ public class XThreadProvider {
 	private int nextThreadID=1;
 	private int activeThreadID;
 	private boolean newImportantInterrupt;
+	private boolean newInterrupt;
 	
 	public XThreadProvider(XVirtualMachine virtualMachine){
 		this.virtualMachine = virtualMachine;
@@ -43,6 +45,7 @@ public class XThreadProvider {
 		nextThreadID = dis.readInt();
 		activeThreadID = dis.readInt();
 		newImportantInterrupt = false;
+		newInterrupt = false;
 	}
 
 	public void save(XOutputStreamSave dos) throws IOException {
@@ -129,7 +132,7 @@ public class XThreadProvider {
 					}
 					activeThreadID--;
 				}
-			}while(thread.getThreadState()==XThreadState.RUNNING);
+			}while(thread.getThreadState()!=XThreadState.RUNNING);
 		}
 		activeThreadID++;
 		if(activeThreadID>=threads.size()){
@@ -141,6 +144,7 @@ public class XThreadProvider {
 	public int run(int numInstructions, int numBlocks){
 		while(numBlocks>0){
 			newImportantInterrupt = false;
+			newInterrupt = false;
 			XThread current = getNextInterrupt();
 			if(current==null){
 				current = getNextThread();
@@ -160,10 +164,17 @@ public class XThreadProvider {
 		return thread;
 	}
 	
+	public XThread start(String name, XMethod method, XGenericClass[] generics, long[] params, long threadObject) {
+		XThread thread = new XThread(virtualMachine, name, method, generics, params, threadObject, nextThreadID++);
+		threads.add(thread);
+		return thread;
+	}
+	
 	public XThread interrupt(String name, byte[] userData, XMethod method, XGenericClass[] generics, long[] params){
 		XThread interrupt = new XThread(virtualMachine, name, method, generics, params, nextThreadID++);
 		interrupts.add(interrupt);
 		interrupt.setUserData(userData);
+		newInterrupt = true;
 		return interrupt;
 	}
 	
@@ -182,6 +193,10 @@ public class XThreadProvider {
 		return newImportantInterrupt;
 	}
 
+	public boolean isNewInterrupt(){
+		return newInterrupt;
+	}
+	
 	public XThread getThread(int id) {
 		for(XThread thread:threads){
 			if(thread.getID()==id){

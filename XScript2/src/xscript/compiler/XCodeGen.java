@@ -199,11 +199,13 @@ public class XCodeGen{
 		maxStackSize = 0;
 		maxObjectStackSize = 0;
 		for(int[] size:sizes){
+			if(size!=null){
 			if(maxStackSize<size[0]){
 				maxStackSize = size[0];
 			}
 			if(maxObjectStackSize<size[1]){
 				maxObjectStackSize = size[1];
+			}
 			}
 		}
 	}

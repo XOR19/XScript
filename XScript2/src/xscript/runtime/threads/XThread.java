@@ -14,6 +14,7 @@ import xscript.runtime.genericclass.XGenericClass;
 import xscript.runtime.instruction.XInstruction;
 import xscript.runtime.method.XMethod;
 import xscript.runtime.object.XObject;
+import xscript.runtime.object.XObjectProvider;
 
 
 public class XThread {
@@ -28,11 +29,21 @@ public class XThread {
 	protected boolean waiting;
 	private byte[] userData;
 	private int id;
+	private long object;
 	
 	protected XThread(XVirtualMachine virtualMachine, String name, XMethod method, XGenericClass[] generics, long[] params, int id){
 		this.virtualMachine = virtualMachine;
 		this.name = name;
 		this.id = id;
+		call(method, generics, params);
+	}
+	
+	protected XThread(XVirtualMachine virtualMachine, String name, XMethod method, XGenericClass[] generics, long[] params, long threadObject, int id){
+		this.virtualMachine = virtualMachine;
+		this.name = name;
+		this.id = id;
+		this.object = threadObject;
+		setupThread(object);
 		call(method, generics, params);
 	}
 
@@ -58,6 +69,7 @@ public class XThread {
 			userData = new byte[s];
 			dis.read(userData);
 		}
+		object = dis.readLong();
 	}
 
 	public void save(XOutputStreamSave dos) throws IOException {
@@ -80,6 +92,7 @@ public class XThread {
 			dos.writeInt(userData.length);
 			dos.write(userData);
 		}
+		dos.writeLong(object);
 	}
 	
 	public void setUserData(byte[] userData){
@@ -92,7 +105,8 @@ public class XThread {
 	
 	protected void run(int numInstructions){
 		if(methodExecutor!=null){
-			while(numInstructions-->0 && methodExecutor!=null && getThreadState()==XThreadState.RUNNING){
+			XThreadProvider threadProvider = virtualMachine.getThreadProvider();
+			while(numInstructions-->0 && methodExecutor!=null && getThreadState()==XThreadState.RUNNING && !threadProvider.isNewImportantInterrupt() && !threadProvider.isNewInterrupt()){
 				XInstruction instruction = methodExecutor.getNextInstruction();
 				while(instruction==null){
 					XMethodExecutor oldMethodExecutor = methodExecutor.getParent();
@@ -102,6 +116,7 @@ public class XThread {
 							oldMethodExecutor.push(result[0], (int) result[1]);
 						}
 					}
+					methodExecutor.exitMethod(this);
 					methodExecutor = oldMethodExecutor;
 					if(oldMethodExecutor==null)
 						return;
@@ -110,7 +125,7 @@ public class XThread {
 				if(instruction!=null){
 					try{
 						instruction.resolve(virtualMachine, this, methodExecutor);
-						if(virtualMachine.getThreadProvider().isNewImportantInterrupt()){
+						if(threadProvider.isNewImportantInterrupt()){
 							methodExecutor.setProgramPointerBack();
 							return;
 						}
@@ -148,7 +163,7 @@ public class XThread {
 		if(XModifier.isNative(xMethod.getModifier())){
 			virtualMachine.getNativeProvider().call(this, methodExecutor, xMethod, generics, params);
 		}else{
-			methodExecutor = new XMethodExecutor(methodExecutor, xMethod, generics, params);
+			methodExecutor = new XMethodExecutor(methodExecutor, this, xMethod, generics, params);
 		}
 	}
 	
@@ -156,7 +171,7 @@ public class XThread {
 		if(XModifier.isNative(xMethod.getModifier())){
 			virtualMachine.getNativeProvider().call(this, methodExecutor, xMethod, generics, params);
 		}else{
-			methodExecutor = new XMethodExecutor(methodExecutor, xMethod, generics, params, initializizedClasses);
+			methodExecutor = new XMethodExecutor(methodExecutor, this, xMethod, generics, params, initializizedClasses);
 		}
 	}
 
@@ -171,6 +186,12 @@ public class XThread {
 				if(obj!=null){
 					obj.markVisible();
 				}
+			}
+		}
+		if(object!=0){
+			obj = virtualMachine.getObjectProvider().getObject(object);
+			if(obj!=null){
+				obj.markVisible();
 			}
 		}
 		methodExecutor.markVisible();
@@ -219,6 +240,31 @@ public class XThread {
 	
 	public String getName(){
 		return name;
+	}
+
+	public long getThreadObject() {
+		if(object==0){
+			object = createThreadObject();
+		}
+		return object;
+	}
+
+	private long createThreadObject() {
+		XObjectProvider objectProvider = virtualMachine.getObjectProvider();
+		long pointer = objectProvider.createObject(this, null, new XGenericClass(virtualMachine.getClassProvider().getXClass("xscript.lang.Thread")));
+		setupThread(pointer);
+		return pointer;
+	}
+	
+	private void setupThread(long pointer){
+		XObject object = virtualMachine.getObjectProvider().getObject(pointer);
+		XClass c = virtualMachine.getClassProvider().getXClass("xscript.lang.Thread");
+		c.getField("threadID").finalSet(object, this.id);
+	}
+
+	@Override
+	public String toString() {
+		return getName()+":"+getThreadState();
 	}
 	
 }

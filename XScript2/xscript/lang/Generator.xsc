@@ -1,0 +1,54 @@
+package xscript.lang;
+
+public class Generator:Thread,Function{
+
+	private Object sync = new Object();
+
+	private Function function;
+	
+	private Object lastReturn;
+
+	private Object[] in;
+	
+	public static Object[] yield(Object ret){
+		Thread thread = getCurrentThread();
+		Generator generator = (Generator)thread;
+		generator.lastReturn = ret;
+		synchronized(generator.sync){
+			generator.sync.notify();
+			generator.sync.wait();
+		}
+		return generator.in;
+	}
+	
+	public Generator(Function function){
+		this.function = function;
+		synchronized(sync){
+			start();
+			sync.wait();
+		}
+	}
+	
+	@Override
+	public synchronized Object operator()(Object...o){
+		in = o;
+		synchronized(sync){
+			sync.notify();
+			sync.wait();
+		}
+		return lastReturn;
+	}
+	
+	@Override
+	protected void run(){
+		synchronized(sync){
+			sync.notify();
+			sync.wait();
+		}
+		lastReturn = function(in);
+		synchronized(sync){
+			sync.notify();
+		}
+	}
+	
+}

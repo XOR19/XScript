@@ -1,14 +1,14 @@
 package test;
 
-public enum Test2{
+public class Test2:Function{
 	
-	T("Test") ,
-	T2("Test2");
-	
-	public String n;
-	
-	Test2(String s){
-		n = s;
+	@Override
+	public Object operator()(Object...o){
+		int i=0;
+		while(true){
+			Generator.yield(i);
+			i++;
+		}
 	}
 	
 }

@@ -27,8 +27,8 @@ import xscript.runtime.threads.XMethodExecutor;
 
 public class XMethod extends XPackage {
 	
-	public static final int STATICALLOWEDMODIFIFER = XModifier.FINAL | XModifier.PRIVATE | XModifier.PROTECTED | XModifier.PUBLIC | XModifier.STATIC | XModifier.NATIVE | XModifier.VARARGS;
-	public static final int ALLOWEDMODIFIFER = XModifier.FINAL | XModifier.PRIVATE | XModifier.PROTECTED | XModifier.PUBLIC | XModifier.ABSTRACT | XModifier.NATIVE | XModifier.VARARGS;
+	public static final int STATICALLOWEDMODIFIFER = XModifier.FINAL | XModifier.PRIVATE | XModifier.PROTECTED | XModifier.PUBLIC | XModifier.STATIC | XModifier.NATIVE | XModifier.VARARGS | XModifier.SYNCHRONIZED;
+	public static final int ALLOWEDMODIFIFER = XModifier.FINAL | XModifier.PRIVATE | XModifier.PROTECTED | XModifier.PUBLIC | XModifier.ABSTRACT | XModifier.NATIVE | XModifier.VARARGS | XModifier.SYNCHRONIZED;
 	public static final int CONSTRUCTORMODIFIER = XModifier.PRIVATE | XModifier.PROTECTED | XModifier.PUBLIC | XModifier.VARARGS;
 	public static final int STATICCONSTRUCTORMODIFIER = XModifier.STATIC | XModifier.FINAL | XModifier.PRIVATE;
 	

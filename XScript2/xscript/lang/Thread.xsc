@@ -4,4 +4,18 @@ public class Thread{
 	
 	public static native void sleep(long ms);
 	
+	public static native Thread getCurrentThread();
+	
+	private final int threadID;
+	
+	public Thread(){
+		threadID = 0;
+	}
+	
+	public native void start();
+	
+	protected void run(){
+		
+	}
+	
 }

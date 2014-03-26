@@ -1,0 +1,14 @@
+package xscript.lang;
+
+public class ArrayIndexOutOfBoundsException:RuntimeException{
+
+	public ArrayIndexOutOfBoundsException():RuntimeException(){
+	}
+	
+	public ArrayIndexOutOfBoundsException(int index):RuntimeException("Array index out of range: "){
+	}
+	
+	public ArrayIndexOutOfBoundsException(String message):RuntimeException(message){
+	}
+	
+}

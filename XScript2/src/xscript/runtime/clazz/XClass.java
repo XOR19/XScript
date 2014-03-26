@@ -556,7 +556,7 @@ public class XClass extends XPackage{
 		if(!classes.contains(c)){
 			XClass cc = c.getXClass();
 			for(XGenericClass gc:classes){
-				if(cc==gc.getXClass())
+				if(cc==gc.getXClass() && !gc.equals(c))
 					throw new XRuntimeException("Can't extend the same class with different generics", cc);
 			}
 			if(in.contains(cc))

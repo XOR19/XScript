@@ -36,11 +36,11 @@ public class XMethodExecutor implements XGenericMethodProvider {
 	private boolean topConstructor = false;
 	private List<XClass> classes;
 	
-	public XMethodExecutor(XMethodExecutor parent, XMethod method, XGenericClass[] generics, long[] params) {
-		this(parent, method, generics, params, null);
+	public XMethodExecutor(XMethodExecutor parent, XThread thread, XMethod method, XGenericClass[] generics, long[] params) {
+		this(parent, thread, method, generics, params, null);
 	}
 	
-	public XMethodExecutor(XMethodExecutor parent, XMethod method, XGenericClass[] generics, long[] params, List<XClass> classes) {
+	public XMethodExecutor(XMethodExecutor parent, XThread thread, XMethod method, XGenericClass[] generics, long[] params, List<XClass> classes) {
 		this.parent = parent;
 		this.method = method;
 		if(classes==null && method.isConstructor() && !XModifier.isStatic(method.getModifier())){
@@ -77,6 +77,13 @@ public class XMethodExecutor implements XGenericMethodProvider {
 		}
 		catchStackPointer = new int[method.getExceptionHanles()];
 		catchObjectStackPointer = new int[method.getExceptionHanles()];
+		if(XModifier.isSynchronized(method.getModifier())){
+			if(XModifier.isStatic(method.getModifier())){
+				method.getDeclaringClass().getVirtualMachine().getObjectProvider().getObject(method.getDeclaringClass().getClassObject(thread, this)).wantMonitor(thread);
+			}else{
+				method.getDeclaringClass().getVirtualMachine().getObjectProvider().getObject(local[0]).wantMonitor(thread);
+			}
+		}
 	}
 
 	public XMethodExecutor(XVirtualMachine virtualMachine, XInputStreamSave dis, List<XClass> classes) throws IOException {
@@ -421,6 +428,16 @@ public class XMethodExecutor implements XGenericMethodProvider {
 	
 	public int getLine(){
 		return method.getLine(programPointer-1);
+	}
+	
+	public void exitMethod(XThread thread){
+		if(XModifier.isSynchronized(method.getModifier())){
+			if(XModifier.isStatic(method.getModifier())){
+				method.getDeclaringClass().getVirtualMachine().getObjectProvider().getObject(method.getDeclaringClass().getClassObject(thread, this)).exitMonitor(thread);
+			}else{
+				method.getDeclaringClass().getVirtualMachine().getObjectProvider().getObject(local[0]).exitMonitor(thread);
+			}
+		}
 	}
 	
 }

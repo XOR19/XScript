@@ -2,6 +2,7 @@ package xscript.runtime.object;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -23,13 +24,37 @@ import xscript.runtime.threads.XThread;
 
 public class XObject extends XMap<Object, Object> implements Callable<Callable<Map<String, Object>>>{
 
+	private static class WaitingInfo{
+		XThread thread;
+		int monitor;
+		boolean notified;
+		
+		WaitingInfo(XThread thread, int monitor) {
+			this.thread = thread;
+			this.monitor = monitor;
+		}
+
+		WaitingInfo(XVirtualMachine virtualMachine, XInputStreamSave dis) throws IOException {
+			thread = virtualMachine.getThreadProvider().getThread(dis.readInt());
+			monitor = dis.readInt();
+			notified = dis.readBoolean();
+		}
+
+		public void save(XOutputStreamSave dos) throws IOException {
+			dos.writeInt(thread.getID());
+			dos.writeInt(monitor);
+			dos.writeBoolean(notified);
+		}
+	}
+	
 	private XGenericClass xClass;
 	private byte[] data;
 	private byte[] userData;
 	private boolean isVisible;
 	private int monitor;
 	private XThread thread;
-	private List<XThread> waiting;
+	private List<XThread> waitingEntry;
+	private List<WaitingInfo> waiting;
 	private Object nativeObject;
 	
 	protected XObject(XThread thread, XMethodExecutor methodExecutor, XGenericClass xClass){
@@ -74,13 +99,22 @@ public class XObject extends XMap<Object, Object> implements Callable<Callable<M
 		if(monitor>0){
 			thread = virtualMachine.getThreadProvider().getThread(dis.readInt());
 			s = dis.readInt();
-			waiting = new ArrayList<XThread>();
-			for(int i=0; i<s; i++){
-				waiting.add(virtualMachine.getThreadProvider().getThread(dis.readInt()));
+			if(s>0){
+				waitingEntry = new ArrayList<XThread>();
+				for(int i=0; i<s; i++){
+					waitingEntry.add(virtualMachine.getThreadProvider().getThread(dis.readInt()));
+				}
 			}
 		}else{
 			thread = null;
-			waiting = null;
+			waitingEntry = null;
+		}
+		s = dis.readInt();
+		if(s>0){
+			waiting = new ArrayList<WaitingInfo>();
+			for(int i=0; i<s; i++){
+				waiting.add(new WaitingInfo(virtualMachine, dis));
+			}
 		}
 	}
 
@@ -97,10 +131,22 @@ public class XObject extends XMap<Object, Object> implements Callable<Callable<M
 		dos.writeInt(monitor);
 		if(monitor>0){
 			dos.writeInt(thread.getID());
-			dos.writeInt(waiting.size());
-			for(XThread waitingt:waiting){
-				dos.writeInt(waitingt.getID());
+			if(waitingEntry==null){
+				dos.writeInt(waitingEntry.size());
+				for(XThread waitingt:waitingEntry){
+					dos.writeInt(waitingt.getID());
+				}
+			}else{
+				dos.writeInt(0);
 			}
+		}
+		if(waiting==null){
+			dos.writeInt(waiting.size());
+			for(WaitingInfo info:waiting){
+				info.save(dos);
+			}
+		}else{
+			dos.writeInt(0);
 		}
 	}
 	
@@ -183,14 +229,7 @@ public class XObject extends XMap<Object, Object> implements Callable<Callable<M
 		if(this.thread==thread){
 			monitor--;
 			if(monitor<=0){
-				if(waiting.isEmpty()){
-					this.thread = null;
-					waiting = null;
-				}else{
-					this.thread = waiting.remove(0);
-					monitor = 1;
-					this.thread.setWaiting(false);
-				}
+				startWaitingThread();
 			}
 		}
 	}
@@ -199,13 +238,72 @@ public class XObject extends XMap<Object, Object> implements Callable<Callable<M
 		if(this.thread==null){
 			this.thread = thread;
 			monitor = 1;
-			waiting = new ArrayList<XThread>();
 		}else if(this.thread==thread){
 			monitor++;
 		}else{
-			waiting.add(thread);
+			if(waitingEntry==null){
+				waitingEntry = new ArrayList<XThread>();
+			}
+			waitingEntry.add(thread);
 			thread.setWaiting(true);
 		}
+	}
+	
+	public void monitorWait(XThread thread){
+		if(this.thread==thread){
+			if(waiting==null){
+				waiting = new ArrayList<WaitingInfo>();
+			}
+			thread.setWaiting(true);
+			waiting.add(new WaitingInfo(thread, monitor));
+			startWaitingThread();
+		}
+	}
+	
+	public void monitorNotify(XThread thread){
+		if(this.thread==thread){
+			if(waiting!=null){
+				waiting.get(0).notified = true;
+			}
+		}
+	}
+	
+	public void monitorNotifyAll(XThread thread) {
+		if(this.thread==thread){
+			if(waiting!=null){
+				for(WaitingInfo info:waiting){
+					info.notified = true;
+				}
+			}
+		}
+	}
+	
+	private void startWaitingThread(){
+		if(waiting!=null){
+			Iterator<WaitingInfo> i = this.waiting.iterator();
+			while(i.hasNext()){
+				WaitingInfo info = i.next();
+				if(info.notified){
+					this.thread = info.thread;
+					this.monitor = info.monitor;
+					this.thread.setWaiting(false);
+					i.remove();
+					if(this.waiting.isEmpty())
+						this.waiting = null;
+					return;
+				}
+			}
+		}
+		if(waitingEntry!=null){
+			this.thread = waitingEntry.remove(0);
+			if(waitingEntry.isEmpty())
+				waitingEntry = null;
+			monitor = 1;
+			this.thread.setWaiting(false);
+			return;
+		}
+		this.thread = null;
+		monitor = 0;
 	}
 	
 	@Override
