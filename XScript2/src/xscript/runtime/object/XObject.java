@@ -140,7 +140,7 @@ public class XObject extends XMap<Object, Object> implements Callable<Callable<M
 				dos.writeInt(0);
 			}
 		}
-		if(waiting==null){
+		if(waiting!=null){
 			dos.writeInt(waiting.size());
 			for(WaitingInfo info:waiting){
 				info.save(dos);
