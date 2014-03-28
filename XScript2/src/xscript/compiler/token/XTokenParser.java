@@ -188,21 +188,26 @@ public class XTokenParser {
 			if(doc){
 				scannChar();
 			}
-			String comment = "";
-			while(scannChar!=0){
-				if(scannChar=='*'){
-					scannChar();
-					if(scannChar=='/')
-						break;
-					comment += '*';
-				}
-				comment += scannChar;
+			if(this.scannChar=='/'){
 				scannChar();
+				this.comments.add(new XComment(XCommentType.MULTILINE, ""));
+			}else{
+				String comment = "";
+				while(scannChar!=0){
+					if(scannChar=='*'){
+						scannChar();
+						if(scannChar=='/')
+							break;
+						comment += '*';
+					}
+					comment += scannChar;
+					scannChar();
+				}
+				if(scannChar!='/'){
+					parserMessage(XMessageLevel.ERROR, "comment.eof");
+				}
+				comments.add(new XComment(doc?XCommentType.DOCMULTILINE:XCommentType.MULTILINE, comment));
 			}
-			if(scannChar!='/'){
-				parserMessage(XMessageLevel.ERROR, "comment.eof");
-			}
-			comments.add(new XComment(doc?XCommentType.DOCMULTILINE:XCommentType.MULTILINE, comment));
 		}else{
 			String comment = "";
 			while(scannChar!='\n' && scannChar!=0){

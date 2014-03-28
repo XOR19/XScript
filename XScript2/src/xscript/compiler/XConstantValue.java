@@ -136,7 +136,7 @@ public class XConstantValue {
 		throw new RuntimeException(getTypeName()+" can't be cast to xscript.lang.String");
 	}
 	
-	public Character getChar(){
+	public char getChar(){
 		if(value instanceof Character)
 			return (Character)value;
 		throw new RuntimeException(getTypeName()+" can't be cast to char");
