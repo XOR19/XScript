@@ -56,6 +56,7 @@ public class XObject extends XMap<Object, Object> implements Callable<Callable<M
 	private List<XThread> waitingEntry;
 	private List<WaitingInfo> waiting;
 	private Object nativeObject;
+	private int references;
 	
 	protected XObject(XThread thread, XMethodExecutor methodExecutor, XGenericClass xClass){
 		if(XModifier.isAbstract(xClass.getXClass().getModifier()))
@@ -116,6 +117,7 @@ public class XObject extends XMap<Object, Object> implements Callable<Callable<M
 				waiting.add(new WaitingInfo(virtualMachine, dis));
 			}
 		}
+		references = dis.readInt();
 	}
 
 	public void save(XOutputStreamSave dos) throws IOException {
@@ -148,6 +150,7 @@ public class XObject extends XMap<Object, Object> implements Callable<Callable<M
 		}else{
 			dos.writeInt(0);
 		}
+		dos.writeInt(references);
 	}
 	
 	public XGenericClass getXClass(){
@@ -215,14 +218,14 @@ public class XObject extends XMap<Object, Object> implements Callable<Callable<M
 	}
 	
 	public void markVisible(){
-		if(!isVisible){
+		if(!isVisible && references<=0){
 			isVisible = true;
 			xClass.getXClass().markObjectObjectsVisible(this);
 		}
 	}
 	
 	public boolean isVisible(){
-		return isVisible;
+		return isVisible || references>0;
 	}
 
 	public void exitMonitor(XThread thread) {
@@ -320,9 +323,21 @@ public class XObject extends XMap<Object, Object> implements Callable<Callable<M
 	
 	@Override
 	public Object get(Object name) {
+		if("+".equals(name)){
+			addRef();
+			return this;
+		}else if("-".equals(name)){
+			release();
+			return this;
+		}
 		if(name instanceof String){
 			XField field = getField((String)name);
 			return getFieldValue(field);
+		}else if(name instanceof Integer){
+			XObjectProvider objProv = xClass.getXClass().getVirtualMachine().getObjectProvider();
+			int index = XWrapper.castToInt(name);
+			int primitive = getXClass().getXClass().getArrayPrimitive();
+			return XWrapper.getJavaObject(objProv, primitive, getArrayElement(index));
 		}
 		return null;
 	}
@@ -406,6 +421,16 @@ public class XObject extends XMap<Object, Object> implements Callable<Callable<M
 	@Override
 	public Callable<Map<String, Object>> call() {
 		return xClass;
+	}
+	
+	public void addRef(){
+		references++;
+	}
+	
+	public void release(){
+		references--;
+		if(references<0)
+			references = 0;
 	}
 	
 }

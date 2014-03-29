@@ -116,17 +116,17 @@ public class XObjectProvider {
 		XClass sc = virtualMachine.getClassProvider().getXClass("xscript.lang.String");
 		XGenericClass gc = new XGenericClass(sc);
 		long s = createObject(thread, methodExecutor, gc);
+		XObject so = getObject(s);
+		so.addRef();
 		XGenericClass ac = new XGenericClass(virtualMachine.getClassProvider().getXClass("xscript.lang.ArrayChar"));
 		long v = createArray(thread, methodExecutor, ac, value.length());
-		if(getObject(s)==null){
-			s = createObject(thread, methodExecutor, gc);
-		}
 		XObject array = getObject(v);
 		for(int i=0; i<value.length(); i++){
 			array.setArrayElement(i, value.charAt(i));
 		}
 		XField fvalue = sc.getField("value");
-		fvalue.finalSet(getObject(s), v);
+		fvalue.finalSet(so, v);
+		so.release();
 		return s;
 	}
 
