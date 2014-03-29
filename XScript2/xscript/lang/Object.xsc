@@ -8,6 +8,10 @@ public class Object{
 		return this==other;
 	}
 	
+	public bool operator===(Object other){
+		return equals(other);
+	}
+	
 	public native long hashCode();
 	
 	public String toString(){
