@@ -14,7 +14,7 @@ public class XWrapper {
 		switch(primitive){
 		case XPrimitive.OBJECT:
 			XObject obj = objectProvider.getObject(value);
-			if(obj.getXClass().getXClass().getName().equals("xscript.lang.String")){
+			if(obj!=null && obj.getXClass().getXClass().getName().equals("xscript.lang.String")){
 				return objectProvider.getString(obj);
 			}
 			return obj;
