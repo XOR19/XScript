@@ -189,7 +189,6 @@ public class XTokenParser {
 				scannChar();
 			}
 			if(this.scannChar=='/'){
-				scannChar();
 				this.comments.add(new XComment(XCommentType.MULTILINE, ""));
 			}else{
 				String comment = "";

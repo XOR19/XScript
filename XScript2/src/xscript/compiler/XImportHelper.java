@@ -1,8 +1,9 @@
 package xscript.compiler;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import xscript.compiler.classtypes.XClassPtrErrored;
 import xscript.compiler.message.XMessageLevel;
@@ -10,7 +11,6 @@ import xscript.compiler.tree.XTree.XTreeImport;
 import xscript.compiler.tree.XTree.XTreeType;
 import xscript.runtime.clazz.XClass;
 import xscript.runtime.clazz.XGenericInfo;
-import xscript.runtime.clazz.XPackage;
 import xscript.runtime.clazz.XPrimitive;
 import xscript.runtime.genericclass.XClassPtr;
 import xscript.runtime.genericclass.XClassPtrClass;
@@ -23,7 +23,7 @@ public class XImportHelper {
 
 	private XCompiler compiler;
 	
-	private XClassCompiler xClassCompiler;
+	private XClass xClass;
 	
 	private List<String> directImports = new ArrayList<String>();
 	
@@ -33,16 +33,16 @@ public class XImportHelper {
 	
 	private List<String> staticIndirectImports = new ArrayList<String>();
 	
-	public XImportHelper(XCompiler compiler, XClassCompiler xClassCompiler) {
+	public XImportHelper(XCompiler compiler, XClass xClass) {
 		this.compiler = compiler;
-		this.xClassCompiler = xClassCompiler;
-		indirectImports.add(xClassCompiler.getParent().getName());
+		this.xClass = xClass;
+		indirectImports.add(xClass.getParent().getName());
 		indirectImports.addAll(compiler.getPredefIndirectImports());
 		staticIndirectImports.addAll(compiler.getPredefStaticIndirectImports());
 	}
 
-	public void addImport(XClassCompiler xClassCompiler, XTreeImport xImport) {
-		if(xClassCompiler!=this.xClassCompiler)
+	public void addImport(XClass xClass, XTreeImport xImport) {
+		if(xClass!=this.xClass)
 			throw new AssertionError();
 		if(xImport.indirect){
 			if(xImport.staticImport){
@@ -59,11 +59,11 @@ public class XImportHelper {
 		}
 	}
 
-	private String getChilds(XClassCompiler c, String name){
-		Collection<XPackage> col = c.getChildren();
-		for(XPackage p:col){
-			if(p instanceof XClassCompiler){
-				XClassCompiler cc = (XClassCompiler) p;
+	private String getChilds(XClass c, String name){
+		Set<Entry<String, Object>> set = c.entrySet();
+		for(Entry<String, Object>e:set){
+			if(e.getValue() instanceof XClass){
+				XClass cc = (XClass) e.getValue();
 				if(cc.getName().endsWith(name)){
 					return cc.getName();
 				}
@@ -109,12 +109,12 @@ public class XImportHelper {
 			name = xClassCompiler.getName();
 		}
 		if(name==null){
-			if(endsWith(this.xClassCompiler.getName(),type.name.name)){
-				name = this.xClassCompiler.getName();
+			if(endsWith(this.xClass.getName(),type.name.name)){
+				name = this.xClass.getName();
 			}
 		}
 		if(name==null){
-			name = getChilds(this.xClassCompiler, type.name.name);
+			name = getChilds(this.xClass, type.name.name);
 		}
 		if(name==null){
 			for(String s:directImports){

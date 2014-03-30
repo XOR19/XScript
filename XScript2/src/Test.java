@@ -16,9 +16,15 @@ import xscript.runtime.clazz.XZipClassLoader;
 
 public class Test {
 	
+	private static String a(){
+		return "";
+	}
+	
 	public static void main(String[] args) throws IOException, NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException{
 
 		File f = new File(".");
+		
+		System.out.println(a()+"a"=="a");
 		
 		XCompiler compiler = new XCompiler(new XZipClassLoader(new File(f, "rt.zip")));
 		XFileSourceProviderToZip fileSourceProviderToZip = new XFileSourceProviderToZip(f, new File(f, "rt.zip"), "xsc", "xcbc", "xscript");

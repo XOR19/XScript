@@ -364,8 +364,12 @@ public class XObject extends XMap<Object, Object> implements Callable<Callable<M
 	
 	private XField getField(String name){
 		int split = name.lastIndexOf('.');
-		XClass c = xClass.getXClass().getVirtualMachine().getClassProvider().getXClass(name.substring(0, split));
-		return c.getField(name.substring(split+1));
+		if(split==-1){
+			return xClass.getXClass().getField(name);
+		}else{
+			XClass c = xClass.getXClass().getVirtualMachine().getClassProvider().getXClass(name.substring(0, split));
+			return c.getField(name.substring(split+1));
+		}
 	}
 	
 	private Object getFieldValue(XField field){

@@ -610,8 +610,9 @@ public class XClass extends XPackage{
 				setupClassTable();
 				state = STATE_RUNNABLE;
 				XMethod xMethod = getMethod(XMethod.STATIC_INIT+"()void");
-				if(xMethod!=null)
+				if(xMethod!=null && virtualMachine.getThreadProvider()!=null){
 					virtualMachine.getThreadProvider().importantInterrupt("Static "+getName(), xMethod, new XGenericClass[0], new long[0]);
+				}
 			}catch(Throwable e){
 				state = STATE_ERRORED;
 				if(!(e instanceof XRuntimeException)){
