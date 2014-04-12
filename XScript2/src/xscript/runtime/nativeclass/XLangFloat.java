@@ -11,7 +11,7 @@ import xscript.runtime.threads.XThread;
 public class XLangFloat  {
 
 	public static void registerNatives(XNativeProvider nativeProvider) {
-		nativeProvider.addNativeMethod("xscript.lang.Float", "toString(float)xscript.lang.String", new XMethodToString());
+		nativeProvider.addNativeMethod("xscript.lang.Float", "toString{(float)xscript.lang.String}", new XMethodToString());
 	}
 	
 	private static class XMethodToString implements XNativeMethod{

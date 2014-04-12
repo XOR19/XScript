@@ -11,8 +11,8 @@ import xscript.runtime.threads.XThread;
 public class XLangArrayDouble {
 	
 	public static void registerNatives(XNativeProvider nativeProvider) {
-		nativeProvider.addNativeMethod("xscript.lang.ArrayDouble", "operator[](int)double", new XMethodGetIndex());
-		nativeProvider.addNativeMethod("xscript.lang.ArrayDouble", "operator[](int, double)double", new XMethodSetIndex());
+		nativeProvider.addNativeMethod("xscript.lang.ArrayDouble", "operator[]{(int)double}", new XMethodGetIndex());
+		nativeProvider.addNativeMethod("xscript.lang.ArrayDouble", "operator[]{(int, double)double}", new XMethodSetIndex());
 	}
 	
 	private static class XMethodGetIndex implements XNativeMethod{

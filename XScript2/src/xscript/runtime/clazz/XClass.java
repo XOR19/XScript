@@ -300,7 +300,7 @@ public class XClass extends XPackage{
 	
 	public XMethod getMethod(String name) {
 		for(int i=0; i<methods.length; i++){
-			if(methods[i].getSimpleName().equals(name)){
+			if(methods[i].getNameDesk().equals(name)){
 				return methods[i];
 			}
 		}

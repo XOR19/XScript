@@ -12,5 +12,12 @@ public class XCompilerMethod {
 	public XVarType[] mThrows;
 	
 	public XVarType returnType;
+
+	@Override
+	public String toString() {
+		return method.toString();
+	}
+	
+	
 	
 }

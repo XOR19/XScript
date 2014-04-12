@@ -11,11 +11,11 @@ import xscript.runtime.threads.XThread;
 public class XLangObject {
 
 	public static void registerNatives(XNativeProvider nativeProvider) {
-		nativeProvider.addNativeMethod("xscript.lang.Object", "getClass()xscript.lang.Class", new XMethodGetClass());
-		nativeProvider.addNativeMethod("xscript.lang.Object", "hashCode()long", new XMethodHashCode());
-		nativeProvider.addNativeMethod("xscript.lang.Object", "notify()void", new XMethodNotify());
-		nativeProvider.addNativeMethod("xscript.lang.Object", "notifyAll()void", new XMethodNotifyAll());
-		nativeProvider.addNativeMethod("xscript.lang.Object", "wait()void", new XMethodWait());
+		nativeProvider.addNativeMethod("xscript.lang.Object", "getClass{()xscript.lang.Class}", new XMethodGetClass());
+		nativeProvider.addNativeMethod("xscript.lang.Object", "hashCode{()long}", new XMethodHashCode());
+		nativeProvider.addNativeMethod("xscript.lang.Object", "notify{()void}", new XMethodNotify());
+		nativeProvider.addNativeMethod("xscript.lang.Object", "notifyAll{()void}", new XMethodNotifyAll());
+		nativeProvider.addNativeMethod("xscript.lang.Object", "wait{()void}", new XMethodWait());
 	}
 	
 	private static class XMethodGetClass implements XNativeMethod{

@@ -354,6 +354,10 @@ public class XMethod extends XPackage {
 	
 	@Override
 	public String getSimpleName(){
+		return name+"{"+desk+"}";
+	}
+	
+	public String getNameDesk(){
 		return name+desk;
 	}
 	

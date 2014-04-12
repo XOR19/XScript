@@ -21,7 +21,7 @@ public class XPrimitiveType extends XKnownType {
 	@Override
 	public boolean equals(Object other) {
 		if(other instanceof XPrimitiveType){
-			return xClass == ((XPrimitiveType)other).xClass;
+			return getPrimitiveID() == ((XPrimitiveType)other).getPrimitiveID();
 		}
 		return false;
 	}

@@ -20,8 +20,23 @@ public class XPackage extends XMap<String, Object> {
 		this.name = name;
 	}
 	
+	private String[] split(String name){
+		int co = 0;
+		for(int i=0; i<name.length(); i++){
+			char c = name.charAt(i);
+			if(c=='.' && co==0){
+				return new String[]{name.substring(0, i), name.substring(i+1)};
+			}else if(c=='{'){
+				co++;
+			}else if(c=='}'){
+				co--;
+			}
+		}
+		return new String[]{name};
+	}
+	
 	public XPackage getChild(String name){
-		String names[] = name.split("\\.", 2);
+		String names[] = split(name);
 		XPackage child = childs.get(names[0]);
 		if(child==null)
 			return null;

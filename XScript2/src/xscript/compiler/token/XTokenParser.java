@@ -146,11 +146,11 @@ public class XTokenParser {
 				scannChar();
 				if(scannChar=='\\'){
 					string += '\\';
-				}else if(scannChar=='\n'){
+				}else if(scannChar=='n'){
 					string += '\n';
-				}else if(scannChar=='\r'){
+				}else if(scannChar=='r'){
 					string += '\r';
-				}else if(scannChar=='\t'){
+				}else if(scannChar=='t'){
 					string += '\t';
 				}else if(scannChar=='\''){
 					string += '\'';

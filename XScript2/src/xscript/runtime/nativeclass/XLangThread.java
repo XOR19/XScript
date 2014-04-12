@@ -13,9 +13,9 @@ import xscript.runtime.threads.XThread;
 public class XLangThread {
 
 	public static void registerNatives(XNativeProvider nativeProvider) {
-		nativeProvider.addNativeMethod("xscript.lang.Thread", "sleep(long)void", new XMethodSleep());
-		nativeProvider.addNativeMethod("xscript.lang.Thread", "getCurrentThread()xscript.lang.Thread", new XMethodGetCurrentThread());
-		nativeProvider.addNativeMethod("xscript.lang.Thread", "start()void", new XMethodStart());
+		nativeProvider.addNativeMethod("xscript.lang.Thread", "sleep{(long)void}", new XMethodSleep());
+		nativeProvider.addNativeMethod("xscript.lang.Thread", "getCurrentThread{()xscript.lang.Thread}", new XMethodGetCurrentThread());
+		nativeProvider.addNativeMethod("xscript.lang.Thread", "start{()void}", new XMethodStart());
 	}
 	
 	private static class XMethodSleep implements XNativeMethod{

@@ -11,8 +11,8 @@ import xscript.runtime.threads.XThread;
 public class XLangArrayBool {
 
 	public static void registerNatives(XNativeProvider nativeProvider) {
-		nativeProvider.addNativeMethod("xscript.lang.ArrayBool", "operator[](int)bool", new XMethodGetIndex());
-		nativeProvider.addNativeMethod("xscript.lang.ArrayBool", "operator[](int, bool)bool", new XMethodSetIndex());
+		nativeProvider.addNativeMethod("xscript.lang.ArrayBool", "operator[]{(int)bool}", new XMethodGetIndex());
+		nativeProvider.addNativeMethod("xscript.lang.ArrayBool", "operator[]{(int, bool)bool}", new XMethodSetIndex());
 	}
 	
 	private static class XMethodGetIndex implements XNativeMethod{

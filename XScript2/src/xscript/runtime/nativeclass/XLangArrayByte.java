@@ -11,8 +11,8 @@ import xscript.runtime.threads.XThread;
 public class XLangArrayByte {
 
 	public static void registerNatives(XNativeProvider nativeProvider) {
-		nativeProvider.addNativeMethod("xscript.lang.ArrayByte", "operator[](int)byte", new XMethodGetIndex());
-		nativeProvider.addNativeMethod("xscript.lang.ArrayByte", "operator[](int, byte)byte", new XMethodSetIndex());
+		nativeProvider.addNativeMethod("xscript.lang.ArrayByte", "operator[]{(int)byte}", new XMethodGetIndex());
+		nativeProvider.addNativeMethod("xscript.lang.ArrayByte", "operator[]{(int, byte)byte}", new XMethodSetIndex());
 	}
 	
 	private static class XMethodGetIndex implements XNativeMethod{

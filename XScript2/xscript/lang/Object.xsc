@@ -12,6 +12,10 @@ public class Object{
 		return equals(other);
 	}
 	
+	public bool operator!==(Object other){
+		return !equals(other);
+	}
+	
 	public native long hashCode();
 	
 	public String toString(){

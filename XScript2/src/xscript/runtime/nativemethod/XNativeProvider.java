@@ -255,7 +255,7 @@ public class XNativeProvider {
 					
 					System.out.println("add:"+name+paramScanner.getDesk());
 					
-					addNativeMethod(classInfo.value(), name+paramScanner.getDesk(), new XNativeMethodImp(method, paramScanner.isNeedVM(), 
+					addNativeMethod(classInfo.value(), name+"{"+paramScanner.getDesk()+"}", new XNativeMethodImp(method, paramScanner.isNeedVM(), 
 							paramScanner.isNeedThread(), paramScanner.isNeedME(), paramScanner.isNeedGenerics(), paramScanner.isNeedThis(), paramScanner.isNeedUserdata()));
 					
 				}else{

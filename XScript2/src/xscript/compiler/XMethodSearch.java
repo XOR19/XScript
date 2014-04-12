@@ -47,8 +47,9 @@ public class XMethodSearch {
 	}
 	
 	private void addMethod(XMethod method, XKnownType kt){
-		if(!method.getRealName().equals(name))
+		if(!method.getRealName().equals(name)){
 			return;
+		}
 		XVarType generics[];
 		if(kt instanceof XSingleType){
 			generics = ((XSingleType) kt).generics;
@@ -91,6 +92,8 @@ public class XMethodSearch {
 		if(m1.method == m2.method)
 			return 2;
 		if(m1.params.length!=m2.params.length)
+			return 0;
+		if(m1.method.getDeclaringClass()==m2.method.getDeclaringClass())
 			return 0;
 		int ret = 1;
 		if(!canCastTo(m1.method.getDeclaringClass(), m2.method.getDeclaringClass())){
@@ -250,11 +253,19 @@ public class XMethodSearch {
 	}
 	
 	public boolean isEmpty(){
-		return posibleMethods[0].isEmpty();
+		return posibleMethods[1].isEmpty();
 	}
 	
 	public boolean notIdentified(){
-		return posibleMethods[0].size()>1;
+		return posibleMethods[1].size()>1;
+	}
+	
+	public List<XCompilerMethod> possibles(){
+		List<XCompilerMethod> l = new ArrayList<XCompilerMethod>();
+		for(int i=1; i<posibleMethods.length; i++){
+			l.addAll(posibleMethods[i]);
+		}
+		return l;
 	}
 	
 	public boolean shouldBeStatic(){

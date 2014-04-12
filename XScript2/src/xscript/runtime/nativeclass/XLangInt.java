@@ -11,8 +11,8 @@ import xscript.runtime.threads.XThread;
 public class XLangInt  {
 
 	public static void registerNatives(XNativeProvider nativeProvider) {
-		nativeProvider.addNativeMethod("xscript.lang.Int", "toString(int, int)xscript.lang.String", new XMethodToString());
-		nativeProvider.addNativeMethod("xscript.lang.Int", "toUnsignedString(int, int)xscript.lang.String", new XMethodToUnsigendString());
+		nativeProvider.addNativeMethod("xscript.lang.Int", "toString{(int, int)xscript.lang.String}", new XMethodToString());
+		nativeProvider.addNativeMethod("xscript.lang.Int", "toUnsignedString{(int, int)xscript.lang.String}", new XMethodToUnsigendString());
 	}
 	
 	private static class XMethodToString implements XNativeMethod{

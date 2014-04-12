@@ -11,8 +11,8 @@ import xscript.runtime.threads.XThread;
 public class XLangArrayLong {
 
 	public static void registerNatives(XNativeProvider nativeProvider) {
-		nativeProvider.addNativeMethod("xscript.lang.ArrayLong", "operator[](int)long", new XMethodGetIndex());
-		nativeProvider.addNativeMethod("xscript.lang.ArrayLong", "operator[](int, long)long", new XMethodSetIndex());
+		nativeProvider.addNativeMethod("xscript.lang.ArrayLong", "operator[]{(int)long}", new XMethodGetIndex());
+		nativeProvider.addNativeMethod("xscript.lang.ArrayLong", "operator[]{(int, long)long}", new XMethodSetIndex());
 	}
 	
 	private static class XMethodGetIndex implements XNativeMethod{

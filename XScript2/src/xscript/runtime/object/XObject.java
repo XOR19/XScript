@@ -134,21 +134,21 @@ public class XObject extends XMap<Object, Object> implements Callable<Callable<M
 		if(monitor>0){
 			dos.writeInt(thread.getID());
 			if(waitingEntry==null){
+				dos.writeInt(0);
+			}else{
 				dos.writeInt(waitingEntry.size());
 				for(XThread waitingt:waitingEntry){
 					dos.writeInt(waitingt.getID());
 				}
-			}else{
-				dos.writeInt(0);
 			}
 		}
-		if(waiting!=null){
+		if(waiting==null){
+			dos.writeInt(0);
+		}else{
 			dos.writeInt(waiting.size());
 			for(WaitingInfo info:waiting){
 				info.save(dos);
 			}
-		}else{
-			dos.writeInt(0);
 		}
 		dos.writeInt(references);
 	}
@@ -187,7 +187,7 @@ public class XObject extends XMap<Object, Object> implements Callable<Callable<M
 			long l = 0;
 			for(int j=0; j<size; j++){
 				l <<= 8;
-				l |= data[i+j];
+				l |= data[i+j] & 255;
 			}
 			return l;
 		}

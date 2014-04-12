@@ -1398,7 +1398,7 @@ public class XStatementCompiler implements XVisitor {
 					}
 				}
 			}else{
-				compilerError(XMessageLevel.ERROR, "toomanymethodfor", tree.line, possibleMethods.getDesk());
+				compilerError(XMessageLevel.ERROR, "toomanymethodfor", tree.line, possibleMethods.getDesk(), possibleMethods.possibles());
 				return new XErroredType();
 			}
 		}
@@ -2221,7 +2221,7 @@ public class XStatementCompiler implements XVisitor {
 				addInstructions(cl);
 				if(t1==XPrimitive.BOOL && op==XOperator.OR){
 					XStatementCompiler cr = visitTree(xOperatorStatement.right, getPrimitiveType(XPrimitive.BOOL));
-					XInstructionDumyIf iif = new XInstructionDumyIf();
+					XInstructionDumyNIf iif = new XInstructionDumyNIf();
 					addInstruction(iif, xOperatorStatement);
 					addInstruction(new XInstructionLoadConstBool(true), xOperatorStatement);
 					XInstructionDumyJump jump = new XInstructionDumyJump();
@@ -2232,7 +2232,7 @@ public class XStatementCompiler implements XVisitor {
 					setReturn(getPrimitiveType(XPrimitive.BOOL), xOperatorStatement);
 				}else if(t1==XPrimitive.BOOL && op==XOperator.AND){
 					XStatementCompiler cr = visitTree(xOperatorStatement.right, getPrimitiveType(XPrimitive.BOOL));
-					XInstructionDumyIf iif = new XInstructionDumyIf();
+					XInstructionDumyNIf iif = new XInstructionDumyNIf();
 					addInstruction(iif, xOperatorStatement);
 					addInstructions(cr);
 					XInstructionDumyJump jump = new XInstructionDumyJump();

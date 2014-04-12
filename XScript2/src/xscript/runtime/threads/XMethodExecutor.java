@@ -104,6 +104,9 @@ public class XMethodExecutor implements XGenericMethodProvider {
 		}
 		String methodName = dis.readUTF();
 		method = (XMethod)virtualMachine.getClassProvider().getLoadedXPackage(methodName);
+		if(method==null){
+			System.out.println(methodName+" not found");
+		}
 		int s = dis.readInt();
 		if(s==-1){
 			generics = null;

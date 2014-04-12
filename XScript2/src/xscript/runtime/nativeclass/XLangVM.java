@@ -11,7 +11,7 @@ import xscript.runtime.threads.XThread;
 public class XLangVM {
 
 	public static void registerNatives(XNativeProvider nativeProvider) {
-		nativeProvider.addNativeMethod("xscript.lang.VM", "println(xscript.lang.String)void", new XMethodPrintln());
+		nativeProvider.addNativeMethod("xscript.lang.VM", "println{(xscript.lang.String)void}", new XMethodPrintln());
 	}
 	
 	private static class XMethodPrintln implements XNativeMethod{

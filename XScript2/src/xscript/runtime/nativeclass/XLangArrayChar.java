@@ -12,8 +12,8 @@ public class XLangArrayChar{
 	
 	
 	public static void registerNatives(XNativeProvider nativeProvider) {
-		nativeProvider.addNativeMethod("xscript.lang.ArrayChar", "operator[](int)char", new XMethodGetIndex());
-		nativeProvider.addNativeMethod("xscript.lang.ArrayChar", "operator[](int, char)char", new XMethodSetIndex());
+		nativeProvider.addNativeMethod("xscript.lang.ArrayChar", "operator[]{(int)char}", new XMethodGetIndex());
+		nativeProvider.addNativeMethod("xscript.lang.ArrayChar", "operator[]{(int, char)char}", new XMethodSetIndex());
 	}
 	
 	private static class XMethodGetIndex implements XNativeMethod{

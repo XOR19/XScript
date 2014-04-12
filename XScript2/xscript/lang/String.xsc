@@ -34,4 +34,11 @@ public final class String{
 		return o.toString();
 	}
 	
+	private native static bool equals(String s1, Object s2);
+	
+	@Override
+	public bool equals(Object other){
+		return equals(this, other);
+	}
+	
 }

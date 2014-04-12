@@ -11,8 +11,8 @@ import xscript.runtime.threads.XThread;
 public class XLangArrayFloat {
 
 	public static void registerNatives(XNativeProvider nativeProvider) {
-		nativeProvider.addNativeMethod("xscript.lang.ArrayFloat", "operator[](int)float", new XMethodGetIndex());
-		nativeProvider.addNativeMethod("xscript.lang.ArrayFloat", "operator[](int, float)float", new XMethodSetIndex());
+		nativeProvider.addNativeMethod("xscript.lang.ArrayFloat", "operator[]{(int)float}", new XMethodGetIndex());
+		nativeProvider.addNativeMethod("xscript.lang.ArrayFloat", "operator[]{(int, float)float}", new XMethodSetIndex());
 	}
 	
 	private static class XMethodGetIndex implements XNativeMethod{
