@@ -1,9 +1,0 @@
-package xscript.lang;
-
-public abstract class Comparator<T> {
-
-	public abstract int compare(T value1, T value2);
-
-	public abstract boolean equals(Object other);
-	
-}

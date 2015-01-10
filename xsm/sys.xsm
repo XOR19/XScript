@@ -1,0 +1,81 @@
+import __builtin__;
+
+func println(message){
+	message = message.__str__();
+	__builtin__.__print(message);
+}
+
+__inputSave__="";
+
+func readln(){
+	str=__inputSave__;
+	index = str.indexOf('\n');
+	while(index==-1){
+		str += __builtin__.__pollInput();
+		index = str.indexOf('\n');
+	}
+	__inputSave__ = str.substring(index);
+	return str.substring(0, index-1);
+}
+
+func sleep(time){
+	__builtin__.__sleep(time);
+}
+
+class Exception{
+
+	_message;
+	_cause;
+	_stackTrace;
+	
+	func __init__(message:null, cause:null){
+		this._message = message;
+		this._cause = cause;
+		this._stackTrace = __builtin__.__fillStackTrace();
+	}
+	
+	func getMessage(){
+		return _message;
+	}
+	
+	func getCause(){
+		return _cause;
+	}
+	
+	func getStackTrace(){
+		return _stackTrace;
+	}
+
+}
+
+class TypeError : Exception{
+
+	func __init__(message:null, cause:null){
+		super.__init__(message, cause);
+	}
+	
+}
+
+class NativeError : Exception{
+
+	func __init__(){
+		throw TypeError("Bad Call");
+	}
+	
+}
+
+class StackTraceElement{
+
+	_declaringPath;
+	_methodName;
+	_fileName;
+	_lineNumber;
+
+	func __init__(declaringPath, methodName, fileName:null, lineNumber:-1){
+		this._declaringPath = declaringPath;
+		this._methodName = methodName;
+		this._fileName = fileName;
+		this._lineNumber = lineNumber;
+	}
+
+}

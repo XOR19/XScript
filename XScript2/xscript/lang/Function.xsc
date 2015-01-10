@@ -1,7 +1,0 @@
-package xscript.lang;
-
-public abstract class Function {
-
-	public abstract Object operator()(Object...param);
-	
-}

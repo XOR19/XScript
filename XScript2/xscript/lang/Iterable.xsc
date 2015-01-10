@@ -1,7 +1,0 @@
-package xscript.lang;
-
-public abstract class Iterable<T>{
-	
-	public abstract Iterator<T> iterator();
-	
-}

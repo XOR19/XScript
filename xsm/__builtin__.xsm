@@ -1,0 +1,749 @@
+// natively done:
+// from sys import TypeError;
+
+// native __getModule(module)
+// native __importParent(module)
+// native __importModule(module)
+// native __initModule(module)
+// native __fillStackTrace()
+// native __print(string)
+
+func __getErrorMessage2(op, left, right){
+	return "Operator "+op+" not applicable for "+left.__type__.__name__+" and "+right.__type__.__name__;
+}
+
+func __getErrorMessage1(op, value){
+	return "Operator "+op+" not applicable for "+value.__type__.__name__;
+}
+
+func ___add__(left, right){
+	if(left.__hasAttr__("__add__")){
+		return left.__add__(right);
+	}else if(right.__hasAttr__("__add2__")){
+		return right.__add2__(left);
+	}
+	throw TypeError(__getErrorMessage2("+", left, right));
+}
+func ___add2__(right, left){
+	if(right.__hasAttr__("__add2__")){
+		return right.__add2__(left);
+	}
+	throw TypeError(__getErrorMessage2("+", left, right));
+}
+
+
+func ___and__(left, right){
+	if(left.__hasAttr__("__and__")){
+		return left.__and__(right);
+	}else if(right.__hasAttr__("__and2__")){
+		return right.__and2__(left);
+	}
+	throw TypeError(__getErrorMessage2("&", left, right));
+}
+func ___and2__(right, left){
+	if(right.__hasAttr__("__and2__")){
+		return right.__and2__(left);
+	}
+	throw TypeError(__getErrorMessage2("&", left, right));
+}
+
+
+func ___compare__(left, right){
+	if(left.__hasAttr__("__compare__")){
+		return left.__compare__(right);
+	}else if(right.__hasAttr__("__compare__")){
+		return right.__compare__(left);
+	}
+	throw TypeError(__getErrorMessage2("<=>", left, right));
+}
+func ___compare2__(right, left){
+	if(right.__hasAttr__("__compare2__")){
+		return right.__compare2__(left);
+	}
+	throw TypeError(__getErrorMessage2("<=>", left, right));
+}
+
+
+func ___copy__(value){
+	if(value.__hasAttr__("__copy__")){
+		return value.__copy__();
+	}
+	throw TypeError(__getErrorMessage1("<:", value));
+}
+
+
+func ___dec__(value){
+	if(value.__hasAttr__("__dec__")){
+		return value.__dec__();
+	}
+	throw TypeError(__getErrorMessage1("--", value));
+}
+
+
+func ___div__(left, right){
+	if(left.__hasAttr__("__div__")){
+		return left.__div__(right);
+	}else if(right.__hasAttr__("__div2__")){
+		return right.__div2__(left);
+	}
+	throw TypeError(__getErrorMessage2("/", left, right));
+}
+func ___div2__(right, left){
+	if(right.__hasAttr__("__div2__")){
+		return right.__div2__(left);
+	}
+	throw TypeError(__getErrorMessage2("/", left, right));
+}
+
+
+func ___equal__(left, right){
+	if(left.__hasAttr__("__equal__")){
+		return left.__equal__(right);
+	}else if(right.__hasAttr__("__equal2__")){
+		return right.__equal2__(left);
+	}
+	throw TypeError(__getErrorMessage2("==", left, right));
+}
+func ___equal2__(right, left){
+	if(right.__hasAttr__("__equal2__")){
+		return right.__equal2__(left);
+	}
+	throw TypeError(__getErrorMessage2("==", left, right));
+}
+
+
+func ___greater__(left, right){
+	if(left.__hasAttr__("__greater__")){
+		return left.__greater__(right);
+	}else if(right.__hasAttr__("__greater2__")){
+		return right.__greater2__(left);
+	}
+	throw TypeError(__getErrorMessage2(">", left, right));
+}
+func ___greater2__(right, left){
+	if(right.__hasAttr__("__greater2__")){
+		return right.__greater2__(left);
+	}
+	throw TypeError(__getErrorMessage2(">", left, right));
+}
+
+
+func ___greaterEqual__(left, right){
+	if(left.__hasAttr__("__greaterEqual__")){
+		return left.__greaterEqual__(right);
+	}else if(right.__hasAttr__("__greaterEqual2__")){
+		return right.__greaterEqual2__(left);
+	}
+	throw TypeError(__getErrorMessage2(">=", left, right));
+}
+func ___greaterEqual2__(right, left){
+	if(right.__hasAttr__("__greaterEqual2__")){
+		return right.__greaterEqual2__(left);
+	}
+	throw TypeError(__getErrorMessage2(">=", left, right));
+}
+
+
+func ___idiv__(left, right){
+	if(left.__hasAttr__("__idiv__")){
+		return left.__idiv__(right);
+	}else if(right.__hasAttr__("__idiv2__")){
+		return right.__idiv2__(left);
+	}
+	throw TypeError(__getErrorMessage2("\\", left, right));
+}
+func ___idiv2__(right, left){
+	if(right.__hasAttr__("__idiv2__")){
+		return right.__idiv2__(left);
+	}
+	throw TypeError(__getErrorMessage2("\\", left, right));
+}
+
+
+func ___inc__(value){
+	if(value.__hasAttr__("__inc__")){
+		return value.__inc__();
+	}
+	throw TypeError(__getErrorMessage1("++", value));
+}
+
+
+func ___invert__(value){
+	if(value.__hasAttr__("__invert__")){
+		return value.__invert__();
+	}
+	throw TypeError(__getErrorMessage1("~", value));
+}
+
+
+func ___ishr__(left, right){
+	if(left.__hasAttr__("__ishr__")){
+		return left.__ishr__(right);
+	}else if(right.__hasAttr__("__ishr2__")){
+		return right.__ishr2__(left);
+	}
+	throw TypeError(__getErrorMessage2(">>>", left, right));
+}
+func ___ishr2__(right, left){
+	if(right.__hasAttr__("__ishr2__")){
+		return right.__ishr2__(left);
+	}
+	throw TypeError(__getErrorMessage2(">>>", left, right));
+}
+
+
+func ___ladd__(left, right){
+	if(left.__hasAttr__("__ladd__")){
+		return left.__ladd__(right);
+	}else if(right.__hasAttr__("__ladd2__")){
+		return right.__ladd2__(left);
+	}else if(left.__hasAttr__("__add__")){
+		return left.__add__(right);
+	}else if(right.__hasAttr__("__add2__")){
+		return right.__add2__(left);
+	}
+	throw TypeError(__getErrorMessage2("+", left, right));
+}
+func ___ladd2__(right, left){
+	if(right.__hasAttr__("__ladd2__")){
+		return right.__ladd2__(left);
+	}else if(left.__hasAttr__("__add__")){
+		return left.__add__(right);
+	}else if(right.__hasAttr__("__add2__")){
+		return right.__add2__(left);
+	}
+	throw TypeError(__getErrorMessage2("+", left, right));
+}
+
+
+func ___land__(left, right){
+	if(left.__hasAttr__("__land__")){
+		return left.__land__(right);
+	}else if(right.__hasAttr__("__land2__")){
+		return right.__land2__(left);
+	}else if(left.__hasAttr__("__and__")){
+		return left.__and__(right);
+	}else if(right.__hasAttr__("__and2__")){
+		return right.__and2__(left);
+	}
+	throw TypeError(__getErrorMessage2("&", left, right));
+}
+func ___land2__(right, left){
+	if(right.__hasAttr__("__land2__")){
+		return right.__land2__(left);
+	}else if(left.__hasAttr__("__and__")){
+		return left.__and__(right);
+	}else if(right.__hasAttr__("__and2__")){
+		return right.__and2__(left);
+	}
+	throw TypeError(__getErrorMessage2("&", left, right));
+}
+
+
+func ___ldiv__(left, right){
+	if(left.__hasAttr__("__ldiv__")){
+		return left.__ldiv__(right);
+	}else if(right.__hasAttr__("__ldiv2__")){
+		return right.__ldiv2__(left);
+	}else if(left.__hasAttr__("__div__")){
+		return left.__div__(right);
+	}else if(right.__hasAttr__("__div2__")){
+		return right.__div2__(left);
+	}
+	throw TypeError(__getErrorMessage2("/", left, right));
+}
+func ___ldiv2__(right, left){
+	if(right.__hasAttr__("__ldiv2__")){
+		return right.__ldiv2__(left);
+	}else if(left.__hasAttr__("__div__")){
+		return left.__div__(right);
+	}else if(right.__hasAttr__("__div2__")){
+		return right.__div2__(left);
+	}
+	throw TypeError(__getErrorMessage2("/", left, right));
+}
+
+
+func ___lidiv__(left, right){
+	if(left.__hasAttr__("__lidiv__")){
+		return left.__ldiv__(right);
+	}else if(right.__hasAttr__("__lidiv2__")){
+		return right.__ldiv2__(left);
+	}else if(left.__hasAttr__("__idiv__")){
+		return left.__div__(right);
+	}else if(right.__hasAttr__("__idiv2__")){
+		return right.__div2__(left);
+	}
+	throw TypeError(__getErrorMessage2("\\", left, right));
+}
+func ___lidiv2__(right, left){
+	if(right.__hasAttr__("__lidiv2__")){
+		return right.__ldiv2__(left);
+	}else if(left.__hasAttr__("__idiv__")){
+		return left.__div__(right);
+	}else if(right.__hasAttr__("__idiv2__")){
+		return right.__div2__(left);
+	}
+	throw TypeError(__getErrorMessage2("\\", left, right));
+}
+
+
+func ___lishr__(left, right){
+	if(left.__hasAttr__("__lishr__")){
+		return left.__lishr__(right);
+	}else if(right.__hasAttr__("__lishr2__")){
+		return right.__lishr2__(left);
+	}else if(left.__hasAttr__("__ishr__")){
+		return left.__ishr__(right);
+	}else if(right.__hasAttr__("__ishr2__")){
+		return right.__ishr2__(left);
+	}
+	throw TypeError(__getErrorMessage2(">>>", left, right));
+}
+func ___lishr2__(right, left){
+	if(right.__hasAttr__("__lishr2__")){
+		return right.__lishr2__(left);
+	}else if(left.__hasAttr__("__ishr__")){
+		return left.__ishr__(right);
+	}else if(right.__hasAttr__("__ishr2__")){
+		return right.__ishr2__(left);
+	}
+	throw TypeError(__getErrorMessage2(">>>", left, right));
+}
+
+
+func ___lmod__(left, right){
+	if(left.__hasAttr__("__lmod__")){
+		return left.__lmod__(right);
+	}else if(right.__hasAttr__("__lmod2__")){
+		return right.__lmod2__(left);
+	}else if(left.__hasAttr__("__mod__")){
+		return left.__mod__(right);
+	}else if(right.__hasAttr__("__mod2__")){
+		return right.__mod2__(left);
+	}
+	throw TypeError(__getErrorMessage2("%", left, right));
+}
+func ___lmod2__(right, left){
+	if(right.__hasAttr__("__lmod2__")){
+		return right.__lmod2__(left);
+	}else if(left.__hasAttr__("__mod__")){
+		return left.__mod__(right);
+	}else if(right.__hasAttr__("__mod2__")){
+		return right.__mod2__(left);
+	}
+	throw TypeError(__getErrorMessage2("%", left, right));
+}
+
+
+func ___lmul__(left, right){
+	if(left.__hasAttr__("__lmul__")){
+		return left.__lmul__(right);
+	}else if(right.__hasAttr__("__lmul2__")){
+		return right.__lmul2__(left);
+	}else if(left.__hasAttr__("__mul__")){
+		return left.__mul__(right);
+	}else if(right.__hasAttr__("__mul2__")){
+		return right.__mul2__(left);
+	}
+	throw TypeError(__getErrorMessage2("*", left, right));
+}
+func ___lmul2__(right, left){
+	if(right.__hasAttr__("__lmul2__")){
+		return right.__lmul2__(left);
+	}else if(left.__hasAttr__("__mul__")){
+		return left.__mul__(right);
+	}else if(right.__hasAttr__("__mul2__")){
+		return right.__mul2__(left);
+	}
+	throw TypeError(__getErrorMessage2("*", left, right));
+}
+
+
+func ___lor__(left, right){
+	if(left.__hasAttr__("__lor__")){
+		return left.__lor__(right);
+	}else if(right.__hasAttr__("__lor2__")){
+		return right.__lor2__(left);
+	}else if(left.__hasAttr__("__or__")){
+		return left.__or__(right);
+	}else if(right.__hasAttr__("__or2__")){
+		return right.__or2__(left);
+	}
+	throw TypeError(__getErrorMessage2("|", left, right));
+}
+func ___lor2__(right, left){
+	if(right.__hasAttr__("__lor2__")){
+		return right.__lor2__(left);
+	}else if(left.__hasAttr__("__or__")){
+		return left.__or__(right);
+	}else if(right.__hasAttr__("__or2__")){
+		return right.__or2__(left);
+	}
+	throw TypeError(__getErrorMessage2("|", left, right));
+}
+
+
+func ___lpow__(left, right){
+	if(left.__hasAttr__("__lpow__")){
+		return left.__lpow__(right);
+	}else if(right.__hasAttr__("__lpow2__")){
+		return right.__lpow2__(left);
+	}else if(left.__hasAttr__("__pow__")){
+		return left.__pow__(right);
+	}else if(right.__hasAttr__("__pow2__")){
+		return right.__pow2__(left);
+	}
+	throw TypeError(__getErrorMessage2("**", left, right));
+}
+func ___lpow2__(right, left){
+	if(right.__hasAttr__("__lpow2__")){
+		return right.__lpow2__(left);
+	}else if(left.__hasAttr__("__pow__")){
+		return left.__pow__(right);
+	}else if(right.__hasAttr__("__pow2__")){
+		return right.__pow2__(left);
+	}
+	throw TypeError(__getErrorMessage2("**", left, right));
+}
+
+
+func ___lshl__(left, right){
+	if(left.__hasAttr__("__lshl__")){
+		return left.__lshl__(right);
+	}else if(right.__hasAttr__("__lshl2__")){
+		return right.__lshl2__(left);
+	}else if(left.__hasAttr__("__shl__")){
+		return left.__shl__(right);
+	}else if(right.__hasAttr__("__shl2__")){
+		return right.__shl2__(left);
+	}
+	throw TypeError(__getErrorMessage2("<<", left, right));
+}
+func ___lshl2__(right, left){
+	if(right.__hasAttr__("__lshl2__")){
+		return right.__lshl2__(left);
+	}else if(left.__hasAttr__("__shl__")){
+		return left.__shl__(right);
+	}else if(right.__hasAttr__("__shl2__")){
+		return right.__shl2__(left);
+	}
+	throw TypeError(__getErrorMessage2("<<", left, right));
+}
+
+
+func ___lshr__(left, right){
+	if(left.__hasAttr__("__lshr__")){
+		return left.__lshr__(right);
+	}else if(right.__hasAttr__("__lshr2__")){
+		return right.__lshr2__(left);
+	}else if(left.__hasAttr__("__shr__")){
+		return left.__shr__(right);
+	}else if(right.__hasAttr__("__shr2__")){
+		return right.__shr2__(left);
+	}
+	throw TypeError(__getErrorMessage2(">>", left, right));
+}
+func ___lshr2__(right, left){
+	if(right.__hasAttr__("__lshr2__")){
+		return right.__lshr2__(left);
+	}else if(left.__hasAttr__("__shr__")){
+		return left.__shr__(right);
+	}else if(right.__hasAttr__("__shr2__")){
+		return right.__shr2__(left);
+	}
+	throw TypeError(__getErrorMessage2(">>", left, right));
+}
+
+
+func ___lsub__(left, right){
+	if(left.__hasAttr__("__lsub__")){
+		return left.__lsub__(right);
+	}else if(right.__hasAttr__("__lsub2__")){
+		return right.__lsub2__(left);
+	}else if(left.__hasAttr__("__sub__")){
+		return left.__sub__(right);
+	}else if(right.__hasAttr__("__sub2__")){
+		return right.__sub2__(left);
+	}
+	throw TypeError(__getErrorMessage2("-", left, right));
+}
+func ___lsub2__(right, left){
+	if(right.__hasAttr__("__lsub2__")){
+		return right.__lsub2__(left);
+	}else if(left.__hasAttr__("__sub__")){
+		return left.__sub__(right);
+	}else if(right.__hasAttr__("__sub2__")){
+		return right.__sub2__(left);
+	}
+	throw TypeError(__getErrorMessage2("-", left, right));
+}
+
+
+func ___lxor__(left, right){
+	if(left.__hasAttr__("__lxor__")){
+		return left.__lxor__(right);
+	}else if(right.__hasAttr__("__lxor2__")){
+		return right.__lxor2__(left);
+	}else if(left.__hasAttr__("__xor__")){
+		return left.__xor__(right);
+	}else if(right.__hasAttr__("__xor2__")){
+		return right.__xor2__(left);
+	}
+	throw TypeError(__getErrorMessage2("^", left, right));
+}
+func ___lxor2__(right, left){
+	if(right.__hasAttr__("__lxor2__")){
+		return right.__lxor2__(left);
+	}else if(left.__hasAttr__("__xor__")){
+		return left.__xor__(right);
+	}else if(right.__hasAttr__("__xor2__")){
+		return right.__xor2__(left);
+	}
+	throw TypeError(__getErrorMessage2("^", left, right));
+}
+
+
+func ___mod__(left, right){
+	if(left.__hasAttr__("__mod__")){
+		return left.__mod__(right);
+	}else if(right.__hasAttr__("__mod2__")){
+		return right.__mod2__(left);
+	}
+	throw TypeError(__getErrorMessage2("%", left, right));
+}
+func ___mod2__(right, left){
+	if(right.__hasAttr__("__mod2__")){
+		return right.__mod2__(left);
+	}
+	throw TypeError(__getErrorMessage2("%", left, right));
+}
+
+
+func ___mul__(left, right){
+	if(left.__hasAttr__("__mul__")){
+		return left.__mul__(right);
+	}else if(right.__hasAttr__("__mul2__")){
+		return right.__mul2__(left);
+	}
+	throw TypeError(__getErrorMessage2("*", left, right));
+}
+func ___mul2__(right, left){
+	if(right.__hasAttr__("__mul2__")){
+		return right.__mul2__(left);
+	}
+	throw TypeError(__getErrorMessage2("*", left, right));
+}
+
+
+func ___neg__(value){
+	if(value.__hasAttr__("__neg__")){
+		return value.__neg__();
+	}
+	throw TypeError(__getErrorMessage1("-", value));
+}
+
+
+func ___not__(value){
+	if(value.__hasAttr__("__not__")){
+		return value.__not__();
+	}
+	throw TypeError(__getErrorMessage1("!", value));
+}
+
+
+func ___notEqual__(left, right){
+	if(left.__hasAttr__("__notEqual__")){
+		return left.__notEqual__(right);
+	}else if(right.__hasAttr__("__notEqual2__")){
+		return right.__notEqual2__(left);
+	}
+	throw TypeError(__getErrorMessage2("!=", left, right));
+}
+func ___notEqual2__(right, left){
+	if(right.__hasAttr__("__notEqual2__")){
+		return right.__notEqual2__(left);
+	}
+	throw TypeError(__getErrorMessage2("!=", left, right));
+}
+
+
+func ___or__(left, right){
+	if(left.__hasAttr__("__or__")){
+		return left.__or__(right);
+	}else if(right.__hasAttr__("__or2__")){
+		return right.__or2__(left);
+	}
+	throw TypeError(__getErrorMessage2("|", left, right));
+}
+func ___or2__(right, left){
+	if(right.__hasAttr__("__or2__")){
+		return right.__or2__(left);
+	}
+	throw TypeError(__getErrorMessage2("|", left, right));
+}
+
+
+func ___pos__(value){
+	if(value.__hasAttr__("__pos__")){
+		return value.__pos__();
+	}
+	throw TypeError(__getErrorMessage1("+", value));
+}
+
+
+func ___pow__(left, right){
+	if(left.__hasAttr__("__pow__")){
+		return left.__pow__(right);
+	}else if(right.__hasAttr__("__pow2__")){
+		return right.__pow2__(left);
+	}
+	throw TypeError(__getErrorMessage2("**", left, right));
+}
+func ___pow2__(right, left){
+	if(right.__hasAttr__("__pow2__")){
+		return right.__pow2__(left);
+	}
+	throw TypeError(__getErrorMessage2("**", left, right));
+}
+
+
+func ___sdec__(value){
+	if(value.__hasAttr__("__sdec__")){
+		return value.__sdec__();
+	}else if(value.__hasAttr__("__dec__")){
+		return value.__dec__();
+	}
+	throw TypeError(__getErrorMessage1("--", value));
+}
+
+func ___shl__(left, right){
+	if(left.__hasAttr__("__shl__")){
+		return left.__shl__(right);
+	}else if(right.__hasAttr__("__shl2__")){
+		return right.__shl2__(left);
+	}
+	throw TypeError(__getErrorMessage2("<<", left, right));
+}
+func ___shl2__(right, left){
+	if(right.__hasAttr__("__shl2__")){
+		return right.__shl2__(left);
+	}
+	throw TypeError(__getErrorMessage2("<<", left, right));
+}
+
+
+func ___shr__(left, right){
+	if(left.__hasAttr__("__shr__")){
+		return left.__shr__(right);
+	}else if(right.__hasAttr__("__shr2__")){
+		return right.__shr2__(left);
+	}
+	throw TypeError(__getErrorMessage2(">>", left, right));
+}
+func ___shr2__(right, left){
+	if(right.__hasAttr__("__shr2__")){
+		return right.__shr2__(left);
+	}
+	throw TypeError(__getErrorMessage2(">>", left, right));
+}
+
+
+func ___sinc__(value){
+	if(value.__hasAttr__("__sinc__")){
+		return value.__sinc__();
+	}else if(value.__hasAttr__("__inc__")){
+		return value.__inc__();
+	}
+	throw TypeError(__getErrorMessage1("++", value));
+}
+
+
+func ___smaller__(left, right){
+	if(left.__hasAttr__("__smaller__")){
+		return left.__smaller__(right);
+	}else if(right.__hasAttr__("__smaller2__")){
+		return right.__smaller2__(left);
+	}
+	throw TypeError(__getErrorMessage2("<", left, right));
+}
+func ___smaller2__(right, left){
+	if(right.__hasAttr__("__smaller2__")){
+		return right.__smaller2__(left);
+	}
+	throw TypeError(__getErrorMessage2("<", left, right));
+}
+
+
+func ___smallerEqual__(left, right){
+	if(left.__hasAttr__("__smallerEqual__")){
+		return left.__smallerEqual__(right);
+	}else if(right.__hasAttr__("__smallerEqual2__")){
+		return right.__smallerEqual2__(left);
+	}
+	throw TypeError(__getErrorMessage2("<=", left, right));
+}
+func ___smallerEqual2__(right, left){
+	if(right.__hasAttr__("__smallerEqual2__")){
+		return right.__smallerEqual2__(left);
+	}
+	throw TypeError(__getErrorMessage2("<=", left, right));
+}
+
+
+func ___sub__(left, right){
+	if(left.__hasAttr__("__sub__")){
+		return left.__sub__(right);
+	}else if(right.__hasAttr__("__sub2__")){
+		return right.__sub2__(left);
+	}
+	throw TypeError(__getErrorMessage2("-", left, right));
+}
+func ___sub2__(right, left){
+	if(right.__hasAttr__("__sub2__")){
+		return right.__sub2__(left);
+	}
+	throw TypeError(__getErrorMessage2("-", left, right));
+}
+
+
+func ___xor__(left, right){
+	if(left.__hasAttr__("__xor__")){
+		return left.__xor__(right);
+	}else if(right.__hasAttr__("__xor2__")){
+		return right.__xor2__(left);
+	}
+	throw TypeError(__getErrorMessage2("^", left, right));
+}
+func ___xor2__(right, left){
+	if(right.__hasAttr__("__xor2__")){
+		return right.__xor2__(left);
+	}
+	throw TypeError(__getErrorMessage2("^", left, right));
+}
+
+func ___call__(thiz, *list, **map){
+	if(thiz.__hasAttr__("__call__")){
+		return thiz.__call__(*list, **map);
+	}
+	throw TypeError(__getErrorMessage1("()", thiz));
+}
+
+func ___new__(type, *list, **map){
+	local obj = type.__new__();
+	if(obj.__hasAttr__("__init__")){
+		obj.__init__(*list, **map);
+	}
+	return obj;
+}
+
+func __import(module){
+	local m = __getModule(module);
+	if(m==null){
+		__importParent(module);
+		m = __importModule(module);
+		__initModule(m);
+	}
+	return m;
+}
+

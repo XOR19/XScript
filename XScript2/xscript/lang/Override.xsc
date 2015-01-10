@@ -1,5 +1,0 @@
-package xscript.lang;
-
-public @interface Override{
-	
-}
