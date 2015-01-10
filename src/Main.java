@@ -23,7 +23,7 @@ public class Main {
 		}catch(ScriptException e){
 			e.printStackTrace();
 		}
-		XCompilerMain.main(new String[]{"bin/__builtin__", "bin/sys"});
+		//XCompilerMain.main(new String[]{"bin/__builtin__", "bin/sys"});
 	}
 	
 }

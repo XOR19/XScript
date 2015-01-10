@@ -179,7 +179,7 @@ public class XScope {
 		}
 		switch(access){
 		case GLOBAL:
-			var = module.getOrCreate(name);
+			var = module.getOrCreateGlobal(tree, name);
 			accessed.put(name, var);
 			return new Result(var);
 		case LOCAL:
@@ -207,7 +207,7 @@ public class XScope {
 		case NONLOCAL:
 			if(base.parent==null){
 				if(base==module){
-					var = module.create(tree, name);
+					var = module.getOrCreateGlobal(tree, name);
 					return new Result(var);
 				}
 				return new Result(null, R.NOT_FOUND);
@@ -239,7 +239,7 @@ public class XScope {
 			scope = scope.parent;
 		}
 		if(base.parent==null){
-			return base==module?module.getOrCreate(name):null;
+			return base==module?module.getOrCreateGlobal(tree, name):null;
 		}
 		var = base.parent.getNonLocal(tree, name, access);
 		if(var instanceof XGlobal)
