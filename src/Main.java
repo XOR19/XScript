@@ -19,11 +19,11 @@ public class Main {
 		ScriptEngine engine = manager.getEngineByName(XScriptLang.ENGINE_NAME);
 		engine.put(XScriptLang.ENGINE_ATTR_SOURCE_FILE, "Test.xsm");
 		try{
-			System.out.println(engine.eval(new FileReader("Test.xsm")));
+			System.out.println(engine.eval(new FileReader("bin/Test.xsm")));
 		}catch(ScriptException e){
 			e.printStackTrace();
 		}
-		//XCompilerMain.main(new String[]{"__builtin__", "sys"});
+		XCompilerMain.main(new String[]{"bin/__builtin__", "bin/sys"});
 	}
 	
 }
