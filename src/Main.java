@@ -5,7 +5,6 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
-import xscript.XCompilerMain;
 import xscript.XScriptEngineFactory;
 import xscript.XScriptLang;
 

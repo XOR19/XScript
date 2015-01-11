@@ -26,5 +26,5 @@ public class XInternCompiler implements XCompiler {
 		tree.accept(treeCompiler);
 		return treeCompiler.getBytes();
 	}
-
+	
 }

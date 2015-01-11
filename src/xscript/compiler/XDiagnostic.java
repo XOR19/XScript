@@ -159,6 +159,10 @@ public class XDiagnostic implements Diagnostic<String> {
 		return position+":"+start+"->"+end+":"+getMessage(null);
 	}
 
+	public Object[] getArgs(){
+		return args;
+	}
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
