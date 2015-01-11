@@ -2,6 +2,10 @@ package xscript.object;
 
 import java.io.IOException;
 import java.io.ObjectInput;
+import java.util.List;
+import java.util.Map;
+
+import xscript.values.XValue;
 
 public class XTypeDataBool extends XTypeData {
 
@@ -18,9 +22,17 @@ public class XTypeDataBool extends XTypeData {
 		}
 		
 	};
-
+	
 	public XTypeDataBool(XRuntime runtime, XObject obj) {
 		super(runtime, obj, "Bool");
 	}
 
+	@Override
+	public XValue alloc(XRuntime runtime, XValue type, List<XValue> list, Map<String, XValue> map) {
+		if(list.isEmpty()){
+			return map.get("b");
+		}
+		return list.get(0);
+	}
+	
 }

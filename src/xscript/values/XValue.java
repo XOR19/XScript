@@ -8,7 +8,7 @@ import java.io.Serializable;
 
 import xscript.object.XRuntime;
 
-public abstract class XValue implements Serializable, Cloneable {
+public abstract class XValue extends Number implements Serializable, Cloneable {
 
 	public static final int REF_NONE = 0;
 	public static final int REF_INTERN = 1;
@@ -138,6 +138,26 @@ public abstract class XValue implements Serializable, Cloneable {
 
 	public boolean isObject() {
 		return false;
+	}
+
+	@Override
+	public int intValue() {
+		return (int)getInt();
+	}
+
+	@Override
+	public long longValue() {
+		return getInt();
+	}
+
+	@Override
+	public float floatValue() {
+		return (float)doubleValue();
+	}
+
+	@Override
+	public double doubleValue() {
+		return getFloat();
 	}
 	
 }

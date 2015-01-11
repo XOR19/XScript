@@ -34,5 +34,17 @@ public class XObjectDataNativeFunc implements XObjectData {
 	public String[] getParamNames() {
 		return function.paramNames;
 	}
+
+	public int getDefStart() {
+		return function.defaultStart;
+	}
+
+	public boolean getUseList() {
+		return function.useList;
+	}
+
+	public boolean getUseMap() {
+		return function.useMap;
+	}
 	
 }

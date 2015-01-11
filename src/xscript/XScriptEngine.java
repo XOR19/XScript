@@ -44,7 +44,6 @@ import xscript.XExec.State;
 import xscript.compiler.XCompiler;
 import xscript.compiler.XFileReader;
 import xscript.compiler.XInternCompiler;
-import xscript.object.XFunction;
 import xscript.object.XFunctionData;
 import xscript.object.XModule;
 import xscript.object.XObject;
@@ -127,14 +126,12 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 			memory[0][XUtils.FUNC] = new XObject(this, XUtils.FUNC, baseTypes[XUtils.TYPE], new Object[]{XTypeDataFunc.FACTORY});
 			XValue __builtin__ = alloc(baseTypes[XUtils.MODULE], "__builtin__");
 			modules.put("__builtin__", __builtin__);
-			__builtin__.setRaw(this, "__getModule", createFunction("__builtin__.__getModule"));
-			__builtin__.setRaw(this, "__importParent", createFunction("__builtin__.__importParent"));
-			__builtin__.setRaw(this, "__importModule", createFunction("__builtin__.__importModule"));
-			__builtin__.setRaw(this, "__initModule", createFunction("__builtin__.__initModule"));
-			__builtin__.setRaw(this, "__fillStackTrace", createFunction("__builtin__.__fillStackTrace"));
-			__builtin__.setRaw(this, "__print", createFunction("__builtin__.__print"));
-			__builtin__.setRaw(this, "__pollInput", createFunction("__builtin__.__pollInput"));
-			__builtin__.setRaw(this, "__sleep", createFunction("__builtin__.__sleep"));
+			for(String nativeName:XNativeFunctions.getFunctions().keySet()){
+				if(nativeName.startsWith("__builtin__.")){
+					String name = nativeName.substring("__builtin__.".length());
+					__builtin__.setRaw(this, name, createFunction(nativeName));
+				}
+			}
 			XValue method = alloc(getBaseType(XUtils.FUNC), "<init>", new String[0], -1, -1, -1, XValueNull.NULL, __builtin__, XValueNull.NULL, 0, new XClosure[0]);
 			XExec exec = new XExec(this, false, 128, method, XValueNull.NULL);
 			exec.run(10000);
@@ -144,6 +141,9 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 			method = alloc(getBaseType(XUtils.FUNC), "<init>", new String[0], -1, -1, -1, XValueNull.NULL, sys, XValueNull.NULL, 0, new XClosure[0]);
 			exec = new XExec(this, false, 128, method, XValueNull.NULL);
 			exec.run(10000);
+			for(int i=0; i<XUtils.NUM_BASE_TYPES; i++){
+				sys.setRaw(this, ((XTypeData)memory[0][i].getData()).getName(), new XValueObj(i));
+			}
 		}catch(Throwable e){
 			e.printStackTrace();
 		}
@@ -452,12 +452,12 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 	}
 
 	@Override
-	public void addNativeMethod(String name, XFunction function, String[] paramNames) {
+	public void addNativeMethod(String name, XFunctionData function) {
 		Bindings functions = (Bindings)get(XScriptLang.ENGINE_ATTR_FUNCTIONS_BINDING);
 		if(functions==null){
 			put(XScriptLang.ENGINE_ATTR_FUNCTIONS_BINDING, functions=createBindings());
 		}
-		functions.put(name, new XFunctionData(function, paramNames));
+		functions.put(name, function);
 	}
 
 	@Override

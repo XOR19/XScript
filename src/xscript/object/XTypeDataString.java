@@ -26,11 +26,24 @@ public class XTypeDataString extends XTypeData {
 		
 	};
 	
-	private static final String[] METHODS = {"__str__", "__add__(other)", "indexOf(ch)", "substring(start)"};
+	private static final String[] METHODS = {"__str__", "__add__(other)", "indexOf(ch)", "substring(start,#end)"};
 	
 	public XTypeDataString(XRuntime runtime, XObject obj) {
 		super(runtime, obj, "String");
 	}
+
+	@Override
+	public XValue alloc(XRuntime runtime, XValue type, List<XValue> list, Map<String, XValue> map) {
+		XValue s;
+		if(list.isEmpty()){
+			s = map.get("string");
+		}else{
+			s = list.get(0);
+		}
+		return s;
+	}
+
+
 
 	@Override
 	public XObjectData loadData(XRuntime runtime, XObject obj, ObjectInput in) throws IOException {
@@ -77,7 +90,7 @@ public class XTypeDataString extends XTypeData {
 		case 2:
 			return indexOf(runtime, thiz, params[0]);
 		case 3:
-			return substring(runtime, thiz, params[0], list);
+			return substring(runtime, thiz, params[0], params[1]);
 		default:
 			break;
 		}
@@ -100,14 +113,14 @@ public class XTypeDataString extends XTypeData {
 		return XValueInt.valueOf(s.indexOf(s2));
 	}
 	
-	private XValue substring(XRuntime runtime, XValue thiz, XValue start, List<XValue> list) {
+	private XValue substring(XRuntime runtime, XValue thiz, XValue start, XValue end) {
 		int s = (int)start.getInt();
 		String str = XUtils.getString(runtime, thiz);
 		String ss;
-		if(list.isEmpty()){
+		if(end==null){
 			ss = str.substring(s);
 		}else{
-			int e = (int)list.get(0).getInt();
+			int e = (int) end.getInt();
 			ss = str.substring(s, e);
 		}
 		return runtime.alloc(ss);

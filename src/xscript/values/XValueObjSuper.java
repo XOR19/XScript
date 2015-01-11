@@ -130,5 +130,25 @@ public final class XValueObjSuper extends XValue implements XContainer {
 	public XValue getValue() {
 		return value;
 	}
+
+	@Override
+	public int intValue() {
+		return value.intValue();
+	}
+
+	@Override
+	public long longValue() {
+		return value.longValue();
+	}
+
+	@Override
+	public float floatValue() {
+		return value.floatValue();
+	}
+
+	@Override
+	public double doubleValue() {
+		return value.doubleValue();
+	}
 	
 }

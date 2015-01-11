@@ -316,15 +316,30 @@ public class XExec {
 			XObjectDataNativeFunc func = (XObjectDataNativeFunc)data;
 			XFunction function = func.getFunction();
 			String[] paramNames = func.getParamNames();
+			int defStart = func.getDefStart();
+			boolean useList = func.getUseList();
+			boolean useMap = func.getUseMap();
 			XValue[] args = new XValue[paramNames.length];
 			int s = params.size();
 			boolean kws = false;
-			List<XValue> list = new ArrayList<XValue>(params.subList(paramNames.length, s));
+			List<XValue> list;
+			if(useList){
+				if(s>paramNames.length){
+					list = new ArrayList<XValue>(params.subList(paramNames.length, s));
+				}else{
+					list = new ArrayList<XValue>();
+				}
+			}else{
+				list = null;
+				if(s>paramNames.length){
+					throw new XRuntimeException("TypeError", "To many args");
+				}
+			}
 			if(map==null){
 				for(int i=0; i<args.length; i++){
 					if(s>i && !kws){
 						args[i] = params.get(i);
-					}else{
+					}else if(defStart==-1 || defStart>i){
 						throw new XRuntimeException("TypeError", "Not enougth args");
 					}
 				}
@@ -339,14 +354,18 @@ public class XExec {
 						args[i] = mn;
 						mn = null;
 						kws = true;
-					}else{
+					}else  if(defStart==-1 || defStart>i){
 						throw new XRuntimeException("TypeError", "Not enougth args");
 					}
 					if(mn!=null){
 						throw new XRuntimeException("TypeError", "Duplicated keyword");
 					}
 				}
+				if(!map.isEmpty() && !useMap){
+					throw new XRuntimeException("TypeError", "To many keyword");
+				}
 			}
+			
 			XValue ret;
 			try{
 				ret = function.invoke(rt, this, thiz, args, list, map);

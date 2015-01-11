@@ -1,6 +1,6 @@
 package xscript.values;
 
-public interface XContainer {
+interface XContainer {
 
 	public XValue getValue();
 	

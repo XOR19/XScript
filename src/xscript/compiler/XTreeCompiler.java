@@ -241,7 +241,8 @@ public class XTreeCompiler implements XVisitor {
 	@Override
 	public void visitModule(XTreeModule module) {
 		scope = new XModuleScope();
-		XCodeGen code = visit(module, module.body.statements).getCode();
+		XCodeGen code = new XCodeGen(1);
+		visit(module, module.body.statements).asStatement(this, code);
 		code.addInstructionB(module, XOpcode.POP, this.scope.getLocalsCount());
 		XDataOutput dataOutput = new XDataOutput();
 		this.module = dataOutput.toByteArray(code);
@@ -263,7 +264,7 @@ public class XTreeCompiler implements XVisitor {
 			if(index!=-1){
 				name = new XTreeIdent(name.position, asName.substring(0, index));
 			}
-			XCompiledPart parts = new XCompiledPartVar(importEntry, scope, name, XVarAccess.LOCAL);
+			XCompiledPart parts = new XCompiledPartVar(importEntry, scope, name, this.scope.isGloabl()?XVarAccess.GLOBAL:XVarAccess.LOCAL);
 			parts.setup(this, code);
 			code.addInstruction(importEntry, XOpcode.IMPORT, importName);
 			if(importEntry.as!=null)
@@ -294,9 +295,10 @@ public class XTreeCompiler implements XVisitor {
 		//TODO from xxx import *;
 		XCompiledPart[] parts = new XCompiledPart[importFrom.imports.size()];
 		int i=0;
+		XVarAccess access = this.scope.isGloabl()?XVarAccess.GLOBAL:XVarAccess.LOCAL;
 		for(XTreeImportEntry importEntry:importFrom.imports){
 			XTreeIdent name = importEntry.as==null?importEntry._import:importEntry.as;
-			(parts[i++] = new XCompiledPartVar(importEntry, scope, name, XVarAccess.LOCAL)).setup(this, code);
+			(parts[i++] = new XCompiledPartVar(importEntry, scope, name, access)).setup(this, code);
 		}
 		code.addInstruction(importFrom, XOpcode.IMPORT, importName);
 		i=0;

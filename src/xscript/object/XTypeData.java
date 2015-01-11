@@ -79,17 +79,43 @@ public class XTypeData implements XObjectData {
 				int index = method.indexOf('(');
 				int close = method.indexOf(')');
 				String[] paramNames;
+				int defStart = -1;
+				boolean useList = false;
+				boolean useMap = false;
 				if(index==-1){
 					if(close!=-1)
 						throw new IllegalArgumentException();
 					paramNames = new String[0];
 				}else{
-					if(close!=method.length()-1)
+					int c = close;
+					while(c<method.length()-1){
+						char cc = method.charAt(c+1);
+						if(!useList && cc=='l'){
+							useList = true;
+						}else if(!useMap && cc=='m'){
+							useMap = true;
+						}else{
+							break;
+						}
+						c++;
+					}
+					if(c!=method.length()-1)
 						throw new IllegalArgumentException();
 					paramNames = method.substring(index+1, close).split(",");
+					if(paramNames.length==1&&paramNames[0].isEmpty()){
+						paramNames = new String[0];
+					}
+					for(int j=0; j<paramNames.length; j++){
+						String s = paramNames[j];
+						if(!s.isEmpty() && s.charAt(0)=='#'){
+							paramNames[j] = s.substring(1);
+							if(defStart==-1)
+								defStart = j;
+						}
+					}
 					method = method.substring(0, index);
 				}
-				runtime.addNativeMethod("intern."+name+"."+method, new TypeFunc(i), paramNames);
+				runtime.addNativeMethod("intern."+name+"."+method, new XFunctionData(new TypeFunc(i), defStart, useList, useMap, paramNames));
 			}
 		}
 	}
@@ -256,6 +282,10 @@ public class XTypeData implements XObjectData {
 			return XTypeData.this.invoke(runtime, exec, id, thiz, params, list, map);
 		}
 
+	}
+
+	public XValue alloc(XRuntime runtime, XValue type, List<XValue> list, Map<String, XValue> map){
+		return runtime.alloc(type);
 	}
 	
 	

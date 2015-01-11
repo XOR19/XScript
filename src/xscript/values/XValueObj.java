@@ -94,5 +94,10 @@ public final class XValueObj extends XValue {
 	public boolean isObject() {
 		return true;
 	}
+
+	@Override
+	public long getInt() {
+		return pointer;
+	}
 	
 }

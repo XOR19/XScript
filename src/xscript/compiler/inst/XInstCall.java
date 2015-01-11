@@ -33,13 +33,13 @@ public class XInstCall extends XInst {
 	public void toCode(XDataOutput dataOutput) {
 		super.toCode(dataOutput);
 		dataOutput.writeByte(params);
+		if(unpackList!=-1){
+			dataOutput.writeByte(unpackList);
+		}
+		if(unpackMap!=-1){
+			dataOutput.writeByte(unpackMap);
+		}
 		if(kws!=null && kws.length>0){
-			if(unpackList!=-1){
-				dataOutput.writeByte(unpackList);
-			}
-			if(unpackMap!=-1){
-				dataOutput.writeByte(unpackMap);
-			}
 			int i=0;
 			boolean b=true;
 			for(String kw:kws){

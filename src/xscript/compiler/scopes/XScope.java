@@ -186,7 +186,7 @@ public class XScope {
 			var = create(tree, name);
 			locals.put(name, var);
 			accessed.put(name, var);
-			return new Result(var, var instanceof XGlobal?R.FOUND:R.DECLARED);
+			return new Result(var, R.DECLARED);
 		default:
 			XScope scope = this;
 			while(scope!=null){
@@ -313,6 +313,10 @@ public class XScope {
 
 	public XScope lock() {
 		return new XScope(this);
+	}
+
+	public boolean isGloabl() {
+		return base==module;
 	}
 	
 }

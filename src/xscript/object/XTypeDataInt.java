@@ -2,8 +2,11 @@ package xscript.object;
 
 import java.io.IOException;
 import java.io.ObjectInput;
+import java.util.List;
+import java.util.Map;
 
 import xscript.XUtils;
+import xscript.values.XValue;
 
 public class XTypeDataInt extends XTypeData {
 
@@ -25,4 +28,12 @@ public class XTypeDataInt extends XTypeData {
 		super(runtime, obj, "Int", runtime.getBaseType(XUtils.NUMBER));
 	}
 
+	@Override
+	public XValue alloc(XRuntime runtime, XValue type, List<XValue> list, Map<String, XValue> map) {
+		if(list.isEmpty()){
+			return map.get("i");
+		}
+		return list.get(0);
+	}
+	
 }

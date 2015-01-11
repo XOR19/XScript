@@ -13,7 +13,7 @@ public class XTypeDataType extends XTypeData {
 
 	private static final String[] ATTRIBUTES = {"__bases__", "__cro__", "__name__"};
 	
-	private static final String[] METHODS = {"__new__"};
+	private static final String[] METHODS = {"__new__()lm"};
 	
 	public XTypeDataType(XRuntime runtime, XObject obj) {
 		super(runtime, obj, "Type");
@@ -71,13 +71,14 @@ public class XTypeDataType extends XTypeData {
 		//XTypeData type = (XTypeData)runtime.getObject(thiz).getData();
 		switch(id){
 		case 0:
-			return _new(runtime, thiz);
+			return _new(runtime, thiz, list, map);
 		}
 		return super.invoke(runtime, exec, id, thiz, params, list, map);
 	}
 	
-	public XValue _new(XRuntime runtime, XValue type){
-		return runtime.alloc(type);
+	public XValue _new(XRuntime runtime, XValue type, List<XValue> list, Map<String, XValue> map){
+		XTypeData t = XUtils.getDataAs(runtime, type, XTypeData.class);
+		return t.alloc(runtime, type, list, map);
 	}
 
 	@Override

@@ -36,7 +36,7 @@ public interface XRuntime {
 	
 	XFunctionData getFunction(String name);
 
-	void addNativeMethod(String name, XFunction function, String[] paramNames);
+	void addNativeMethod(String name, XFunctionData function);
 
 	XValue createFunction(String name);
 	

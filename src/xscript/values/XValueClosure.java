@@ -121,5 +121,35 @@ public class XValueClosure extends XValue implements XContainer{
 	public XValue getValue() {
 		return value;
 	}
+
+	@Override
+	public boolean isInt() {
+		return value.isInt();
+	}
+
+	@Override
+	public boolean isBool() {
+		return value.isBool();
+	}
+
+	@Override
+	public int intValue() {
+		return value.intValue();
+	}
+
+	@Override
+	public long longValue() {
+		return value.longValue();
+	}
+
+	@Override
+	public float floatValue() {
+		return value.floatValue();
+	}
+
+	@Override
+	public double doubleValue() {
+		return value.doubleValue();
+	}
 	
 }

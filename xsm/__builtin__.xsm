@@ -7,6 +7,8 @@
 // native __initModule(module)
 // native __fillStackTrace()
 // native __print(string)
+// native __pollInput()
+// native __sleep(time)
 
 func __getErrorMessage2(op, left, right){
 	return "Operator "+op+" not applicable for "+left.__type__.__name__+" and "+right.__type__.__name__;
@@ -730,7 +732,7 @@ func ___call__(thiz, *list, **map){
 }
 
 func ___new__(type, *list, **map){
-	local obj = type.__new__();
+	local obj = type.__new__(*list, **map);
 	if(obj.__hasAttr__("__init__")){
 		obj.__init__(*list, **map);
 	}

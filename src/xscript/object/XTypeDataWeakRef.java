@@ -32,6 +32,21 @@ public class XTypeDataWeakRef extends XTypeData {
 	}
 	
 	@Override
+	public XValue alloc(XRuntime runtime, XValue type, List<XValue> list, Map<String, XValue> map) {
+		XValue obj;
+		if(list.isEmpty()){
+			obj = map.get("obj");
+		}else{
+			obj = list.get(0);
+		}
+		XObject o = runtime.getObject(obj);
+		if(o==null){
+			return obj;
+		}
+		return o.getWeakRef(runtime);
+	}
+
+	@Override
 	public XObjectData loadData(XRuntime runtime, XObject obj, ObjectInput in) throws IOException {
 		XValue value = XValue.read(in);
 		return new XObjectDataWeakRef(value);
