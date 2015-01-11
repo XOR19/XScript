@@ -25,14 +25,17 @@ class Log implements DiagnosticListener<String>{
 	
 	private Kind last;
 	
-	public Log(PrintWriter errWriter, PrintWriter warnWriter, PrintWriter noticeWriter){
+	private Localizer lang;
+	
+	public Log(PrintWriter errWriter, PrintWriter warnWriter, PrintWriter noticeWriter, Localizer lang){
 		this.errWriter = errWriter;
 		this.warnWriter = warnWriter;
 		this.noticeWriter = noticeWriter;
+		this.lang = lang;
 	}
 	
-	public Log(){
-		this(new PrintWriter(System.err), new PrintWriter(System.err), new PrintWriter(System.out));
+	public Log(Localizer lang){
+		this(new PrintWriter(System.err), new PrintWriter(System.err), new PrintWriter(System.out), lang);
 	}
 	
 	public void println(){
@@ -54,14 +57,14 @@ class Log implements DiagnosticListener<String>{
 	}
 
 	public String localize(String key){
-		return key;
+		return lang.localize(key);
 	}
 	
 	public String localize(String key, Object...args){
-		return format(localize(key), args);
+		return lang.localize(key, args);
 	}
 	
-	public PrintWriter getPrintWriter(Kind kind){
+	public PrintWriter getWriter(Kind kind){
 		switch(kind){
 		case ERROR:
 			return errWriter;
@@ -75,13 +78,13 @@ class Log implements DiagnosticListener<String>{
 	
 	public void rawprintln(Kind kind, String message) {
 		checkLast(kind);
-		rawprintln(getPrintWriter(kind), message);
+		rawprintln(getWriter(kind), message);
 	}
 	
 	private void checkLast(Kind kind){
 		if(last!=kind){
 			if(last!=null){
-				getPrintWriter(last).flush();
+				getWriter(last).flush();
 			}
 			last = kind;
 		}

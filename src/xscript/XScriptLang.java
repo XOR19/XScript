@@ -12,7 +12,7 @@ public final class XScriptLang {
 	public static final String LANG_VERSION = "1.0.0";
 	public static final List<String> MIME_TYPES = new XArrayList<String>();
 	public static final List<String> NAMES = new XArrayList<String>(ENGINE_NAME, LANG_NAME);
-
+	
 	public static final String ENGINE_ATTR_SOURCE_FILE = "SOURCE";
 	public static final String ENGINE_ATTR_FUNCTIONS_BINDING = "FUNCTIONS";
 	public static final String ENGINE_ATTR_COMPILER_MAP = "COMPILERS";

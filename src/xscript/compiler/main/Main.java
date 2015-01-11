@@ -18,6 +18,8 @@ import java.util.regex.Pattern;
 
 import xscript.compiler.XFileReader;
 import xscript.compiler.XInternCompiler;
+import xscript.compiler.main.ArgReader.RecuresiveFileException;
+import xscript.compiler.main.Log.Kind;
 
 
 public class Main {
@@ -51,6 +53,39 @@ public class Main {
 		public String getOwnName() {
 			return "xscriptc";
 		}
+
+		@Override
+		public boolean addSourceDir(File file) {
+			if(!file.exists()){
+				error("err.dir.not.found", file);
+				return false;
+			}
+			if(!file.isDirectory()){
+				error("err.file.not.directory", file);
+				return false;
+			}
+			sourceDirs.add(file);
+			return true;
+		}
+		
+		@Override
+		public boolean setOutputDir(File file){
+			if(!file.exists()){
+				error("err.dir.not.found", file);
+				return false;
+			}
+			if(!file.isDirectory()){
+				error("err.file.not.directory", file);
+				return false;
+			}
+			outputTo = file;
+			return true;
+		}
+
+		@Override
+		public void error(String key, Object...args) {
+			Main.this.error(key, args);
+		}
 		
 	};
 	
@@ -70,8 +105,8 @@ public class Main {
 		}else{
 			this.args = new ArgReader(args);
 		}
-		//ResourceBundle lang = ResourceBundle.getBundle("lang");
-		log = new Log();
+		ResourceBundle lang = ResourceBundle.getBundle("xscript.compiler.main.lang");
+		log = new Log(new Localizer(lang));
 		sourceDirs.add(new File("."));
 	}
 	
@@ -82,8 +117,8 @@ public class Main {
 				return CMDERR;
 			}
 			
-			while(args.hasNext()){
-				String arg = args.next();
+			String arg;
+			while((arg = args.next())!=null){
 				if(!arg.isEmpty()){
 					if(arg.charAt(0)=='-'){
 						if(!processCommand(arg)){
@@ -96,29 +131,41 @@ public class Main {
 			}
 			
 			return errored?ERROR:OK;
-		}catch(IOException e){
-			log.println("err.io", e.getMessage());
+		}catch(RecuresiveFileException e){
+			log.println("err.recursive.file", e.f, e.opend);
 			return SYSERR;
-		}catch(Throwable e){
-			log.println("err.abn", e);
+		}catch(IOException e){
+			log.println("msg.io");
+			e.printStackTrace(log.getWriter(Kind.NOTICE));
+			return SYSERR;
+		}catch (OutOfMemoryError e) {
+			log.println("msg.resource");
+			e.printStackTrace(log.getWriter(Kind.NOTICE));
+            return SYSERR;
+        } catch (StackOverflowError e) {
+        	log.println("msg.resource");
+			e.printStackTrace(log.getWriter(Kind.NOTICE));
+            return SYSERR;
+        } catch(Throwable e){
+			log.println("msg.bug", XInternCompiler.VERSION);
+			e.printStackTrace(log.getWriter(Kind.NOTICE));
 			return ABNORMAL;
 		}finally{
 			log.flush();
 		}
 	}
 	
-	private boolean processCommand(String arg) throws IOException{
+	private boolean processCommand(String arg) throws IOException, RecuresiveFileException{
 		Option o = Option.getOption(arg);
 		if(o==null){
-			log.println("err.invalid.flag", arg);
+			error("err.invalid.flag", arg);
 			return false;
 		}else{
 			String a;
 			if(o.hasArg()){
-				if(args.hasNext()){
-					a = args.next();
-				}else{
-					log.println("err.req.arg", arg);
+				a = args.next();
+				if(a==null){
+					error("err.req.arg", arg);
 					return false;
 				}
 			}else{
@@ -128,14 +175,19 @@ public class Main {
 		}
 	}
 	
-	private void processFile(String file){
+	void error(String msg, Object... args){
+		log.println(msg, args);
+		log.println("msg.usage", helper.getOwnName());
+	}
+	
+	private void processFile(String file) throws IOException{
 		String[] split = file.split("[\\./\\\\]");
 		for(File sources:sourceDirs){
 			check(sources, split, 0, null);
 		}
 	}
 	
-	private void check(File f, String[] splits, int i, String file){
+	private void check(File f, String[] splits, int i, String file) throws IOException{
 		if(splits.length-1==i){
 			String s = splits[i];
 			s = Pattern.quote(s);
@@ -179,7 +231,7 @@ public class Main {
 		}
 	}
 	
-	private void processFile(String file, String sourceName, File in){
+	private void processFile(String file, String sourceName, File in) throws IOException{
 		Reader r = null;
 		OutputStream os = null;
 		try{
@@ -204,8 +256,6 @@ public class Main {
 			os.write('C');
 			os.write('M');
 			os.write(compiled);
-		}catch(IOException e){
-			log.println("err.io", e.getMessage());
 		}finally{
 			if(r!=null){
 				try {

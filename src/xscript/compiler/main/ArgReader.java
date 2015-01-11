@@ -1,6 +1,7 @@
 package xscript.compiler.main;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -15,20 +16,36 @@ class ArgReader {
 	
 	private LinkedList<FileArgReader> fileArgReader = new LinkedList<FileArgReader>();
 	
+	public static class RecuresiveFileException extends Exception{
+
+		private static final long serialVersionUID = -6187218166184991980L;
+
+		public final File f;
+
+		public final String opend;
+		
+		public RecuresiveFileException(File f, String opend) {
+			this.f = f;
+			this.opend = opend;
+		}
+		
+	}
+	
 	public ArgReader(String[] args) {
 		this.args = args;
 	}
 	
-	public boolean hasNext(){
-		if(fileArgReader.isEmpty()){
-			return args.length>index;
-		}else{
-			return true;
-		}
-	}
-	
-	public String next() throws IOException{
+	public String next() throws IOException, RecuresiveFileException{
 		String next;
+		while(!fileArgReader.isEmpty()){
+			FileArgReader far = fileArgReader.getLast();
+			if(far.hasNext()){
+				break;
+			}else{
+				far.close();
+				fileArgReader.removeLast();
+			}
+		}
 		while(true){
 			if(fileArgReader.isEmpty()){
 				if(args.length>index){
@@ -37,12 +54,8 @@ class ArgReader {
 					return null;
 				}
 			}else{
-				FileArgReader far = fileArgReader.getFirst();
+				FileArgReader far = fileArgReader.getLast();
 				next = far.next();
-				if(!far.hasNext()){
-					far.close();
-					fileArgReader.removeFirst();
-				}
 			}
 			if(next.length()>1){
 				if(next.charAt(0)=='@'){
@@ -50,9 +63,32 @@ class ArgReader {
 					if(next.charAt(0)=='@'){
 						return next;
 					}else{
-						FileArgReader far = new FileArgReader(next);
-						if(far.hasNext())
-							fileArgReader.addFirst(far);
+						File f = new File(next);
+						for(FileArgReader reader:fileArgReader){
+							if(reader.file.equals(f)){
+								StringBuilder sb = new StringBuilder();
+								for(FileArgReader r:fileArgReader){
+									sb.append(r.file);
+									sb.append(", ");
+								}
+								sb.setLength(sb.length()-2);
+								throw new RecuresiveFileException(f, sb.toString());
+							}
+						}
+						FileArgReader far = new FileArgReader(f);
+						if(far.hasNext()){
+							fileArgReader.addLast(far);
+						}else{
+							while(!fileArgReader.isEmpty()){
+								far = fileArgReader.getLast();
+								if(far.hasNext()){
+									break;
+								}else{
+									far.close();
+									fileArgReader.removeLast();
+								}
+							}
+						}
 					}
 				}else{
 					return next;
@@ -65,11 +101,14 @@ class ArgReader {
 
 	private static class FileArgReader {
 		
+		final File file;
+		
 		private final Reader r;
 		
 		private final StreamTokenizer st;
 		
-		FileArgReader(String file) throws IOException{
+		FileArgReader(File file) throws IOException{
+			this.file = file;
 			r = new BufferedReader(new FileReader(file));
 	        st = new StreamTokenizer(r);
 	        st.resetSyntax();
@@ -82,7 +121,7 @@ class ArgReader {
 		}
 		
 		boolean hasNext(){
-			return st.ttype == StreamTokenizer.TT_EOF;
+			return st.ttype != StreamTokenizer.TT_EOF;
 		}
 		
         String next() throws IOException{
