@@ -1,72 +1,32 @@
 package xscript.compiler;
 
+import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
 
 import javax.tools.Diagnostic;
 
 public class XDiagnostic implements Diagnostic<String> {
 	
-	private static final Map<String, String> lang = new HashMap<String, String>();
-	
 	private static final Map<String, Kind> kinds = new HashMap<String, Kind>();
 	
+	private static final ResourceBundle lang;
+	
 	static{
-		//XTokenizer errors
-		lang.put("char.unknown", "Unknown char '%s'");
-		lang.put("char.invalid.escape", "Invalid char escape '%s'");
-		lang.put("string.invalid.escape", "Invalid string escape '%s'");
-		lang.put("char.unexpected.eof", "Expect \"'\" before end of file");
-		lang.put("string.unexpected.eof", "Expect '\"' before end of file");
-		lang.put("char.invalid.empty", "Char is empty");
-		lang.put("char.invalid.length", "Char to long");
-		lang.put("literal.single_dot", "Allreay digit");
-		lang.put("literal.empty_exponent", "Empty exponent");
-		lang.put("number.format", "Number format error %s");
-		lang.put("comment.unexpected.eof", "No end of comment");
-
-		//XTreeMakerImpl errors
-
-		lang.put("value.unexpected.keyword", "Expected value but got keyword '%s'");
-		lang.put("value.unexpected.kind", "Expected value but got '%s'");
-		lang.put("func.only.one.kw", "Func can only have only one keyword, '**param', parameter");
-		lang.put("func.list.after.kw", "List parameter, '*param', has to be bevore keyword, '**param', parameter");
-		lang.put("func.only.one.list", "Func can only have only one list, '*param', parameter");
-		lang.put("expect.keyword", "Expect keyword '%s' but got '%s'");
-		lang.put("expect.ident", "Expect ident but got '%s'");
-
-		//XTreeMakeEasy errors
-
-		lang.put("makeeasy.tree.failure", "Failure in makeeasy %s");
-		lang.put("invalid.data.types", "%s");
-
-		//XTreeCompiler errors
-
-		lang.put("need.default.after.default", "After default params there have to be default params");
-		lang.put("break.no.target", "No target found for break");
-		lang.put("break.no.lable", "Target label not found for break");
-		lang.put("continue.no.target", "No target found for continue");
-		lang.put("continue.no.lable", "Target label not found for continue");
-		lang.put("label.duplicated", "Duplicated label");
-		lang.put("label.unused", "Unused label");
+		ResourceBundle _lang = null;
+		try{
+			_lang = ResourceBundle.getBundle("xscript.compiler.lang");
+		}catch(MissingResourceException e){}
+		lang = _lang;
 		kinds.put("label.unused", Kind.WARNING);
-		lang.put("element.expected.ident", "Expect ident after '.'");
-		lang.put("code.dead", "Dead Code");
 		kinds.put("code.dead", Kind.WARNING);
-		lang.put("case.duplicated.default", "Duplicated default in switch");
-		lang.put("case.duplicated.key", "Duplicated key '%s' in switch");
-		lang.put("case.key.no.constant", "Key not constant in switch");
-		lang.put("call.unpack.list.after.map", "List unpacking only allowed bevore map unpacking");
-		lang.put("call.unpack.list.after.list", "Only one list unpacking allowed");
-		lang.put("call.unpack.map.after.map", "Only one map unpacking allowed");
-		lang.put("unpack.list.with.keyword", "No keyword expected for list unpacking");
-		lang.put("unpack.map.with.keyword", "No keyword expected for map unpacking");
-		lang.put("keyword.needed", "Need keyword after list unpacking, map unpacking and other keywords");
-		lang.put("code.empty", "Empty block");
 		kinds.put("code.empty", Kind.WARNING);
-		lang.put("locals.not.allowed", "Locals not allowed here");
 	}
 	
 	private XPosition position;
@@ -129,14 +89,23 @@ public class XDiagnostic implements Diagnostic<String> {
 		return position.line;
 	}
 
+	private String localize(String key, Object...args){
+		if(lang==null){
+			return key;
+		}else{
+			String msg;
+			try{
+				msg = lang.getString(key);
+			}catch(MissingResourceException e){
+				msg = "compiler message file broken: key=" + key + " arguments={0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}";
+			}
+			return MessageFormat.format(msg, args);
+		}
+	}
+	
 	@Override
 	public String getMessage(Locale loc) {
-		String message = code;
-		String l = lang.get(message);
-		if(l==null){
-			return "!"+message+"!"+Arrays.toString(args);
-		}
-		return String.format(l, args);
+		return localize(code, args);
 	}
 
 	@Override
@@ -200,6 +169,37 @@ public class XDiagnostic implements Diagnostic<String> {
 		if (start != other.start)
 			return false;
 		return true;
+	}
+	
+	public LogRecord asLogRecord(){
+		Level level;
+		switch(getKind()){
+		case ERROR:
+			level = Level.SEVERE;
+			break;
+		case MANDATORY_WARNING:
+		case WARNING:
+			level = Level.WARNING;
+			break;
+		case NOTE:
+		case OTHER:
+		default:
+			level = Level.INFO;
+			break;
+		}
+		LogRecord logRecord = new LogRecord(level, code);
+		logRecord.setSourceClassName(position.source);
+		logRecord.setResourceBundleName("script.compiler.lang");
+		Object[] params = new Object[args.length+6];
+		System.arraycopy(args, 0, params, 6, args.length);
+		params[0] = position.source;
+		params[1] = position.pos;
+		params[2] = position.line;
+		params[3] = position.column;
+		params[4] = start;
+		params[5] = end;
+		logRecord.setParameters(params);
+		return logRecord;
 	}
 	
 }

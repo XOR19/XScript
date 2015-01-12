@@ -2,12 +2,9 @@ package xscript.compiler.main;
 
 import java.io.PrintWriter;
 import java.util.IllegalFormatException;
-import java.util.Locale;
 
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
-
-import xscript.compiler.XDiagnostic;
 
 class Log implements DiagnosticListener<String>{
 
@@ -117,11 +114,7 @@ class Log implements DiagnosticListener<String>{
 			kind = Kind.NOTICE;
 			break;
 		}
-		if(diagnostic instanceof XDiagnostic){
-			message = localize(diagnostic.getCode(), ((XDiagnostic)diagnostic).getArgs());
-		}else{
-			message = diagnostic.getMessage(Locale.US);
-		}
+		message = diagnostic.getMessage(null);
 		rawprintln(kind, message);
 	}
 
