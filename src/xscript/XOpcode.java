@@ -61,11 +61,11 @@ public enum XOpcode {
 	JUMP_IF_NON_ZERO(-1),
 	
 	GET_GLOBAL(1),
-	SET_GLOBAL(0),
+	SET_GLOBAL(-1),
 	DEL_GLOBAL(0),
 	
 	GET_CLOSURE(1),
-	SET_CLOSURE(0),
+	SET_CLOSURE(-1),
 	
 	GET_ATTR(0),
 	SET_ATTR(-1),

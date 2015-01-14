@@ -150,12 +150,14 @@ public class XCompiledPartVar extends XCompiledPart {
 			if(result.var instanceof XClassAttr){
 				codeGen.addInstruction(t, XOpcode.SET_ATTR, result.var.name);
 			}else if(result.var instanceof XGlobal){
+				codeGen.addInstruction(t, XOpcode.DUP);
 				codeGen.addInstruction2(t, XOpcode.SET_GLOBAL, result.var);
 			}else if(result.var instanceof XClosureVar){
 				XVar base = ((XClosureVar)result.var).base;
 				if(base instanceof XClassAttr){
 					codeGen.addInstruction(t, XOpcode.SET_ATTR, base.name);
 				}else{
+					codeGen.addInstruction(t, XOpcode.DUP);
 					codeGen.addInstruction2(t, XOpcode.SET_CLOSURE, result.var);
 				}
 			}else{

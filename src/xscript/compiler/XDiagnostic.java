@@ -189,7 +189,8 @@ public class XDiagnostic implements Diagnostic<String> {
 		}
 		LogRecord logRecord = new LogRecord(level, code);
 		logRecord.setSourceClassName(position.source);
-logRecord.setResourceBundle(lang);		logRecord.setResourceBundleName("script.compiler.lang");
+		logRecord.setResourceBundle(lang);
+		logRecord.setResourceBundleName("script.compiler.lang");
 		Object[] params = new Object[args.length+6];
 		System.arraycopy(args, 0, params, 6, args.length);
 		params[0] = position.source;

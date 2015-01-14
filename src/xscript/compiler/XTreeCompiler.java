@@ -74,9 +74,11 @@ public class XTreeCompiler implements XVisitor {
 	private XScope scope;
 	private List<XLabel> labels;
 	private byte[] module;
+	private XCompilerOptions options;
 	
-	public XTreeCompiler(DiagnosticListener<String> diagnosticListener){
+	public XTreeCompiler(DiagnosticListener<String> diagnosticListener, XCompilerOptions options){
 		this.diagnosticListener = diagnosticListener;
+		this.options = options;
 	}
 	
 	private XCompiledPart visit(XTree tree){
@@ -245,7 +247,7 @@ public class XTreeCompiler implements XVisitor {
 		visit(module, module.body.statements).asStatement(this, code);
 		code.addInstructionB(module, XOpcode.POP, this.scope.getLocalsCount());
 		XDataOutput dataOutput = new XDataOutput();
-		this.module = dataOutput.toByteArray(code);
+		this.module = dataOutput.toByteArray(code, options);
 	}
 
 	@Override
@@ -1234,12 +1236,14 @@ public class XTreeCompiler implements XVisitor {
 				if(result.var instanceof XClassAttr){
 					code.addInstruction(varDecl, XOpcode.SET_ATTR, result.var.name);
 				}else if(result.var instanceof XGlobal){
+					code.addInstruction(varDecl, XOpcode.DUP);
 					code.addInstruction2(varDecl, XOpcode.SET_GLOBAL, result.var);
 				}else if(result.var instanceof XClosureVar){
 					XVar base = ((XClosureVar)result.var).base;
 					if(base instanceof XClassAttr){
 						code.addInstruction(varDecl, XOpcode.SET_ATTR, base.name);
 					}else{
+						code.addInstruction(varDecl, XOpcode.DUP);
 						code.addInstruction2(varDecl, XOpcode.SET_CLOSURE, result.var);
 					}
 				}else{

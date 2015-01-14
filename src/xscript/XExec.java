@@ -1527,13 +1527,13 @@ public class XExec {
 			break;
 		case SET_CLOSURE:
 			i1 = callFrame.readUByte();
-			v1 = getTop(0);
+			v1 = pop();
 			callFrame.getClosure(i1).setValue(v1);
 			break;
 		case SET_GLOBAL:
 			s = callFrame.readStringP();
 			v1 = callFrame.getModule();
-			v2 = getTop(0);
+			v2 = pop();
 			XUtils.set(rt, v1, s, v2, XValue.REF_NONE);
 			break;
 		case SET_INDEX:

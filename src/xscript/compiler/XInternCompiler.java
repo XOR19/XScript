@@ -17,14 +17,14 @@ public class XInternCompiler implements XCompiler {
 	private XInternCompiler(){}
 	
 	@Override
-	public byte[] compile(Map<String, Object> options, XFileReader reader, DiagnosticListener<String> diagnosticListener) {
-		XCompilerOptions compilerOptions = new XCompilerOptions();
+	public byte[] compile(Map<String, Object> o, XFileReader reader, DiagnosticListener<String> diagnosticListener) {
+		XCompilerOptions options = new XCompilerOptions();
 		if(options!=null)
-			compilerOptions.from(options);
+			options.from(o);
 		XTokenizer tokenizer = new XTokenizer(reader, diagnosticListener);
 		XTreeMaker treeMaker = new XTreeMaker(tokenizer, diagnosticListener);
 		XTree tree = treeMaker.makeModule();
-		XTreeCompiler treeCompiler = new XTreeCompiler(diagnosticListener);
+		XTreeCompiler treeCompiler = new XTreeCompiler(diagnosticListener, options);
 		tree.accept(treeCompiler);
 		return treeCompiler.getBytes();
 	}

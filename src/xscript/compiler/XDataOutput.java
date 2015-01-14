@@ -140,12 +140,12 @@ public class XDataOutput implements DataOutput {
 		writeShort(id);
 	}
 
-	public byte[] toByteArray(XCodeGen codeGen){
+	public byte[] toByteArray(XCodeGen codeGen, XCompilerOptions options){
 		codes.add(codeGen);
 		for(int i=0; i<codes.size(); i++){
 			XCodeGen code = codes.get(i);
 			baos = new ByteArrayOutputStream();
-			code.getCode(this);
+			code.getCode(this, options);
 			bytes.add(baos.toByteArray());
 		}
 		baos = new ByteArrayOutputStream();

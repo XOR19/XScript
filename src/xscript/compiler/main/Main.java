@@ -190,8 +190,8 @@ public class Main {
 	private void check(File f, String[] splits, int i, String file) throws IOException{
 		if(splits.length-1==i){
 			String s = splits[i];
-			s = Pattern.quote(s);
-			final Pattern pattern = Pattern.compile(s.replace("*", ".*").replace("?", ".")+"\\.xsc");
+			s = "\\Q"+s+".xsm\\E";
+			final Pattern pattern = Pattern.compile(s.replace("*", "\\Q.*\\E").replace("?", "\\Q.\\E"));
 			File[] files = f.listFiles(new FileFilter() {
 				@Override
 				public boolean accept(File pathname) {
@@ -246,9 +246,9 @@ public class Main {
 			f.mkdirs();
 			int index = sourceName.lastIndexOf('.');
 			if(index==-1){
-				f = new File(f, sourceName+".xsc");
+				f = new File(f, sourceName+".xcm");
 			}else{
-				f = new File(f, sourceName.substring(index)+".xsc");
+				f = new File(f, sourceName.substring(index+1)+".xcm");
 			}
 			os = new FileOutputStream(f);
 			os.write('X');

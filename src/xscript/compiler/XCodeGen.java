@@ -1,7 +1,9 @@
 package xscript.compiler;
 
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.ListIterator;
 
@@ -16,6 +18,8 @@ import xscript.compiler.inst.XInstJump;
 import xscript.compiler.inst.XInstLine;
 import xscript.compiler.inst.XInstVarDecl;
 import xscript.compiler.inst.XInstVarLookup;
+import xscript.compiler.optimizers.XOptimizerCombinePop;
+import xscript.compiler.optimizers.XOptimizerDeleteDeadCode;
 import xscript.compiler.tree.XTree;
 
 
@@ -121,7 +125,7 @@ public class XCodeGen{
 		}
 	}
 	
-	private boolean deleteDeadCode(){
+	/*private boolean deleteDeadCode(){
 		boolean deleted;
 		boolean b = false;
 		do{
@@ -167,7 +171,7 @@ public class XCodeGen{
 				b=true;
 		}while(deleted);
 		return b;
-	}
+	}*/
 	
 	public int resolve(XInst target) {
 		if(target==null)
@@ -222,7 +226,7 @@ public class XCodeGen{
 		}
 	}
 	
-	private boolean makeEasy(){
+	/*private boolean makeEasy(){
 		ListIterator<XInst> i = instructions.listIterator();
 		boolean b = false;
 		while(i.hasNext()){
@@ -283,7 +287,7 @@ public class XCodeGen{
 			}
 		}
 		return b;
-	}
+	}*/
 	
 	private int[] checkStackSize(){
 		int[] sizes = new int[instructions.size()];
@@ -335,17 +339,28 @@ public class XCodeGen{
 		}
 	}
 	
-	public void generateFinalCode(){
-		//if(scope==null)
-		//	throw new AssertionError();
+	public void generateFinalCode(XCompilerOptions options){
+		ListWrapper listWrapper = new ListWrapper();
+		List<XOptimizer> optimizers = new ArrayList<XOptimizer>();
+		optimizers.add(new XOptimizerDeleteDeadCode());
+		optimizers.add(new XOptimizerCombinePop());
 		compileSubparts();
 		deleteDumies();
 		boolean didSomething;
 		do{
+			didSomething = false;
+			for(XOptimizer optimizer:optimizers){
+				didSomething |= optimizer.optimize(listWrapper);
+			}
+		}while(didSomething);
+		/*boolean didSomething;
+		do{
 			didSomething = deleteDeadCode();
 			didSomething |= makeEasy();
-		}while(didSomething);
-		addLines();
+		}while(didSomething);*/
+		if(options.addLines){
+			addLines();
+		}
 		resolve();
 		replace();
 		int[]sizes = checkStackSize();
@@ -371,11 +386,99 @@ public class XCodeGen{
 		return instructions;
 	}
 	
-	public void getCode(XDataOutput dataOutput) {
-		generateFinalCode();
+	public void getCode(XDataOutput dataOutput, XCompilerOptions options) {
+		generateFinalCode(options);
 		for(XInst i:instructions){
 			i.toCode(dataOutput);
 		}
+	}
+	
+	private class ListWrapper extends AbstractList<XInst> {
+
+		@Override
+		public XInst get(int index) {
+			return instructions.get(index);
+		}
+
+		@Override
+		public int size() {
+			return instructions.size();
+		}
+
+		@Override
+		public boolean add(XInst e) {
+			return instructions.add(e);
+		}
+
+		@Override
+		public XInst set(int index, XInst element) {
+			replace(instructions.get(index), element);
+			return instructions.set(index, element);
+		}
+
+		@Override
+		public void add(int index, XInst element) {
+			instructions.add(index, element);
+		}
+
+		@Override
+		public XInst remove(int index) {
+			delete(instructions.get(index));
+			return instructions.remove(index);
+		}
+
+		@Override
+		public int indexOf(Object o) {
+			return instructions.indexOf(o);
+		}
+
+		@Override
+		public int lastIndexOf(Object o) {
+			return instructions.lastIndexOf(o);
+		}
+
+		@Override
+		public void clear() {
+			instructions.clear();
+		}
+
+		@Override
+		public boolean addAll(int index, Collection<? extends XInst> c) {
+			return instructions.addAll(index, c);
+		}
+
+		@Override
+		public boolean contains(Object o) {
+			return instructions.contains(o);
+		}
+
+		@Override
+		public Object[] toArray() {
+			return instructions.toArray();
+		}
+
+		@Override
+		public <T> T[] toArray(T[] a) {
+			return instructions.toArray(a);
+		}
+
+		@Override
+		public boolean remove(Object o) {
+			if(o instanceof XInst)
+				delete((XInst)o);
+			return instructions.remove(o);
+		}
+
+		@Override
+		public boolean containsAll(Collection<?> c) {
+			return instructions.containsAll(c);
+		}
+
+		@Override
+		public String toString() {
+			return instructions.toString();
+		}
+		
 	}
 	
 }
