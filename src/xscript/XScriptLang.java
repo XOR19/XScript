@@ -2,6 +2,8 @@ package xscript;
 
 import java.util.List;
 
+import xscript.compiler.XCompilerOptions;
+
 public final class XScriptLang {
 
 	public static final String ENGINE_NAME = "XScriptEngine";
@@ -20,9 +22,17 @@ public final class XScriptLang {
 	public static final String ENGINE_ATTR_FILE_SYSTEM_ROOT = "FILE_SYSTEM_ROOT";
 	public static final String ENGINE_ATTR_OUT = "OUT";
 	public static final String ENGINE_ATTR_IN = "IN";
+	public static final String ENGINE_ATTR_INTERACTIVE = "INTERACTIVE";
+	public static final String ENGINE_ATTR_INSTS_TO_RUN_ON_DIRECT_INVOKE = "INSTS_TO_RUN_ON_DIRECT_INVOKE";
+	public static final String ENGINE_ATTR_TIMEOUT_DIRECT_INVOKE = "TIMEOUT_DIRECT_INVOKE";
+	public static final String ENGINE_ATTR_INSTS_TO_RUN_ON_BLOCK = "INSTS_TO_RUN_ON_BLOCK";
+	public static final String ENGINE_ATTR_BLOCKS_TO_RUN_ON_INVOKE = "BLOCKS_TO_RUN_ON_INVOKE";
+	public static final String ENGINE_ATTR_EXIT_STATE = "EXIT_STATE";
 	
 	public static final String COMPILER_OPT_COMPILER = "COMPILER";
-	
+	public static final String COMPILER_OPT_REMOVE_LINES = XCompilerOptions.COMPILER_OPT_REMOVE_LINES;
+	public static final String COMPILER_OPT_REMOVE_ASSERTS = XCompilerOptions.COMPILER_OPT_REMOVE_ASSERTS;
+	public static final String COMPILER_OPT_OPTIMIZATION_LEVEL = XCompilerOptions.COMPILER_OPT_OPTIMIZATION_LEVEL;
 	
 	private XScriptLang(){}
 	

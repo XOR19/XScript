@@ -2,9 +2,10 @@ package xscript.object;
 
 import java.io.IOException;
 import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Arrays;
 
-public class XModule implements XConstPool {
+public class XConstPoolImpl implements XConstPool {
 
 	private int[] ints;
 	
@@ -18,7 +19,7 @@ public class XModule implements XConstPool {
 	
 	private byte[][] bytes;
 	
-	public XModule(ObjectInput in) throws IOException{
+	public XConstPoolImpl(ObjectInput in) throws IOException{
 		int size = in.readUnsignedShort();
 		ints = new int[size];
 		for(int i=0; i<size; i++){
@@ -89,12 +90,41 @@ public class XModule implements XConstPool {
 
 	@Override
 	public String toString() {
-		return "XModule [ints=" + Arrays.toString(ints) + ", longs="
+		return "XConstPoolImpl [ints=" + Arrays.toString(ints) + ", longs="
 				+ Arrays.toString(longs) + ", floats="
 				+ Arrays.toString(floats) + ", doubles="
 				+ Arrays.toString(doubles) + ", strings="
 				+ Arrays.toString(strings) + ", bytes="
 				+ Arrays.deepToString(bytes) + "]";
+	}
+
+	@Override
+	public void save(ObjectOutput out) throws IOException {
+		out.writeShort(ints.length);
+		for(int i:ints){
+			out.writeInt(i);
+		}
+		out.writeShort(longs.length);
+		for(long l:longs){
+			out.writeLong(l);
+		}
+		out.writeShort(floats.length);
+		for(float f:floats){
+			out.writeFloat(f);
+		}
+		out.writeShort(doubles.length);
+		for(double d:doubles){
+			out.writeDouble(d);
+		}
+		out.writeShort(strings.length);
+		for(String s:strings){
+			out.writeUTF(s);
+		}
+		out.writeShort(bytes.length);
+		for(byte[] bytes2:bytes){
+			out.writeShort(bytes2.length);
+			out.write(bytes2);
+		}
 	}
 	
 }

@@ -40,7 +40,8 @@ public class XUtils {
 	public static final int MAP = 12;
 	public static final int WEAK_REF = 13;
 	public static final int MODULE = 14;
-	public static final int NUM_BASE_TYPES = 15;
+	public static final int CONST_POOL = 15;
+	public static final int NUM_BASE_TYPES = 16;
 	
 	public static XValue lookupTry(XRuntime runtime, XValue value, String attr, int addRef){
 		XValue v = value.getRaw(runtime, attr);

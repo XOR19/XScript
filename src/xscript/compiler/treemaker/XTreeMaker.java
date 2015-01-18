@@ -135,6 +135,59 @@ public class XTreeMaker {
 		return new XTreeModule(position, scope);
 	}
 	
+	public XTreeModule makeModuleInteractive() {
+		tokenizer.next();
+		startPosition();
+		List<XTreeStatement> list = new ArrayList<XTreeStatement>();
+		while(!tokenEof()){
+			list.add(makeStatementInteractive());
+			skip();
+		}
+		XTreePosition position = endPosition();
+		XTreeScope scope = new XTreeScope(position.clone(), list);
+		return new XTreeModule(position, scope);
+	}
+	
+	public XTreeLowExpr makeExprOrDecl(){
+		XToken token = tokenizer.getToken();
+		if(token.kind==XTokenKind.KEYWORD){
+			startPosition();
+			switch((XKeyword)token.data){
+			case CLASS:
+				return makeClassPosStarted(true);
+			case FUNC:
+				return makeFuncPosStarted(true);
+			case GLOBAL:{
+				tokenizer.next();
+				if(tokenOk(XTokenKind.KEYWORD, XKeyword.CLASS)){
+					return makeClassPosStarted(true, XVarAccess.GLOBAL);
+				}else if(tokenOk(XTokenKind.KEYWORD, XKeyword.FUNC)){
+					return makeFuncPosStarted(true, XVarAccess.GLOBAL);
+				}
+				List<XTreeVarDeclEntry> entries = makeDeclEntries();
+				return new XTreeVarDecl(endPosition(), entries, XVarAccess.GLOBAL);
+			}case LOCAL:{
+				tokenizer.next();
+				if(tokenOk(XTokenKind.KEYWORD, XKeyword.CLASS)){
+					return makeClassPosStarted(true, XVarAccess.LOCAL);
+				}else if(tokenOk(XTokenKind.KEYWORD, XKeyword.FUNC)){
+					return makeFuncPosStarted(true, XVarAccess.LOCAL);
+				}
+				List<XTreeVarDeclEntry> entries = makeDeclEntries();
+				return new XTreeVarDecl(endPosition(), entries, XVarAccess.LOCAL);
+			}case NONLOCAL:{
+				tokenizer.next();
+				List<XTreeVarDeclEntry> entries = makeDeclEntries();
+				return new XTreeVarDecl(endPosition(), entries, XVarAccess.NONLOCAL);
+			}
+			default:
+				break;
+			}
+			endPosition();
+		}
+		return makeExpr();
+	}
+	
 	public XTreeStatement makeStatement() {
 		XToken token = tokenizer.getToken();
 		if(token.kind==XTokenKind.KEYWORD){
@@ -184,7 +237,7 @@ public class XTreeMaker {
 			case FOR:
 				tokenizer.next();
 				expect(XKeyword.LBRAKET);
-				t = makeExpr();
+				t = makeExprOrDecl();
 				if(tokenOk(XTokenKind.KEYWORD, XKeyword.COLON) && (t instanceof XTreeIdent || (t instanceof XTreeVarDecl && ((XTreeVarDecl)t).entries.size()==1))){
 					tokenizer.next();
 					t2 = makeExpr();
@@ -302,6 +355,178 @@ public class XTreeMaker {
 		XTreeStatement statement = makeExpr();
 		if(statement instanceof XTreeIdent && tokenOk(XTokenKind.KEYWORD, XKeyword.COLON)){
 			statement = new XTreeLabel(statement.position.clone(), (XTreeIdent)statement, makeStatement());
+		}else{
+			skip = !expect(XKeyword.SEMICOLON);
+		}
+		return statement;
+	}
+	
+	public XTreeStatement makeStatementInteractive() {
+		XToken token = tokenizer.getToken();
+		if(token.kind==XTokenKind.KEYWORD){
+			startPosition();
+			XTree t = null;
+			XTree t2 = null;
+			XTree t3 = null;
+			XTree t4 = null;
+			switch((XKeyword)token.data){
+			case ASSERT:
+				tokenizer.next();
+				t = makeExpr();
+				if(tokenOk(XTokenKind.KEYWORD, XKeyword.COLON)){
+					tokenizer.next();
+					t2 = makeExpr();
+				}
+				expectOrEOF(XKeyword.SEMICOLON);
+				return new XTreeAssert(endPosition(), (XTreeExpr)t, (XTreeExpr)t2);
+			case BREAK:
+				if(tokenizer.next().kind==XTokenKind.IDENT){
+					t = makeIdent();
+				}
+				expectOrEOF(XKeyword.SEMICOLON);
+				return new XTreeBreak(endPosition(), (XTreeIdent)t);
+			case CONTINUE:
+				if(tokenizer.next().kind==XTokenKind.IDENT){
+					t = makeIdent();
+				}
+				expectOrEOF(XKeyword.SEMICOLON);
+				return new XTreeContinue(endPosition(), (XTreeIdent)t);
+			case DELETE:
+				tokenizer.next();
+				t = makeExpr();
+				expectOrEOF(XKeyword.SEMICOLON);
+				return new XTreeDelete(endPosition(), (XTreeExpr)t);
+			case DO:
+				tokenizer.next();
+				t = makeStatement();
+				expect(XKeyword.WHILE);
+				expect(XKeyword.LBRAKET);
+				t2 = makeExpr();
+				expect(XKeyword.RBRAKET);
+				expectOrEOF(XKeyword.SEMICOLON);
+				return new XTreeDo(endPosition(), (XTreeExpr)t2, (XTreeStatement)t);
+			case FOR:
+				tokenizer.next();
+				expect(XKeyword.LBRAKET);
+				t = makeExprOrDecl();
+				if(tokenOk(XTokenKind.KEYWORD, XKeyword.COLON) && (t instanceof XTreeIdent || (t instanceof XTreeVarDecl && ((XTreeVarDecl)t).entries.size()==1))){
+					tokenizer.next();
+					t2 = makeExpr();
+					expect(XKeyword.RBRAKET);
+					t3 = makeStatement();
+					return new XTreeForeach(endPosition(), (XTreeExpr)t, (XTreeExpr)t2, (XTreeStatement)t3);
+				}
+				expect(XKeyword.SEMICOLON);
+				t2 = makeExpr();
+				expect(XKeyword.SEMICOLON);
+				t3 = makeExpr();
+				expect(XKeyword.RBRAKET);
+				t4 = makeStatement();
+				return new XTreeFor(endPosition(), (XTreeLowExpr)t, (XTreeExpr)t2, (XTreeExpr)t3, (XTreeStatement)t4);
+			case FOREACH:
+				tokenizer.next();
+				expect(XKeyword.LBRAKET);
+				t = makeVarDelc();
+				expect(XKeyword.COLON);
+				t2 = makeExpr();
+				expect(XKeyword.RBRAKET);
+				t3 = makeStatement();
+				return new XTreeForeach(endPosition(), (XTreeLowExpr)t, (XTreeExpr)t2, (XTreeStatement)t3);
+			case FROM:{
+				tokenizer.next();
+				t = makeIdentEx();
+				expect(XKeyword.IMPORT);
+				List<XTreeImportEntry> imports = makeImports(true);
+				expectOrEOF(XKeyword.SEMICOLON);
+				return new XTreeImportFrom(endPosition(), (XTreeIdent) t, imports);
+			}
+			case GLOBAL:{
+				tokenizer.next();
+				if(tokenOk(XTokenKind.KEYWORD, XKeyword.CLASS)){
+					return makeClassPosStarted(true, XVarAccess.GLOBAL);
+				}else if(tokenOk(XTokenKind.KEYWORD, XKeyword.FUNC)){
+					return makeFuncPosStarted(true, XVarAccess.GLOBAL);
+				}
+				List<XTreeVarDeclEntry> entries = makeDeclEntries();
+				expectOrEOF(XKeyword.SEMICOLON);
+				return new XTreeVarDecl(endPosition(), entries, XVarAccess.GLOBAL);
+			}case IF:
+				tokenizer.next();
+				expect(XKeyword.LBRAKET);
+				t = makeExpr();
+				expect(XKeyword.RBRAKET);
+				t2 = makeStatement();
+				if(tokenOk(XTokenKind.KEYWORD, XKeyword.ELSE)){
+					tokenizer.next();
+					t3 = makeStatement();
+				}
+				return new XTreeIf(endPosition(), (XTreeExpr)t, (XTreeStatement)t2, (XTreeStatement)t3);
+			case IMPORT:
+			{
+				tokenizer.next();
+				List<XTreeImportEntry> imports = makeImports(false);
+				expectOrEOF(XKeyword.SEMICOLON);
+				return new XTreeImport(endPosition(), imports);
+			}
+			case LOCAL:{
+				tokenizer.next();
+				if(tokenOk(XTokenKind.KEYWORD, XKeyword.CLASS)){
+					return makeClassPosStarted(true, XVarAccess.LOCAL);
+				}else if(tokenOk(XTokenKind.KEYWORD, XKeyword.FUNC)){
+					return makeFuncPosStarted(true, XVarAccess.LOCAL);
+				}
+				List<XTreeVarDeclEntry> entries = makeDeclEntries();
+				expectOrEOF(XKeyword.SEMICOLON);
+				return new XTreeVarDecl(endPosition(), entries, XVarAccess.LOCAL);
+			}case NONLOCAL:{
+				tokenizer.next();
+				List<XTreeVarDeclEntry> entries = makeDeclEntries();
+				expectOrEOF(XKeyword.SEMICOLON);
+				return new XTreeVarDecl(endPosition(), entries, XVarAccess.NONLOCAL);
+			}case RETURN:
+				tokenizer.next();
+				if(!tokenOk(XTokenKind.KEYWORD, XKeyword.SEMICOLON))
+					t = makeExpr();
+				expectOrEOF(XKeyword.SEMICOLON);
+				return new XTreeReturn(endPosition(), (XTreeExpr)t);
+			case SEMICOLON:
+				tokenizer.next();
+				return new XTreeEmpty(endPosition());
+			case SYNCHRONIZED:
+				tokenizer.next();
+				expect(XKeyword.LBRAKET);
+				t = makeExpr();
+				expect(XKeyword.RBRAKET);
+				t2 = makeScope();
+				return new XTreeSynchronized(endPosition(), (XTreeExpr)t, (XTreeScope)t2);
+			case SWITCH:
+				return makeSwitchPosStarted();
+			case THROW:
+				tokenizer.next();
+				t = makeExpr();
+				expectOrEOF(XKeyword.SEMICOLON);
+				return new XTreeThrow(endPosition(), (XTreeExpr)t);
+			case TRY:
+				return makeTryPosStarted();
+			case WHILE:
+				tokenizer.next();
+				expect(XKeyword.LBRAKET);
+				t = makeExpr();
+				expect(XKeyword.RBRAKET);
+				t2 = makeStatement();
+				return new XTreeWhile(endPosition(), (XTreeExpr)t, (XTreeStatement)t2);
+			case LSCOPE:
+				return makeScope();
+			default:
+				break;
+			}
+			endPosition();
+		}
+		XTreeStatement statement = makeExpr();
+		if(statement instanceof XTreeIdent && tokenOk(XTokenKind.KEYWORD, XKeyword.COLON)){
+			statement = new XTreeLabel(statement.position.clone(), (XTreeIdent)statement, makeStatementInteractive());
+		}else if(tokenEof()){
+			return new XTreeReturn(statement.position.clone(), (XTreeExpr)statement);
 		}else{
 			skip = !expect(XKeyword.SEMICOLON);
 		}
@@ -1203,6 +1428,18 @@ public class XTreeMaker {
 	private boolean expect(XKeyword keyword){
 		if(tokenOk(XTokenKind.KEYWORD, keyword)){
 			tokenizer.next();
+			return true;
+		}else{
+			addDiagnostic("expect.keyword", keyword, tokenizer.getToken());
+			return false;
+		}
+	}
+	
+	private boolean expectOrEOF(XKeyword keyword){
+		if(tokenOk(XTokenKind.KEYWORD, keyword)){
+			tokenizer.next();
+			return true;
+		}else if(tokenEof()){
 			return true;
 		}else{
 			addDiagnostic("expect.keyword", keyword, tokenizer.getToken());

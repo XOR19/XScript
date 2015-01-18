@@ -35,7 +35,7 @@ public class XTypeDataFunc extends XTypeData {
 	@Override
 	public XObjectData createData(XRuntime runtime, XObject obj, Object[] args) {
 		// TODO Auto-generated method stub
-		return new XObjectDataFunc(runtime, (String)args[0], (String[])args[1], (Integer)args[2], (Integer)args[3], (Integer)args[4], (XValue)args[5], (XValue)args[6], (XValue)args[7], (Integer)args[8], (XClosure[])args[9]);
+		return new XObjectDataFunc(runtime, (String)args[0], (String[])args[1], (Integer)args[2], (Integer)args[3], (Integer)args[4], (XValue)args[5], (XValue)args[6], (XValue)args[7], (XValue)args[8], (Integer)args[9], (XClosure[])args[10]);
 	}
 
 	@Override

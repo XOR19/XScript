@@ -157,10 +157,14 @@ public final class XObject{
 	}
 
 	public XValue setRaw(String attr, XValue value){
+		if(value==null)
+			throw new NullPointerException();
 		return fields.put(attr, value);
 	}
 	
 	public XValue replaceRaw(String attr, XValue value){
+		if(value==null)
+			throw new NullPointerException();
 		if(fields.containsKey(attr))
 			return fields.put(attr, value);
 		return null;

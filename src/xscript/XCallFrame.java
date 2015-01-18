@@ -146,5 +146,9 @@ public class XCallFrame {
 	public String getMethodName() {
 		return func.getName();
 	}
+
+	public XValue getConstPool() {
+		return func.getConstPool();
+	}
 	
 }

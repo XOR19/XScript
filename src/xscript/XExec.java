@@ -470,7 +470,7 @@ public class XExec {
 		}
 	}
 
-	private void updateWaiting(){
+	public boolean updateWaiting(){
 		if(timeout>0){
 			long time = rt.getTime();
 			timeout += lastTime-time;
@@ -480,12 +480,13 @@ public class XExec {
 				push(XValueInt.valueOf(1));
 			}
 		}
+		return timeout==0;
 	}
 	
 	public int run(int instrs){
-		updateWaiting();
-		while(instrs>0 && timeout==0){
-			instrs--;
+		while((instrs==-1 || instrs>0) && timeout==0 && rt.isRunning()){
+			if(instrs>0)
+				instrs--;
 			while(callFrame.isFinished()){
 				if(stackpointer==callFrame.basepointer){
 					push(XValueNull.NULL);
@@ -548,7 +549,9 @@ public class XExec {
 		XValue v1, v2, v3, v4;
 		int i1;
 		String s;
-		System.out.println("exec:"+opcode+":"+Arrays.toString(Arrays.copyOf(stack, stackpointer)));
+		if(XFlags.DEBUG){
+			System.out.println("exec:"+opcode+":"+Arrays.toString(Arrays.copyOf(stack, stackpointer)));
+		}
 		switch(opcode){
 		case ADD:
 			v1 = pop();
@@ -1283,7 +1286,8 @@ public class XExec {
 			
 			v2 = pop();
 			v3 = callFrame.getModule();
-			v1 = rt.alloc(rt.getBaseType(XUtils.FUNC), s, params, kwParam, listParam, defStart, v2, v3, XValueNull.NULL, index, closures);
+			XValue constPool = callFrame.getConstPool();
+			v1 = rt.alloc(rt.getBaseType(XUtils.FUNC), s, params, kwParam, listParam, defStart, v2, v3, constPool, XValueNull.NULL, index, closures);
 			push(v1);
 			break;
 		}
@@ -1338,7 +1342,8 @@ public class XExec {
 			v4 = pop();
 			v2 = pop();
 			v3 = callFrame.getModule();
-			v1 = rt.alloc(rt.getBaseType(XUtils.FUNC), s, params, kwParam, listParam, defStart, v2, v3, v4, index, closures);
+			XValue constPool = callFrame.getConstPool();
+			v1 = rt.alloc(rt.getBaseType(XUtils.FUNC), s, params, kwParam, listParam, defStart, v2, v3, constPool, v4, index, closures);
 			push(v1);
 			break;
 		}

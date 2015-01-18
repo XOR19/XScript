@@ -3,15 +3,13 @@ package xscript.object;
 import java.io.IOException;
 import java.io.ObjectOutput;
 
-import xscript.XUtils;
-import xscript.values.XValue;
-
-public class XObjectDataModule implements XObjectData {
-
-	private XValue constPool;
+public class XObjectDataConstPool implements XObjectData {
 	
-	public XObjectDataModule(XRuntime rt, XValue constPool){
-		XUtils.check(rt, constPool, XUtils.CONST_POOL);
+	private XConstPool constPool;
+	
+	public XObjectDataConstPool(XConstPool constPool){
+		if(constPool==null)
+			throw new NullPointerException();
 		this.constPool = constPool;
 	}
 	
@@ -23,11 +21,11 @@ public class XObjectDataModule implements XObjectData {
 
 	@Override
 	public void save(ObjectOutput out) throws IOException {
-		XValue.write(out, constPool);
+		constPool.save(out);
 	}
 
-	public XValue getConstPool(){
+	public XConstPool getConstPool(){
 		return constPool;
 	}
-
+	
 }

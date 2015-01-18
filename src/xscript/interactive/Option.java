@@ -1,66 +1,32 @@
-package xscript.compiler.main;
+package xscript.interactive;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-import xscript.compiler.XCompilerOptions;
-import xscript.compiler.XInternCompiler;
 import xscript.executils.Log;
 
 enum Option {
-	O("-o", "opt.arg.o.level", "opt.o"){
-
-		@Override
-		boolean process(OptionHelper helper, String arg) {
-			helper.putOption(XCompilerOptions.COMPILER_OPT_OPTIMIZATION_LEVEL, arg);
-			return true;
-		}
-		
-	},
-	RL("-rl", "opt.arg.onoff", "opt.rl"){
-
-		@Override
-		boolean process(OptionHelper helper, String arg) {
-			helper.putOption(XCompilerOptions.COMPILER_OPT_OPTIMIZATION_LEVEL, arg);
-			return true;
-		}
-		
-	},
-	RA("-ra", "opt.arg.onoff", "opt.ra"){
-
-		@Override
-		boolean process(OptionHelper helper, String arg) {
-			helper.putOption(XCompilerOptions.COMPILER_OPT_OPTIMIZATION_LEVEL, arg);
-			return true;
-		}
-		
-	},
-	SOURCEPATH("-sourcepath", "opt.arg.directory", "opt.sourcepath", "-s"){
+	SEARCHPATH("-searchpath", "opt.arg.directory", "opt.searchpath", "-s"){
 		@Override
 		boolean process(OptionHelper helper, String arg) {
 			File file = new File(arg);
-			return helper.addSourceDir(file);
-		}
-	},
-	D("-d", "opt.arg.directory", "opt.d"){
-		@Override
-		boolean process(OptionHelper helper, String arg) {
-			File file = new File(arg);
-			return helper.setOutputDir(file);
+			return helper.addSearchPath(file);
 		}
 	},
 	VERSION("-version", null, "opt.version", "-v"){
 		@Override
 		boolean process(OptionHelper helper, String arg) {
+			helper.noFileNeeded();
 			Log log = helper.getLog();
-	        log.println("msg.version", helper.getOwnName(), XInternCompiler.VERSION);
+	        log.println("msg.version", helper.getOwnName(), helper.getScriptEngine().getFactory().getEngineVersion());
 			return true;
 		}
 	},
 	HELP("-help", null, "opt.help", "-h", "-?") {
 		@Override
 		boolean process(OptionHelper helper, String arg) {
+			helper.noFileNeeded();
 			Log log = helper.getLog();
 			log.println("msg.usage.header", helper.getCommandLine());
 			for(Option c:Option.values()){

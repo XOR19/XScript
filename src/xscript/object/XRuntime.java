@@ -50,7 +50,7 @@ public interface XRuntime {
 
 	boolean doInit();
 	
-	byte[] compile(Map<String, Object> options, String source, Reader reader, DiagnosticListener<String> diagnosticListener);
+	byte[] compile(Map<String, Object> options, String source, Reader reader, DiagnosticListener<String> diagnosticListener, boolean interactive);
 
 	XValue getModule(String name);
 
@@ -59,5 +59,9 @@ public interface XRuntime {
 	PrintStream getOut();
 	
 	InputStream getIn();
+
+	void exit(int state);
+	
+	boolean isRunning();
 	
 }

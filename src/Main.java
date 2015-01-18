@@ -4,6 +4,7 @@ import java.io.IOException;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import javax.swing.JTextArea;
 
 import xscript.XScriptEngineFactory;
 import xscript.XScriptLang;

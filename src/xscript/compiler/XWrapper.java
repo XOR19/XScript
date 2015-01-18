@@ -17,7 +17,7 @@ public final class XWrapper {
 		}else if(obj instanceof Boolean){
 			return ((Boolean)obj).booleanValue()?1:0;
 		}
-		throw new ClassCastException("Can't cast '"+obj.getClass()+"' to 'long'");
+		throw new ClassCastException("Can't cast '"+getClassName(obj)+"' to 'long'");
 	}
 	
 	public static boolean isNumber(Object obj){
@@ -32,7 +32,7 @@ public final class XWrapper {
 		}else if(obj instanceof Boolean){
 			return ((Boolean)obj).booleanValue()?1:0;
 		}
-		throw new ClassCastException("Can't cast '"+obj.getClass()+"' to 'double'");
+		throw new ClassCastException("Can't cast '"+getClassName(obj)+"' to 'double'");
 	}
 	
 	public static boolean isString(Object obj){
@@ -48,13 +48,21 @@ public final class XWrapper {
 	}
 	
 	public static boolean asBool(Object obj){
-		try{
-			return asNumber(obj)!=0;
-		}catch(NullPointerException e){
+		if(obj == null){
 			return false;
-		}catch (ClassCastException e) {
+		}else if(obj instanceof Number){
+			return ((Number)obj).doubleValue()!=0;
+		}else if(obj instanceof Character){
+			return ((Character)obj).charValue()!=0;
+		}else if(obj instanceof Boolean){
+			return ((Boolean)obj).booleanValue();
+		}else{
 			return true;
 		}
+	}
+	
+	private static String getClassName(Object obj){
+		return obj==null?"null":obj.getClass().getName();
 	}
 	
 }

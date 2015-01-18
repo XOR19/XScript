@@ -8,6 +8,7 @@ import java.util.Map;
 
 import xscript.object.XFunction;
 import xscript.object.XFunctionData;
+import xscript.object.XObjectDataModule;
 import xscript.object.XRuntime;
 import xscript.values.XValue;
 import xscript.values.XValueNull;
@@ -26,6 +27,7 @@ class XNativeFunctions {
 		map.put("__builtin__.__print", new XFunctionData(new __builtin__.__print(), "string"));
 		map.put("__builtin__.__pollInput", new XFunctionData(new __builtin__.__pollInput()));
 		map.put("__builtin__.__sleep", new XFunctionData(new __builtin__.__sleep(), "time"));
+		map.put("__builtin__.__exit", new XFunctionData(new __builtin__.__exit(), "state"));
 		functions = Collections.unmodifiableMap(map);
 	}
 
@@ -84,7 +86,9 @@ class XNativeFunctions {
 	
 			@Override
 			public XValue invoke(XRuntime runtime, XExec exec, XValue thiz, XValue[] params, List<XValue> list, Map<String, XValue> map) throws Throwable {
-				XValue method = runtime.alloc(runtime.getBaseType(XUtils.FUNC), "<init>", new String[0], -1, -1, -1, XValueNull.NULL, params[0], XValueNull.NULL, 0, new XClosure[0]);
+				XValue module = params[0];
+				XValue constPool = XUtils.getDataAs(runtime, module, XObjectDataModule.class).getConstPool();
+				XValue method = runtime.alloc(runtime.getBaseType(XUtils.FUNC), "<init>", new String[0], -1, -1, -1, XValueNull.NULL, module, constPool, XValueNull.NULL, 0, new XClosure[0]);
 				exec.call(method, null, Collections.<XValue>emptyList(), null);
 				return NO_PUSH;
 			}
@@ -130,6 +134,17 @@ class XNativeFunctions {
 			public XValue invoke(XRuntime runtime, XExec exec, XValue thiz, XValue[] params, List<XValue> list, Map<String, XValue> map) throws Throwable {
 				exec.setWait(params[0].getInt());
 				return NO_PUSH;
+			}
+			
+		}
+		
+		private static class __exit implements XFunction{
+			
+			@Override
+			public XValue invoke(XRuntime runtime, XExec exec, XValue thiz, XValue[] params, List<XValue> list, Map<String, XValue> map) throws Throwable {
+				int i = (int) params[0].getInt();
+				runtime.exit(i);
+				return null;
 			}
 			
 		}

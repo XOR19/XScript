@@ -23,6 +23,8 @@ public class XObjectDataFunc implements XObjectData {
 	
 	private XValue module;
 	
+	private XValue constPool;
+	
 	private XValue clasz;
 	
 	private int index;
@@ -30,10 +32,11 @@ public class XObjectDataFunc implements XObjectData {
 	private XClosure[] closures;
 	
 	public XObjectDataFunc(XRuntime rt, String name, String[] paramNames, int kwParam,
-			int listParam, int defStart, XValue def, XValue module, XValue clasz, int index,
+			int listParam, int defStart, XValue def, XValue module, XValue constPool, XValue clasz, int index,
 			XClosure[] closures) {
 		XUtils.check(rt, def, XUtils.TUPLE);
 		XUtils.check(rt, module, XUtils.MODULE);
+		XUtils.check(rt, constPool, XUtils.CONST_POOL);
 		XUtils.check(rt, clasz, XUtils.TYPE);
 		this.name = name;
 		this.paramNames = paramNames;
@@ -42,6 +45,7 @@ public class XObjectDataFunc implements XObjectData {
 		this.defStart = defStart;
 		this.def = def;
 		this.module = module;
+		this.constPool = constPool;
 		this.clasz = clasz;
 		this.index = index;
 		this.closures = closures;
@@ -58,6 +62,7 @@ public class XObjectDataFunc implements XObjectData {
 	public void setVisible(XRuntime runtime) {
 		def.setVisible(runtime);
 		module.setVisible(runtime);
+		constPool.setVisible(runtime);
 		for(XClosure closure:closures){
 			closure.setVisible(runtime);
 		}
@@ -93,7 +98,7 @@ public class XObjectDataFunc implements XObjectData {
 	}
 
 	public XConstPool getConstPool(XRuntime rt) {
-		XObjectDataModule m = XUtils.getDataAs(rt, module, XObjectDataModule.class);
+		XObjectDataConstPool m = XUtils.getDataAs(rt, constPool, XObjectDataConstPool.class);
 		return m.getConstPool();
 	}
 
@@ -102,13 +107,13 @@ public class XObjectDataFunc implements XObjectData {
 	}
 
 	public String getFileName(XRuntime rt) {
-		XObjectDataModule m = XUtils.getDataAs(rt, module, XObjectDataModule.class);
-		return m.getFileName();
+		//TODO
+		return "";
 	}
 
 	public String getFullPath(XRuntime rt) {
-		XObjectDataModule m = XUtils.getDataAs(rt, module, XObjectDataModule.class);
-		return m.getName();
+		//TODO
+		return "";
 	}
 
 	public XClosure[] getClosures(){
@@ -121,6 +126,10 @@ public class XObjectDataFunc implements XObjectData {
 
 	public XValue getDeclaringClass() {
 		return clasz;
+	}
+
+	public XValue getConstPool() {
+		return constPool;
 	}
 	
 }

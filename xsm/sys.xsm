@@ -22,6 +22,10 @@ func sleep(time){
 	__builtin__.__sleep(time);
 }
 
+func exit(state:0){
+	__builtin__.__exit(state);
+}
+
 class Exception{
 
 	_message;
@@ -62,6 +66,14 @@ class NativeError : Exception{
 		throw TypeError("Bad Call");
 	}
 	
+}
+
+class AssertionError : Exception{
+
+	func __init__(message:null, cause:null){
+		super.__init__(message, cause);
+	}
+
 }
 
 class StackTraceElement{

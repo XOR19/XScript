@@ -18,17 +18,15 @@ import java.util.regex.Pattern;
 
 import xscript.compiler.XFileReader;
 import xscript.compiler.XInternCompiler;
-import xscript.compiler.main.ArgReader.RecuresiveFileException;
-import xscript.compiler.main.Log.Kind;
+import xscript.executils.ArgReader;
+import xscript.executils.Localizer;
+import xscript.executils.Log;
+import xscript.executils.ArgReader.RecuresiveFileException;
+import xscript.executils.Log.Kind;
+import xscript.executils.Utils;
 
 
 public class Main {
-
-	public static final int OK = 0;
-	public static final int ERROR = 1;
-	public static final int CMDERR = 2;
-	public static final int SYSERR = 3;
-	public static final int ABNORMAL = 4;
 	
 	public static void main(String[] args){
 		System.exit(process(args));
@@ -42,6 +40,10 @@ public class Main {
 	
 	private final Log log;
 	
+	private final String commandLine;
+	
+	private final String ownName;
+	
 	private final OptionHelper helper = new OptionHelper() {
 		
 		@Override
@@ -51,9 +53,14 @@ public class Main {
 
 		@Override
 		public String getOwnName() {
-			return "xscriptc";
+			return ownName;
 		}
 
+		@Override
+		public String getCommandLine() {
+			return commandLine;
+		}
+		
 		@Override
 		public boolean addSourceDir(File file) {
 			if(!file.exists()){
@@ -86,6 +93,11 @@ public class Main {
 		public void error(String key, Object...args) {
 			Main.this.error(key, args);
 		}
+
+		@Override
+		public void putOption(String key, String value) {
+			compilerOptions.put(key, value);
+		}
 		
 	};
 	
@@ -108,13 +120,15 @@ public class Main {
 		ResourceBundle lang = ResourceBundle.getBundle("xscript.compiler.main.lang");
 		log = new Log(new Localizer(lang));
 		sourceDirs.add(new File("."));
+		commandLine = Utils.getCommandLineRebuild(Main.class);
+		ownName = Utils.getOwnName(Main.class);
 	}
 	
 	private int process() {
 		try{
 			if(args==null){
 				Option.HELP.process(helper, null);
-				return CMDERR;
+				return Utils.CMDERR;
 			}
 			
 			String arg;
@@ -122,7 +136,7 @@ public class Main {
 				if(!arg.isEmpty()){
 					if(arg.charAt(0)=='-'){
 						if(!processCommand(arg)){
-							return CMDERR;
+							return Utils.CMDERR;
 						}
 					}else{
 						processFile(arg);
@@ -130,26 +144,26 @@ public class Main {
 				}
 			}
 			
-			return errored?ERROR:OK;
+			return errored?Utils.ERROR:Utils.OK;
 		}catch(RecuresiveFileException e){
 			log.println("err.recursive.file", e.f, e.opend);
-			return SYSERR;
+			return Utils.SYSERR;
 		}catch(IOException e){
 			log.println("msg.io");
 			e.printStackTrace(log.getWriter(Kind.NOTICE));
-			return SYSERR;
+			return Utils.SYSERR;
 		}catch (OutOfMemoryError e) {
 			log.println("msg.resource");
 			e.printStackTrace(log.getWriter(Kind.NOTICE));
-            return SYSERR;
+            return Utils.SYSERR;
         } catch (StackOverflowError e) {
         	log.println("msg.resource");
 			e.printStackTrace(log.getWriter(Kind.NOTICE));
-            return SYSERR;
+            return Utils.SYSERR;
         } catch(Throwable e){
 			log.println("msg.bug", XInternCompiler.VERSION);
 			e.printStackTrace(log.getWriter(Kind.NOTICE));
-			return ABNORMAL;
+			return Utils.ABNORMAL;
 		}finally{
 			log.flush();
 		}
@@ -177,7 +191,7 @@ public class Main {
 	
 	void error(String msg, Object... args){
 		log.println(msg, args);
-		log.println("msg.usage", helper.getOwnName());
+		log.println("msg.usage", helper.getCommandLine());
 	}
 	
 	private void processFile(String file) throws IOException{
@@ -237,7 +251,7 @@ public class Main {
 		try{
 			r = new FileReader(in);
 			XFileReader reader = new XFileReader(sourceName, r);
-			byte[] compiled = XInternCompiler.COMPILER.compile(compilerOptions, reader, log);
+			byte[] compiled = XInternCompiler.COMPILER.compile(compilerOptions, reader, log, false);
 			try{
 				r.close();
 			}catch(IOException e){}

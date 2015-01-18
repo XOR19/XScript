@@ -749,3 +749,6 @@ func __import(module){
 	return m;
 }
 
+func ___str__(obj){
+	return obj.__str__();
+}

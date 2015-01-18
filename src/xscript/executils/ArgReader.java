@@ -1,4 +1,4 @@
-package xscript.compiler.main;
+package xscript.executils;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -8,7 +8,7 @@ import java.io.Reader;
 import java.io.StreamTokenizer;
 import java.util.LinkedList;
 
-class ArgReader {
+public class ArgReader {
 
 	private final String[] args;
 	

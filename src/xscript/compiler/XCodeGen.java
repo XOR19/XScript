@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.ListIterator;
 
+import xscript.XFlags;
 import xscript.XOpcode;
 import xscript.compiler.inst.XInst;
 import xscript.compiler.inst.XInst1B;
@@ -358,19 +359,21 @@ public class XCodeGen{
 			didSomething = deleteDeadCode();
 			didSomething |= makeEasy();
 		}while(didSomething);*/
-		if(options.addLines){
+		if(!options.removeLines){
 			addLines();
 		}
 		resolve();
 		replace();
 		int[]sizes = checkStackSize();
 		resolvePost();
-		System.out.println("=========================================");
-		System.out.println("               GEN                       ");
-		System.out.println("=========================================");
-		int i=0;
-		for(XInst instr:instructions){
-			System.out.println(sizes[i++]+"\t"+instr.toString());
+		if(XFlags.DEBUG){
+			System.out.println("=========================================");
+			System.out.println("               GEN                       ");
+			System.out.println("=========================================");
+			int i=0;
+			for(XInst instr:instructions){
+				System.out.println(sizes[i++]+"\t"+instr.toString());
+			}
 		}
 	}
 	

@@ -571,10 +571,10 @@ public class XTreeCompiler implements XVisitor {
 		XCodeGen code = getCode(_assert);
 		XCompiledPart part = visit(_assert.condition);
 		if(part.isConstValue()){
-			if(part.isFalse()){
+			if(part.isFalse() && !options.removeAsserts){
 				code.addInstruction(_assert, XOpcode.LOADN);
-				code.addInstruction(_assert, XOpcode.IMPORT, "sys.exc");
-				code.addInstruction(_assert, XOpcode.GET_ATTR, "AssertionException");
+				code.addInstruction(_assert, XOpcode.IMPORT, "sys");
+				code.addInstruction(_assert, XOpcode.GET_ATTR, "AssertionError");
 				if(_assert.message==null){
 					code.addInstruction(new XInstCall(_assert.position.position.line, null, -1, -1, 0));
 				}else{
@@ -583,13 +583,15 @@ public class XTreeCompiler implements XVisitor {
 				}
 				treePart.setDead(true);
 			}
+		}else if(options.removeAsserts){
+			part.asStatement(this, code);
 		}else{
 			part.setupAndGet(this, code);
 			XJumpTarget end = new XJumpTarget();
 			code.addInstruction(_assert, XOpcode.JUMP_IF_NON_ZERO, end);
 			code.addInstruction(_assert, XOpcode.LOADN);
-			code.addInstruction(_assert, XOpcode.IMPORT, "sys.exc");
-			code.addInstruction(_assert, XOpcode.GET_ATTR, "AssertionException");
+			code.addInstruction(_assert, XOpcode.IMPORT, "sys");
+			code.addInstruction(_assert, XOpcode.GET_ATTR, "AssertionError");
 			if(_assert.message==null){
 				code.addInstruction(new XInstCall(_assert.position.position.line, null, -1, -1, 0));
 			}else{
@@ -1197,7 +1199,9 @@ public class XTreeCompiler implements XVisitor {
 	}
 
 	@Override
-	public void visitEmpty(XTreeEmpty empty) {}
+	public void visitEmpty(XTreeEmpty empty) {
+		getCode(empty);
+	}
 
 	@Override
 	public void visitVarDecl(XTreeVarDecl varDecl) {

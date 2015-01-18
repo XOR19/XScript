@@ -1,4 +1,4 @@
-package xscript.compiler.main;
+package xscript.executils;
 
 import java.io.PrintWriter;
 import java.util.IllegalFormatException;
@@ -6,7 +6,7 @@ import java.util.IllegalFormatException;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 
-class Log implements DiagnosticListener<String>{
+public class Log implements DiagnosticListener<String>{
 
 	public enum Kind{
 		NOTICE,
@@ -43,14 +43,27 @@ class Log implements DiagnosticListener<String>{
 	public void println(String key, Object...args) {
 		rawprintln(localize(key, args));
 	}
+	
+	public void print(String key, Object...args) {
+		rawprint(localize(key, args));
+	}
 
 	public void rawprintln(String message, Object...args) {
 		rawprintln(format(message, args));
 	}
 	
+	public void rawprint(String message, Object...args) {
+		rawprint(format(message, args));
+	}
+	
 	public void rawprintln(String message) {
 		checkLast(Kind.NOTICE);
 		rawprintln(noticeWriter, message);
+	}
+	
+	public void rawprint(String message) {
+		checkLast(Kind.NOTICE);
+		rawprint(noticeWriter, message);
 	}
 
 	public String localize(String key){
@@ -78,6 +91,11 @@ class Log implements DiagnosticListener<String>{
 		rawprintln(getWriter(kind), message);
 	}
 	
+	public void rawprint(Kind kind, String message) {
+		checkLast(kind);
+		rawprint(getWriter(kind), message);
+	}
+	
 	private void checkLast(Kind kind){
 		if(last!=kind){
 			if(last!=null){
@@ -94,6 +112,15 @@ class Log implements DiagnosticListener<String>{
             msg = msg.substring(nl+1);
         }
         if (msg.length() != 0) writer.println(msg);
+	}
+	
+	public static void rawprint(PrintWriter writer, String msg) {
+		int nl;
+        while ((nl = msg.indexOf('\n')) != -1) {
+            writer.println(msg.substring(0, nl));
+            msg = msg.substring(nl+1);
+        }
+        if (msg.length() != 0) writer.print(msg);
 	}
 	
 	@Override

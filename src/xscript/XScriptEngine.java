@@ -45,12 +45,13 @@ import xscript.compiler.XCompiler;
 import xscript.compiler.XFileReader;
 import xscript.compiler.XInternCompiler;
 import xscript.object.XFunctionData;
-import xscript.object.XModule;
+import xscript.object.XConstPoolImpl;
 import xscript.object.XObject;
 import xscript.object.XObjectDataFunc;
 import xscript.object.XRuntime;
 import xscript.object.XTypeData;
 import xscript.object.XTypeDataBool;
+import xscript.object.XTypeDataConstPool;
 import xscript.object.XTypeDataFloat;
 import xscript.object.XTypeDataFunc;
 import xscript.object.XTypeDataInt;
@@ -66,7 +67,7 @@ import xscript.values.XValue;
 import xscript.values.XValueNull;
 import xscript.values.XValueObj;
 
-public class XScriptEngine extends AbstractScriptEngine implements Invocable, Externalizable, XRuntime {
+public class XScriptEngine extends AbstractScriptEngine implements Invocable, Externalizable, XRuntime, Runnable {
 
 	private static final int MAGIC_NUMBER_SAVE = 'X'<<24 | 'S'<<16 | 'C'<<8 | 'S';
 	private static final int MAGIC_NUMBER_COMPILED_MODULE = 'X'<<24 | 'S'<<16 | 'C'<<8 | 'M';
@@ -83,7 +84,11 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 	
 	private List<XExec> threads = new ArrayList<XExec>();
 	
+	private int nextThread;
+	
 	private boolean doInit = false;
+	
+	private boolean running = true;
 	
 	XScriptEngine(XScriptEngineFactory factory){
 		this.factory = factory;
@@ -96,10 +101,20 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 			functions.putAll(XNativeFunctions.getFunctions());
 			
 			put(XScriptLang.ENGINE_ATTR_FILE_SYSTEM, FileSystems.getDefault());
-			put(XScriptLang.ENGINE_ATTR_FILE_SYSTEM_ROOT, new File(".").getAbsolutePath());
+			String path = new File(".").getAbsolutePath();
+			path = path.substring(0, path.length()-1);
+			put(XScriptLang.ENGINE_ATTR_FILE_SYSTEM_ROOT, path);
 			
 			put(XScriptLang.ENGINE_ATTR_OUT, System.out);
 			put(XScriptLang.ENGINE_ATTR_IN, System.in);
+			
+			put(XScriptLang.ENGINE_ATTR_INSTS_TO_RUN_ON_DIRECT_INVOKE, -1);
+			put(XScriptLang.ENGINE_ATTR_TIMEOUT_DIRECT_INVOKE, true);
+			
+			put(XScriptLang.ENGINE_ATTR_INSTS_TO_RUN_ON_BLOCK, 10);
+			put(XScriptLang.ENGINE_ATTR_BLOCKS_TO_RUN_ON_INVOKE, -1);
+			
+			put(XScriptLang.ENGINE_ATTR_INTERACTIVE, false);
 			
 			try{
 				memory[0][XUtils.OBJECT] = new XObject(this, XUtils.OBJECT, baseTypes[XUtils.TYPE], null);
@@ -124,7 +139,9 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 			memory[0][XUtils.TUPLE] = new XObject(this, XUtils.TUPLE, baseTypes[XUtils.TYPE], new Object[]{XTypeDataTuple.FACTORY});
 			memory[0][XUtils.WEAK_REF] = new XObject(this, XUtils.WEAK_REF, baseTypes[XUtils.TYPE], new Object[]{XTypeDataWeakRef.FACTORY});
 			memory[0][XUtils.FUNC] = new XObject(this, XUtils.FUNC, baseTypes[XUtils.TYPE], new Object[]{XTypeDataFunc.FACTORY});
-			XValue __builtin__ = alloc(baseTypes[XUtils.MODULE], "__builtin__");
+			memory[0][XUtils.CONST_POOL] = new XObject(this, XUtils.CONST_POOL, baseTypes[XUtils.TYPE], new Object[]{XTypeDataConstPool.FACTORY});
+			XValue constPool = alloc(baseTypes[XUtils.CONST_POOL], loadModule("__builtin__"));
+			XValue __builtin__ = alloc(baseTypes[XUtils.MODULE], constPool);
 			modules.put("__builtin__", __builtin__);
 			for(String nativeName:XNativeFunctions.getFunctions().keySet()){
 				if(nativeName.startsWith("__builtin__.")){
@@ -132,18 +149,19 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 					__builtin__.setRaw(this, name, createFunction(nativeName));
 				}
 			}
-			XValue method = alloc(getBaseType(XUtils.FUNC), "<init>", new String[0], -1, -1, -1, XValueNull.NULL, __builtin__, XValueNull.NULL, 0, new XClosure[0]);
+			XValue method = alloc(getBaseType(XUtils.FUNC), "<init>", new String[0], -1, -1, -1, XValueNull.NULL, __builtin__, constPool, XValueNull.NULL, 0, new XClosure[0]);
 			XExec exec = new XExec(this, false, 128, method, XValueNull.NULL);
-			exec.run(10000);
-			XValue sys = alloc(baseTypes[XUtils.MODULE], "sys");
+			exec.run(-1);
+			constPool = alloc(baseTypes[XUtils.CONST_POOL], loadModule("sys"));
+			XValue sys = alloc(baseTypes[XUtils.MODULE], constPool);
 			modules.put("sys", sys);
-			__builtin__.setRaw(this, "TypeError", sys.getRaw(this, "TypeError"));
-			method = alloc(getBaseType(XUtils.FUNC), "<init>", new String[0], -1, -1, -1, XValueNull.NULL, sys, XValueNull.NULL, 0, new XClosure[0]);
-			exec = new XExec(this, false, 128, method, XValueNull.NULL);
-			exec.run(10000);
 			for(int i=0; i<XUtils.NUM_BASE_TYPES; i++){
 				sys.setRaw(this, ((XTypeData)memory[0][i].getData()).getName(), new XValueObj(i));
 			}
+			method = alloc(getBaseType(XUtils.FUNC), "<init>", new String[0], -1, -1, -1, XValueNull.NULL, sys, constPool, XValueNull.NULL, 0, new XClosure[0]);
+			exec = new XExec(this, false, 128, method, XValueNull.NULL);
+			exec.run(-1);
+			__builtin__.setRaw(this, "TypeError", sys.getRaw(this, "TypeError"));
 		}catch(Throwable e){
 			e.printStackTrace();
 		}
@@ -154,15 +172,17 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 		return eval(new StringReader(script), context);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public Object eval(Reader reader, ScriptContext context) throws ScriptException {
 		Object obj = get(XScriptLang.ENGINE_ATTR_SOURCE_FILE);
 		String source = obj instanceof String?(String)obj:".intern";
 		DiagnosticCollector<String> diagnosticCollector = new DiagnosticCollector<String>();
 		Throwable thr = null;
+		boolean interactive = (Boolean) get(XScriptLang.ENGINE_ATTR_INTERACTIVE);
 		byte[] bytes = null;
 		try{
-			bytes = compile(null, source, reader, diagnosticCollector);
+			bytes = compile((Map<String, Object>) get(XScriptLang.COMPILER_OPT_COMPILER), source, reader, diagnosticCollector, interactive);
 		}catch(Throwable e){
 			thr = e;
 		}
@@ -174,19 +194,24 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 		if(thr!=null){
 			throw new XScriptException(thr);
 		}
-		System.out.println(Arrays.toString(bytes));
+		if(XFlags.DEBUG)
+			System.out.println(Arrays.toString(bytes));
 		ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-		XModule module;
+		XConstPoolImpl module;
 		try{
 			XFakeObjectInput ois = new XFakeObjectInput(bais);
-			module = new XModule(ois);
-			System.out.println(module);
+			module = new XConstPoolImpl(ois);
 		}catch(IOException e){
 			throw new AssertionError(e);
 		}
-		XValue m = alloc(getBaseType(XUtils.MODULE), source, module);
-		modules.put(source, m);
-		XValue method = alloc(getBaseType(XUtils.FUNC), "<init>", new String[0], -1, -1, -1, XValueNull.NULL, m, XValueNull.NULL, 0, new XClosure[0]);
+		if(XFlags.DEBUG)
+			System.out.println(module);
+		XValue constPool = alloc(getBaseType(XUtils.CONST_POOL), module);
+		XValue m = modules.get(source);
+		if(m==null){
+			modules.put(source, m = alloc(getBaseType(XUtils.MODULE), constPool));
+		}
+		XValue method = alloc(getBaseType(XUtils.FUNC), "<init>", new String[0], -1, -1, -1, XValueNull.NULL, m, constPool, XValueNull.NULL, 0, new XClosure[0]);
 		return createThreadAndInvoke(method, null);
 	}
 
@@ -212,6 +237,18 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 
 	@Override
 	public Object invokeFunction(String name, Object... args) throws ScriptException, NoSuchMethodException {
+		if(name.endsWith(".<init>")){
+			name = name.substring(0, name.length()-7);
+			XValue module = getModule(name);
+			if(module==null){
+				XValue constPool = alloc(baseTypes[XUtils.CONST_POOL], loadModule(name));
+				module = alloc(baseTypes[XUtils.MODULE], constPool);
+				XValue method = alloc(getBaseType(XUtils.FUNC), "<init>", new String[0], -1, -1, -1, XValueNull.NULL, module, constPool, XValueNull.NULL, 0, new XClosure[0]);
+				return createThreadAndInvoke(method, null);
+			}else{
+				return null;
+			}
+		}
 		int i = name.lastIndexOf('.');
 		String moduleName;
 		if(i==-1){
@@ -239,17 +276,56 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 		if(params.length!=args.length)
 			throw new IllegalArgumentException();
 		XExec exec = new XExec(this, false, 128, method, thiz, args);
-		int instrs = 1000;
-		exec.run(instrs);
+		threads.add(exec);
+		int instrs = (Integer) get(XScriptLang.ENGINE_ATTR_INSTS_TO_RUN_ON_DIRECT_INVOKE);
+		if(running)
+			exec.run(instrs);
 		State state = exec.getState();
 		if(state==State.TERMINATED){
 			XValue ret = exec.pop();
+			threads.remove(exec);
 			return ret;
 		}else if(state==State.ERRORED){
 			XValue exception = exec.getException();
+			threads.remove(exec);
 			XUtils.throwException(this, exception);
 		}
-		throw new XScriptException(new TimeoutException());
+		if((Boolean) get(XScriptLang.ENGINE_ATTR_TIMEOUT_DIRECT_INVOKE)){
+			throw new XScriptException(new TimeoutException());
+		}
+		return null;
+	}
+	
+	@Override
+	public void run(){
+		int blocksToRun = (Integer) get(XScriptLang.ENGINE_ATTR_BLOCKS_TO_RUN_ON_INVOKE);
+		int instsToRun = (Integer) get(XScriptLang.ENGINE_ATTR_INSTS_TO_RUN_ON_BLOCK);
+		if(instsToRun<=0)
+			throw new IllegalArgumentException();
+		while((blocksToRun==-1||blocksToRun>0) && running){
+			if(blocksToRun>0)
+				blocksToRun--;
+			nextThread %= threads.size();
+			int start = nextThread;
+			XExec t;
+			do{
+				t = threads.get(nextThread);
+				nextThread = (nextThread+1) % threads.size();
+			}while(nextThread!=start && !t.updateWaiting());
+			if(t.getState()!=State.RUNNING)
+				return;
+			t.run(instsToRun);
+			switch(t.getState()){
+			case ERRORED:
+				threads.remove(t);
+				break;
+			case TERMINATED:
+				threads.remove(t);
+				break;
+			default:
+				break;
+			}
+		}
 	}
 	
 	@Override
@@ -536,8 +612,9 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 		return getModule("__builtin__");
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public XModule loadModule(String name) {
+	public XConstPoolImpl loadModule(String name) {
 		if(name.equals("sys") || name.equals("__builtin__")){
 			InputStream is = XScriptEngine.class.getClassLoader().getResourceAsStream(name+".xcm");
 			if(is==null){
@@ -548,7 +625,7 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 				if(in.readInt()!=MAGIC_NUMBER_COMPILED_MODULE){
 					return null;
 				}
-				return new XModule(in);
+				return new XConstPoolImpl(in);
 			}catch(IOException e){
 			}finally{
 				try {
@@ -572,7 +649,7 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 				is = fileSystem.provider().newInputStream(p, StandardOpenOption.READ);
 				Reader reader = new InputStreamReader(is);
 				XBasicDiagnosticListener basicDiagnosticListener = new XBasicDiagnosticListener();
-				byte[] bytes = compile(null, path+".xsm", reader, basicDiagnosticListener);
+				byte[] bytes = compile((Map<String, Object>) get(XScriptLang.COMPILER_OPT_COMPILER), path+".xsm", reader, basicDiagnosticListener, false);
 				Diagnostic<?extends String> diagnostic = basicDiagnosticListener.getFirstError();
 				if(diagnostic!=null)
 					throw new XRuntimeScriptException(new XScriptException(diagnostic.getMessage(Locale.US), diagnostic.getSource(), (int)diagnostic.getLineNumber()));
@@ -597,9 +674,9 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 		}
 		if(is2==null)
 			return null;
-		XModule module;
+		XConstPoolImpl module;
 		try{
-			module = new XModule(in);
+			module = new XConstPoolImpl(in);
 		}catch(IOException e){
 			try {
 				is2.close();
@@ -611,13 +688,13 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public byte[] compile(Map<String, Object> options, String source, Reader reader, DiagnosticListener<String> diagnosticListener){
+	public byte[] compile(Map<String, Object> options, String source, Reader reader, DiagnosticListener<String> diagnosticListener, boolean interactive){
 		XFileReader fileReader = new XFileReader(source, reader);
 		XCompiler compiler;
 		if(options==null || (compiler=(XCompiler)options.get(XScriptLang.COMPILER_OPT_COMPILER))==null){
 			int i = source.lastIndexOf('.');
 			if(i==-1){
-				return XInternCompiler.COMPILER.compile(options, fileReader, diagnosticListener);
+				return XInternCompiler.COMPILER.compile(options, fileReader, diagnosticListener, interactive);
 			}
 			String extension = source.substring(i+1);
 			Object obj = get(XScriptLang.ENGINE_ATTR_COMPILER_MAP);
@@ -627,10 +704,10 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 				compiler = (XCompiler)compilers.get(extension);
 			}
 			if(compiler==null){
-				return XInternCompiler.COMPILER.compile(options, fileReader, diagnosticListener);
+				return XInternCompiler.COMPILER.compile(options, fileReader, diagnosticListener, interactive);
 			}
 		}
-		return compiler.compile(options, fileReader, diagnosticListener);
+		return compiler.compile(options, fileReader, diagnosticListener, interactive);
 	}
 
 	@Override
@@ -657,6 +734,21 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 	@Override
 	public InputStream getIn() {
 		return (InputStream)get(XScriptLang.ENGINE_ATTR_IN);
+	}
+
+	@Override
+	public void exit(int state) {
+		running = false;
+		put(XScriptLang.ENGINE_ATTR_EXIT_STATE, state);
+	}
+	
+	@Override
+	public boolean isRunning() {
+		return running;
+	}
+	
+	public boolean hasThreads(){
+		return !threads.isEmpty();
 	}
 	
 }

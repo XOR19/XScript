@@ -1,4 +1,4 @@
-package xscript.compiler.main;
+package xscript.executils;
 
 import java.text.MessageFormat;
 import java.util.MissingResourceException;
