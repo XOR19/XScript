@@ -1240,7 +1240,10 @@ public class XTreeMaker {
 				tokenizer.next();
 				excType.add(makeExprPrefixSuffix(false));
 			}
-			XTreeIdent varName = makeIdent();
+			XTreeIdent varName = null;
+			if(!tokenOk(XTokenKind.KEYWORD, XKeyword.RBRAKET)){
+				varName = makeIdent();
+			}
 			expect(XKeyword.RBRAKET);
 			XTreeScope b = makeScope();
 			catches.add(new XTreeCatch(endPosition(), excType, varName, b));
