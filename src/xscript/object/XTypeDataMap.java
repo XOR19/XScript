@@ -2,6 +2,7 @@ package xscript.object;
 
 import java.io.IOException;
 import java.io.ObjectInput;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +29,7 @@ public class XTypeDataMap extends XTypeData {
 		
 	};
 	
-	private static final String[] METHODS = {"__getIndex__(index)", "length", "__setIndex__(index,value)", "__delIndex__(index)", "__getItem__(item)"};
+	private static final String[] METHODS = {"__getIndex__(index)", "length", "__setIndex__(index,value)", "__delIndex__(index)", "__getItem__(item)", "keys"};
 	
 	public XTypeDataMap(XRuntime runtime, XObject obj){
 		super(runtime, obj, "Map");
@@ -67,8 +68,18 @@ public class XTypeDataMap extends XTypeData {
 			return delIndex(runtime, m, params[0]);
 		case 4:
 			return getItem(runtime, m, thiz, params[0]);
+		case 5:
+			return getKeys(runtime, m);
 		}
 		return super.invoke(runtime, exec, id, thiz, params, list, map);
+	}
+
+	private XValue getKeys(XRuntime runtime, XObjectDataMap m) {
+		List<XValue> list = new ArrayList<XValue>(m.size());
+		for(String s:m.keySet()){
+			list.add(runtime.alloc(s));
+		}
+		return runtime.createTuple(list);
 	}
 
 	private XValue getIndex(XRuntime rt, XObjectDataMap thiz, XValue index){

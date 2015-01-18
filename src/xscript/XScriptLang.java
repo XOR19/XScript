@@ -19,7 +19,7 @@ public final class XScriptLang {
 	public static final String ENGINE_ATTR_FUNCTIONS_BINDING = "FUNCTIONS";
 	public static final String ENGINE_ATTR_COMPILER_MAP = "COMPILERS";
 	public static final String ENGINE_ATTR_FILE_SYSTEM = "FILE_SYSTEM";
-	public static final String ENGINE_ATTR_FILE_SYSTEM_ROOT = "FILE_SYSTEM_ROOT";
+	public static final String ENGINE_ATTR_FILE_SYSTEM_ROOTS = "FILE_SYSTEM_ROOTS";
 	public static final String ENGINE_ATTR_OUT = "OUT";
 	public static final String ENGINE_ATTR_IN = "IN";
 	public static final String ENGINE_ATTR_INTERACTIVE = "INTERACTIVE";

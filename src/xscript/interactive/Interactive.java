@@ -94,14 +94,17 @@ public class Interactive {
 				if(opens.isEmpty() || opens.remove(opens.size()-1)!='{'){
 					return true;
 				}
+				break;
 			case ')':
 				if(opens.isEmpty() || opens.remove(opens.size()-1)!='('){
 					return true;
 				}
+				break;
 			case ']':
 				if(opens.isEmpty() || opens.remove(opens.size()-1)!='['){
 					return true;
 				}
+				break;
 			}
 		}
 		return opens.isEmpty();

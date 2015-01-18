@@ -752,3 +752,42 @@ func __import(module){
 func ___str__(obj){
 	return obj.__str__();
 }
+
+func __list___str__(){
+	local repr = "[";
+	local l = this.length();
+	if(l>0){
+		repr += this[0].__str__();
+		for(i=1; i<l; i++){
+			repr += ", "+this[i].__str__();
+		}
+	}
+	return repr+"]";
+}
+
+func __tuple___str__(){
+	local repr = "(";
+	local l = this.length();
+	if(l>0){
+		repr += this[0].__str__();
+		for(i=1; i<l; i++){
+			repr += ", "+this[i].__str__();
+		}
+	}
+	return repr+")";
+}
+
+func __map___str__(){
+	local repr = "{";
+	local keys = this.keys();
+	local l = keys.length();
+	if(l>0){
+		local key = keys[0];
+		repr += key.__str__() + ":" + this[key].__str__();
+		for(i=1; i<l; i++){
+			key = keys[i];
+			repr += ", "+key.__str__() + ":" + this[key].__str__();
+		}
+	}
+	return repr+"}";
+}

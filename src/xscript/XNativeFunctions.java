@@ -28,6 +28,7 @@ class XNativeFunctions {
 		map.put("__builtin__.__pollInput", new XFunctionData(new __builtin__.__pollInput()));
 		map.put("__builtin__.__sleep", new XFunctionData(new __builtin__.__sleep(), "time"));
 		map.put("__builtin__.__exit", new XFunctionData(new __builtin__.__exit(), "state"));
+		map.put("__builtin__.__dir", new XFunctionData(new __builtin__.__dir(), "obj"));
 		functions = Collections.unmodifiableMap(map);
 	}
 
@@ -145,6 +146,24 @@ class XNativeFunctions {
 				int i = (int) params[0].getInt();
 				runtime.exit(i);
 				return null;
+			}
+			
+		}
+		
+		private static class __dir implements XFunction{
+			
+			@Override
+			public XValue invoke(XRuntime runtime, XExec exec, XValue thiz, XValue[] params, List<XValue> list, Map<String, XValue> map) throws Throwable {
+				XValue value = params[0];
+				if(value==XValueNull.NULL || value==null){
+					value = exec.getCallFrame().getParent().getModule();
+				}
+				List<String> li = XUtils.dir(runtime, value);
+				List<XValue> l = new ArrayList<XValue>();
+				for(String s:li){
+					l.add(runtime.alloc(s));
+				}
+				return runtime.createTuple(l);
 			}
 			
 		}

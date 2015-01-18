@@ -26,6 +26,10 @@ func exit(state:0){
 	__builtin__.__exit(state);
 }
 
+func dir(obj:null){
+	return __builtin__.__dir(obj);
+}
+
 class Exception{
 
 	_message;

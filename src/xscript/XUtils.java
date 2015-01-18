@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.script.ScriptException;
 
@@ -411,6 +412,54 @@ public class XUtils {
 			st.add(ste);
 		}
 		return rt.createTuple(st);
+	}
+	
+	public static List<String> dir(XRuntime rt, XValue obj){
+		List<String> list = new ArrayList<String>();
+		
+		XValue type = obj.getType(rt);
+		XTypeData typeData = getDataAs(rt, type, XTypeData.class);
+		List<XValue> classes = typeData.getCRO();
+		
+		if(obj instanceof XValueObjSuper){
+			int _super = ((XValueObjSuper)obj).getCastToType();
+			boolean found = false;
+			for(XValue t:classes){
+				if(found){
+					XObject typeObj = rt.getObject(t);
+					Set<String> keys = typeObj.getKeys();
+					for(String key:keys){
+						if(typeObj.getRaw(key) instanceof XValueAttr){
+							list.add(key);
+						}
+					}
+				}else{
+					if(((XValueObj)t).getPointer()==_super){
+						found = true;
+					}
+				}
+			}
+		}else{
+			for(XValue t:classes){
+				XObject typeObj = rt.getObject(t);
+				Set<String> keys = typeObj.getKeys();
+				for(String key:keys){
+					if(typeObj.getRaw(key) instanceof XValueAttr){
+						list.add(key);
+					}
+				}
+			}
+		}
+		
+		XObject o = rt.getObject(obj);
+		if(o!=null){
+			Set<String> keys = o.getKeys();
+			for(String key:keys){
+				list.add(key);
+			}
+		}
+		
+		return list;
 	}
 	
 }

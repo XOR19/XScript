@@ -5,6 +5,7 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.HashMap;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import xscript.XUtils;
 import xscript.values.XValue;
@@ -235,6 +236,10 @@ public final class XObject{
 
 	public void releaseWeakRef() {
 		weakRef = XValueNull.NULL;
+	}
+
+	public Set<String> getKeys() {
+		return fields.keySet();
 	}
 	
 }

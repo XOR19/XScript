@@ -25,7 +25,7 @@ public class XTypeDataWeakRef extends XTypeData {
 		
 	};
 	
-	private static final String[] METHODS = {"get"};
+	private static final String[] METHODS = {"get", "__str__"};
 	
 	public XTypeDataWeakRef(XRuntime runtime, XObject obj) {
 		super(runtime, obj, "WeakRef");
@@ -63,6 +63,8 @@ public class XTypeDataWeakRef extends XTypeData {
 		switch(id){
 		case 0:
 			return weakRef.getRef();
+		case 1:
+			return runtime.alloc("weakref<ref@"+Integer.toHexString(weakRef.getRef().hashCode())+">");
 		}
 		return super.invoke(runtime, exec, id, thiz, params, list, map);
 	}

@@ -4,6 +4,7 @@ import java.util.List;
 
 import xscript.object.XConstPool;
 import xscript.object.XObjectDataFunc;
+import xscript.object.XObjectDataModule;
 import xscript.object.XRuntime;
 import xscript.values.XValue;
 
@@ -107,7 +108,7 @@ public class XCallFrame {
 		if(visibleToStacktrace){
 			String declaringClass = func.getFullPath(rt);
 			String methodName = func.getName();
-			String fileName = func.getFileName(rt);
+			String fileName = XUtils.getDataAs(rt, func.getModule(), XObjectDataModule.class).getName();
 			stackTrace.add(new StackTraceElement(declaringClass, methodName, fileName, line));
 		}
 	}

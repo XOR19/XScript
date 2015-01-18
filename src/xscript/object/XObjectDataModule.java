@@ -10,9 +10,12 @@ public class XObjectDataModule implements XObjectData {
 
 	private XValue constPool;
 	
-	public XObjectDataModule(XRuntime rt, XValue constPool){
+	private String name;
+	
+	public XObjectDataModule(XRuntime rt, XValue constPool, String name){
 		XUtils.check(rt, constPool, XUtils.CONST_POOL);
 		this.constPool = constPool;
+		this.name = name;
 	}
 	
 	@Override
@@ -28,6 +31,10 @@ public class XObjectDataModule implements XObjectData {
 
 	public XValue getConstPool(){
 		return constPool;
+	}
+	
+	public String getName(){
+		return name;
 	}
 
 }

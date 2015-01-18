@@ -17,11 +17,13 @@ import java.io.StringReader;
 import java.lang.reflect.Proxy;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -101,9 +103,9 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 			functions.putAll(XNativeFunctions.getFunctions());
 			
 			put(XScriptLang.ENGINE_ATTR_FILE_SYSTEM, FileSystems.getDefault());
-			String path = new File(".").getAbsolutePath();
-			path = path.substring(0, path.length()-1);
-			put(XScriptLang.ENGINE_ATTR_FILE_SYSTEM_ROOT, path);
+			List<String> roots = new ArrayList<String>();
+			roots.add(new File("").getAbsolutePath());
+			put(XScriptLang.ENGINE_ATTR_FILE_SYSTEM_ROOTS, roots);
 			
 			put(XScriptLang.ENGINE_ATTR_OUT, System.out);
 			put(XScriptLang.ENGINE_ATTR_IN, System.in);
@@ -141,7 +143,7 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 			memory[0][XUtils.FUNC] = new XObject(this, XUtils.FUNC, baseTypes[XUtils.TYPE], new Object[]{XTypeDataFunc.FACTORY});
 			memory[0][XUtils.CONST_POOL] = new XObject(this, XUtils.CONST_POOL, baseTypes[XUtils.TYPE], new Object[]{XTypeDataConstPool.FACTORY});
 			XValue constPool = alloc(baseTypes[XUtils.CONST_POOL], loadModule("__builtin__"));
-			XValue __builtin__ = alloc(baseTypes[XUtils.MODULE], constPool);
+			XValue __builtin__ = alloc(baseTypes[XUtils.MODULE], constPool, "__builtin__");
 			modules.put("__builtin__", __builtin__);
 			for(String nativeName:XNativeFunctions.getFunctions().keySet()){
 				if(nativeName.startsWith("__builtin__.")){
@@ -152,8 +154,11 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 			XValue method = alloc(getBaseType(XUtils.FUNC), "<init>", new String[0], -1, -1, -1, XValueNull.NULL, __builtin__, constPool, XValueNull.NULL, 0, new XClosure[0]);
 			XExec exec = new XExec(this, false, 128, method, XValueNull.NULL);
 			exec.run(-1);
+			memory[0][XUtils.TUPLE].setRaw("__str__", __builtin__.getRaw(this, "__tuple___str__"));
+			memory[0][XUtils.LIST].setRaw("__str__", __builtin__.getRaw(this, "__list___str__"));
+			memory[0][XUtils.MAP].setRaw("__str__", __builtin__.getRaw(this, "__map___str__"));
 			constPool = alloc(baseTypes[XUtils.CONST_POOL], loadModule("sys"));
-			XValue sys = alloc(baseTypes[XUtils.MODULE], constPool);
+			XValue sys = alloc(baseTypes[XUtils.MODULE], constPool, "sys");
 			modules.put("sys", sys);
 			for(int i=0; i<XUtils.NUM_BASE_TYPES; i++){
 				sys.setRaw(this, ((XTypeData)memory[0][i].getData()).getName(), new XValueObj(i));
@@ -209,7 +214,7 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 		XValue constPool = alloc(getBaseType(XUtils.CONST_POOL), module);
 		XValue m = modules.get(source);
 		if(m==null){
-			modules.put(source, m = alloc(getBaseType(XUtils.MODULE), constPool));
+			modules.put(source, m = alloc(getBaseType(XUtils.MODULE), constPool, source));
 		}
 		XValue method = alloc(getBaseType(XUtils.FUNC), "<init>", new String[0], -1, -1, -1, XValueNull.NULL, m, constPool, XValueNull.NULL, 0, new XClosure[0]);
 		return createThreadAndInvoke(method, null);
@@ -242,7 +247,8 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 			XValue module = getModule(name);
 			if(module==null){
 				XValue constPool = alloc(baseTypes[XUtils.CONST_POOL], loadModule(name));
-				module = alloc(baseTypes[XUtils.MODULE], constPool);
+				module = alloc(baseTypes[XUtils.MODULE], constPool, name);
+				module.setRaw(this, "__args__", createTuple(XUtils.wrap(this, args)));
 				XValue method = alloc(getBaseType(XUtils.FUNC), "<init>", new String[0], -1, -1, -1, XValueNull.NULL, module, constPool, XValueNull.NULL, 0, new XClosure[0]);
 				return createThreadAndInvoke(method, null);
 			}else{
@@ -635,34 +641,57 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 			return null;
 		}
 		FileSystem fileSystem = (FileSystem)get(XScriptLang.ENGINE_ATTR_FILE_SYSTEM);
-		String root = (String)get(XScriptLang.ENGINE_ATTR_FILE_SYSTEM_ROOT);
-		if(root==null)
+		List<String> roots = (List<String>)get(XScriptLang.ENGINE_ATTR_FILE_SYSTEM_ROOTS);
+		Iterator<String> i = roots.iterator();
+		String root;
+		if(i.hasNext()){
+			root = i.next();
+		}else{
 			root = "";
+		}
 		String seperator = fileSystem.getSeparator();
-		String path = root + name.replace(".", seperator);
-		Path p = fileSystem.getPath(path + ".xsm");
 		InputStream is = null;
 		InputStream is2 = null;
 		XFakeObjectInput in = null;
+		name = name.replace(".", seperator);
 		try {
-			try{
-				is = fileSystem.provider().newInputStream(p, StandardOpenOption.READ);
-				Reader reader = new InputStreamReader(is);
-				XBasicDiagnosticListener basicDiagnosticListener = new XBasicDiagnosticListener();
-				byte[] bytes = compile((Map<String, Object>) get(XScriptLang.COMPILER_OPT_COMPILER), path+".xsm", reader, basicDiagnosticListener, false);
-				Diagnostic<?extends String> diagnostic = basicDiagnosticListener.getFirstError();
-				if(diagnostic!=null)
-					throw new XRuntimeScriptException(new XScriptException(diagnostic.getMessage(Locale.US), diagnostic.getSource(), (int)diagnostic.getLineNumber()));
-				is2 = new ByteArrayInputStream(bytes);
-				in = new XFakeObjectInput(is2);
-			}catch(FileNotFoundException e){
-				p = fileSystem.getPath(root, path+".xcm");
-				is2 = fileSystem.provider().newInputStream(p, StandardOpenOption.READ);
-				in = new XFakeObjectInput(is2);
-				if(in.readInt()!=MAGIC_NUMBER_COMPILED_MODULE){
-					return null;
+			do{
+				if(root==null){
+					root = i.next();
 				}
-			}
+				if(!root.isEmpty() && !root.endsWith(seperator)){
+					root += seperator;
+				}
+				String path = root + name;
+				Path p = fileSystem.getPath(path + ".xsm");
+				try{
+					is = fileSystem.provider().newInputStream(p, StandardOpenOption.READ);
+					Reader reader = new InputStreamReader(is);
+					XBasicDiagnosticListener basicDiagnosticListener = new XBasicDiagnosticListener();
+					byte[] bytes = compile((Map<String, Object>) get(XScriptLang.COMPILER_OPT_COMPILER), path+".xsm", reader, basicDiagnosticListener, false);
+					Diagnostic<?extends String> diagnostic = basicDiagnosticListener.getFirstError();
+					if(diagnostic!=null)
+						throw new XRuntimeScriptException(new XScriptException(diagnostic.getMessage(Locale.US), diagnostic.getSource(), (int)diagnostic.getLineNumber()));
+					is2 = new ByteArrayInputStream(bytes);
+					in = new XFakeObjectInput(is2);
+				}catch(FileNotFoundException e){
+				}catch(NoSuchFileException e){
+				}
+				if(in==null){
+					try{
+						p = fileSystem.getPath(path+".xcm");
+						is2 = fileSystem.provider().newInputStream(p, StandardOpenOption.READ);
+						in = new XFakeObjectInput(is2);
+						if(in.readInt()!=MAGIC_NUMBER_COMPILED_MODULE){
+							System.out.println("MAGIC_NUMBER_COMPILED_MODULE");
+							return null;
+						}
+					}catch(FileNotFoundException e){
+					}catch(NoSuchFileException e){
+					}
+				}
+				root=null;
+			}while(in==null && i.hasNext());
 		} catch(IOException e){
 			
 		} finally {
@@ -718,7 +747,8 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 	@Override
 	public XValue tryImportModule(String name) {
 		try{
-			XValue module = alloc(baseTypes[XUtils.MODULE], name);
+			XValue constPool = alloc(baseTypes[XUtils.CONST_POOL], loadModule(name));
+			XValue module = alloc(baseTypes[XUtils.MODULE], constPool, name);
 			modules.put(name, module);
 			return module;
 		}catch(Throwable e){

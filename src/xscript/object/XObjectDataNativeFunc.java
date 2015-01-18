@@ -27,6 +27,10 @@ public class XObjectDataNativeFunc implements XObjectData {
 		out.writeUTF(name);
 	}
 
+	public String getName(){
+		return name;
+	}
+	
 	public XFunction getFunction(){
 		return function.function;
 	}

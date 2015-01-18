@@ -56,11 +56,17 @@ public class XTypeDataObject extends XTypeData {
 		case 1:
 			return hasAttr(runtime, thiz, params[0]);
 		case 2:
-			return runtime.alloc(thiz.toString());
+			return asString(runtime, obj, thiz);
 		}
 		return super.invoke(runtime, exec, id, thiz, params, list, map);
 	}
 
+	private XValue asString(XRuntime runtime, XObject obj, XValue value){
+		String s = XUtils.getDataAs(runtime, obj.getType(), XTypeData.class).getName();
+		s+="@"+Integer.toHexString(value.hashCode());
+		return runtime.alloc(s);
+	}
+	
 	private XValue hasAttr(XRuntime runtime, XValue value, XValue attr){
 		String a = XUtils.getString(runtime, attr);
 		XValue v = XUtils.lookupTry(runtime, value, a, XValue.REF_NONE);

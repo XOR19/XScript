@@ -1911,4 +1911,8 @@ public class XExec {
 		return new XValueObjSuper(XValue.unpackContainer(obj), ((XValueObj)type).getPointer());
 	}
 	
+	XCallFrame getCallFrame(){
+		return callFrame;
+	}
+	
 }

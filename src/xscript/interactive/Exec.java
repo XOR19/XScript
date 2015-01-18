@@ -3,7 +3,7 @@ package xscript.interactive;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.script.ScriptEngine;
@@ -17,6 +17,7 @@ import xscript.executils.ArgReader.RecuresiveFileException;
 import xscript.executils.Log;
 import xscript.executils.Log.Kind;
 import xscript.executils.Utils;
+import xscript.values.XValue;
 
 public class Exec {
 
@@ -32,7 +33,7 @@ public class Exec {
 	
 	private boolean needFile = true;
 	
-	private List<File> searchPaths = new LinkedList<File>();
+	private List<String> searchPaths;
 	
 	private final OptionHelper helper = new OptionHelper() {
 		
@@ -71,18 +72,20 @@ public class Exec {
 				error("err.file.not.directory", file);
 				return false;
 			}
-			searchPaths.add(file);
+			searchPaths.add(file.getAbsolutePath());
 			return true;
 		}
 		
 	};
 	
+	@SuppressWarnings("unchecked")
 	public Exec(ScriptEngine se, Log log, String[] args) {
 		this.se = (XScriptEngine) se;
 		this.args = new ArgReader(args);
 		this.log = log;
 		this.commandLine = Utils.getCommandLineRebuild(Main.class);
 		this.ownName = Utils.getOwnName(Main.class);
+		searchPaths = (List<String>) this.se.get(XScriptLang.ENGINE_ATTR_FILE_SYSTEM_ROOTS);
 	}
 
 	public int run() {
@@ -100,7 +103,12 @@ public class Exec {
 							return Utils.CMDERR;
 						}
 					}else{
-						return processFile(arg);
+						List<XValue> vmargs = new ArrayList<XValue>();
+						String a;
+						while((a = args.next())!=null){
+							vmargs.add(se.alloc(a));
+						}
+						return processFile(arg, vmargs.toArray());
 					}
 				}
 			}
@@ -158,11 +166,11 @@ public class Exec {
 		log.println("msg.usage", helper.getCommandLine());
 	}
 	
-	private int processFile(String file) throws IOException{
+	private int processFile(String file, Object[] args) throws IOException{
 		Utils.setConsoleTitle(file);
 		Object o2 = null;
 		try {
-			o2 = se.invokeFunction(file+".<init>");
+			o2 = se.invokeFunction(file+".<init>", args);
 		} catch (NoSuchMethodException e) {
 			throw new FileNotFoundException(file);
 		} catch (ScriptException e) {
