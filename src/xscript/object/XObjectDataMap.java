@@ -11,21 +11,23 @@ import xscript.values.XValue;
 public class XObjectDataMap implements XObjectData, Map<String, XValue> {
 
 	private Map<String, XValue> map;
-	
-	public XObjectDataMap(Map<String, XValue> map){
+
+	public XObjectDataMap(Map<String, XValue> map) {
 		this.map = map;
 	}
-	
+
 	@Override
-	public void delete(XRuntime runtime) {
-		for(XValue value:map.values()){
-			value.decRef(runtime);
+	public void delete(XRuntime runtime, boolean cleanup) {
+		if (cleanup) {
+			for (XValue value : map.values()) {
+				value.decRef(runtime);
+			}
 		}
 	}
 
 	@Override
 	public void setVisible(XRuntime runtime) {
-		for(XValue value:map.values()){
+		for (XValue value : map.values()) {
 			value.setVisible(runtime);
 		}
 	}
@@ -33,7 +35,7 @@ public class XObjectDataMap implements XObjectData, Map<String, XValue> {
 	@Override
 	public void save(ObjectOutput out) throws IOException {
 		out.writeInt(map.size());
-		for(Entry<String, XValue> e:map.entrySet()){
+		for (Entry<String, XValue> e : map.entrySet()) {
 			out.writeUTF(e.getKey());
 			XValue.write(out, e.getValue());
 		}

@@ -15,7 +15,7 @@ public class XObjectDataWeakRef implements XObjectData {
 	}
 	
 	@Override
-	public void delete(XRuntime runtime) {
+	public void delete(XRuntime runtime, boolean cleanup) {
 		XObject obj = runtime.getObject(value);
 		if(obj!=null){
 			obj.releaseWeakRef();

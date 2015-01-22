@@ -353,6 +353,7 @@ public class XTreeCompiler implements XVisitor {
 	public void visitFor(XTreeFor _for) {
 		XCodeGen code = getCode(_for);
 		XJumpTarget _break = new XJumpTarget();
+		XJumpTarget stop = new XJumpTarget();
 		XJumpTarget _continue = new XJumpTarget();
 		XJumpTarget start = new XJumpTarget();
 		scope = new XScope(scope, true, _break, _continue, labels, 0);
@@ -374,12 +375,13 @@ public class XTreeCompiler implements XVisitor {
 			}
 		}else{
 			part.setupAndGet(this, code);
-			code.addInstruction(_for, XOpcode.JUMP_IF_ZERO, _break);
+			code.addInstruction(_for, XOpcode.JUMP_IF_ZERO, stop);
 			visitInScope(_for.body).asStatement(this, code);
 			code.addInstruction(_for, _continue);
 			visit(_for.inc).asStatement(this, code);
 			code.addInstruction(_for, XOpcode.JUMP, start);
 		}
+		code.addInstruction(_for, stop);
 		code.addInstructionB(_for, XOpcode.POP, this.scope.getLocalsCount());
 		scope = scope.getParent();
 		code.addInstruction(_for, _break);
@@ -1032,8 +1034,8 @@ public class XTreeCompiler implements XVisitor {
 	@Override
 	public void visitInstanceof(XTreeInstanceof _instanceof) {
 		XCodeGen code = getCodeExpr(_instanceof);
-		visit(_instanceof.statement).get(this, code);
-		visit(_instanceof.type).get(this, code);
+		visit(_instanceof.statement).setupAndGet(this, code);
+		visit(_instanceof.type).setupAndGet(this, code);
 		code.addInstruction(_instanceof, XOpcode.INSTANCEOF);
 		
 	}
@@ -1041,8 +1043,8 @@ public class XTreeCompiler implements XVisitor {
 	@Override
 	public void visitIssubclass(XTreeIssubclass issubclass) {
 		XCodeGen code = getCodeExpr(issubclass);
-		visit(issubclass.statement).get(this, code);
-		visit(issubclass.type).get(this, code);
+		visit(issubclass.statement).setupAndGet(this, code);
+		visit(issubclass.type).setupAndGet(this, code);
 		code.addInstruction(issubclass, XOpcode.ISDERIVEDOF);
 	}
 

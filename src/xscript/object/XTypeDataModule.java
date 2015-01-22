@@ -49,6 +49,10 @@ private static final String[] ATTRIBUTES = {"__name__"};
 			obj.setRaw("readln", sys.getRaw(runtime, "readln"));
 			obj.setRaw("sleep", sys.getRaw(runtime, "sleep"));
 			obj.setRaw("exit", sys.getRaw(runtime, "exit"));
+			obj.setRaw("exec", sys.getRaw(runtime, "exec"));
+			obj.setRaw("print", sys.getRaw(runtime, "print"));
+			obj.setRaw("printerrln", sys.getRaw(runtime, "printerrln"));
+			obj.setRaw("printerr", sys.getRaw(runtime, "printerr"));
 		}
 		return new XObjectDataModule(runtime, (XValue) args[0], (String)args[1]);
 	}

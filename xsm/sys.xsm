@@ -2,7 +2,22 @@ import __builtin__;
 
 func println(message){
 	message = message.__str__();
-	__builtin__.__print(message);
+	__builtin__.__print(message, true, false);
+}
+
+func print(message){
+	message = message.__str__();
+	__builtin__.__print(message, false, false);
+}
+
+func printerrln(message){
+	message = message.__str__();
+	__builtin__.__print(message, true, true);
+}
+
+func printerr(message){
+	message = message.__str__();
+	__builtin__.__print(message, false, true);
 }
 
 __inputSave__="";
@@ -30,6 +45,10 @@ func dir(obj:null){
 	return __builtin__.__dir(obj);
 }
 
+func exec(code){
+	return __builtin__.__exec(code);
+}
+
 class Exception{
 
 	_message;
@@ -52,6 +71,18 @@ class Exception{
 	
 	func getStackTrace(){
 		return _stackTrace;
+	}
+	
+	func __str__(){
+		local err = this.__type__.__name__;
+		if(_message!=null){
+			err += ":"+_message;
+		}
+		for(local i=0; i<_stackTrace.length(); i++){
+			local ste = _stackTrace[i];
+			err += "\n\t"+ste.__str__();
+		}
+		return err;
 	}
 
 }
@@ -92,6 +123,10 @@ class StackTraceElement{
 		this._methodName = methodName;
 		this._fileName = fileName;
 		this._lineNumber = lineNumber;
+	}
+	
+	func __str__(){
+		return _declaringPath+":"+_methodName+":"+_fileName+":"+_lineNumber.__str__();
 	}
 
 }

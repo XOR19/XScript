@@ -1,0 +1,77 @@
+import sys;
+import __builtin__;
+
+cmdStart = ">>>";
+cmdResume = "...";
+println("XScriptEngine 1.0.0");
+
+local func finished(source){
+	local whiteLines = 0;
+	local inStr = false;
+	local opens = [];
+	for(local i=0; i<source.length(); i++){
+		local c = source.charAt(i);
+		if(c!=' ' && c!='\n' && c!='\t' && c!='\r'){
+			whiteLines=0;
+		}
+		switch(c){
+		case '\\':
+			if(inStr)
+				i++;
+			break;
+		case '"':
+			inStr = !inStr;
+			break;
+		case '\n':
+			if(inStr)
+				return true;
+			whiteLines++;
+			break;
+		case '{':
+		case '(':
+		case '[':
+			opens.add(c);
+			break;
+		case '}':
+			if(opens.isEmpty() || opens.removeAt(opens.length()-1)!='{'){
+				return true;
+			}
+			break;
+		case ')':
+			if(opens.isEmpty() || opens.removeAt(opens.length()-1)!='('){
+				return true;
+			}
+			break;
+		case ']':
+			if(opens.isEmpty() || opens.removeAt(opens.length()-1)!='['){
+				return true;
+			}
+			break;
+		}
+	}
+	return whiteLines>1 || opens.isEmpty();
+}
+
+local std = __builtin__.__fillStackTrace().length()+1;
+
+while(true){
+	print(cmdStart);
+	local line = readln();
+	while(!finished(line)){
+		print(cmdResume);
+		line += "\n" + readln();
+	}
+	try{
+		local ret = exec(line);
+		println(ret);
+	}catch(sys.Object e){
+		/*if(e instanceof sys.Exception){
+			if(e._stackTrace.length()>std){
+				for(local i=0; i<std; i++){
+					e._stackTrace.removeAt(e._stackTrace.length()-1);
+				}
+			}
+		}*/
+		printerrln(e);
+	}
+}

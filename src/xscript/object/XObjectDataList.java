@@ -18,9 +18,11 @@ public class XObjectDataList extends AbstractList<XValue> implements XObjectData
 	}
 	
 	@Override
-	public void delete(XRuntime runtime) {
-		for(XValue value:list){
-			value.decRef(runtime);
+	public void delete(XRuntime runtime, boolean cleanup) {
+		if(cleanup){
+			for(XValue value:list){
+				value.decRef(runtime);
+			}
 		}
 	}
 

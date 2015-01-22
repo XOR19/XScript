@@ -58,10 +58,14 @@ public interface XRuntime {
 
 	PrintStream getOut();
 	
+	PrintStream getErr();
+	
 	InputStream getIn();
 
 	void exit(int state);
 	
 	boolean isRunning();
+
+	Object get(String option);
 	
 }

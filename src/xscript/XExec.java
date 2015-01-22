@@ -843,7 +843,7 @@ public class XExec {
 				}
 				push(v3);
 			}else{
-				callBiOperator("==", "__equal__", "__equal2__", v2, v1);
+				callBiOperator("===", "__equal__", "__equal2__", v2, v1);
 			}
 			break;
 		case GETBOTTOM1:
@@ -1404,7 +1404,7 @@ public class XExec {
 		case NOT:
 			v1 = pop();
 			if(v1.isNumber() || v1.isBool()){
-				v2 = XValueBool.valueOf(v1.noneZero());
+				v2 = XValueBool.valueOf(!v1.noneZero());
 				push(v2);
 			}else{
 				callSingleOperator("!", "__not__", v1);
@@ -1421,7 +1421,7 @@ public class XExec {
 				}
 				push(v3);
 			}else{
-				callBiOperator("!=", "__notEqual__", "__notEqual2__", v2, v1);
+				callBiOperator("!==", "__notEqual__", "__notEqual2__", v2, v1);
 			}
 			break;
 		case NOT_SAME:

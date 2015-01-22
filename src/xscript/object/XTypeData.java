@@ -152,9 +152,11 @@ public class XTypeData implements XObjectData {
 	}
 	
 	@Override
-	public void delete(XRuntime runtime) {
-		for(XValue value:bases){
-			value.decRef(runtime);
+	public void delete(XRuntime runtime, boolean cleanup) {
+		if(cleanup){
+			for(XValue value:bases){
+				value.decRef(runtime);
+			}
 		}
 	}
 

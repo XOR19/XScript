@@ -5,7 +5,7 @@ import java.io.ObjectOutput;
 
 public interface XObjectData {
 	
-	void delete(XRuntime runtime);
+	void delete(XRuntime runtime, boolean cleanup);
 
 	void setVisible(XRuntime runtime);
 

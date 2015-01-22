@@ -111,14 +111,16 @@ public final class XObject{
 		return false;
 	}
 
-	public boolean delete(XRuntime runtime){
+	public boolean delete(XRuntime runtime, boolean cleanup){
 		runtime.delete(this);
-		type.decRef(runtime);
-		for(XValue value:fields.values()){
-			value.decRef(runtime);
+		if(cleanup){
+			type.decRef(runtime);
+			for(XValue value:fields.values()){
+				value.decRef(runtime);
+			}
 		}
 		if(objectData!=null){
-			objectData.delete(runtime);
+			objectData.delete(runtime, cleanup);
 		}
 		if(weakRef!=XValueNull.NULL){
 			XObjectDataWeakRef ref = XUtils.getDataAs(runtime, weakRef, XObjectDataWeakRef.class);

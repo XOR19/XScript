@@ -9,6 +9,8 @@
 // native __print(string)
 // native __pollInput()
 // native __sleep(time)
+// native __dir(obj)
+// native __exec(code)
 
 func __getErrorMessage2(op, left, right){
 	return "Operator "+op+" not applicable for "+left.__type__.__name__+" and "+right.__type__.__name__;

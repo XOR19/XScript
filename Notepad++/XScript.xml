@@ -27,11 +27,11 @@
             <Keywords name="Keywords1">null true false this super</Keywords>
             <Keywords name="Keywords2">func class local global nonlocal</Keywords>
             <Keywords name="Keywords3">if else for foreach while do try catch finally switch case default synchronized</Keywords>
-            <Keywords name="Keywords4">break continue throw return yield assert import from del as</Keywords>
+            <Keywords name="Keywords4">break continue throw return yield assert import from del as and or xor bitand bitor mod not bitnot pow instanceof typeof issubclass</Keywords>
             <Keywords name="Keywords5">__builtin__ sys</Keywords>
             <Keywords name="Keywords6">__</Keywords>
             <Keywords name="Keywords7">_</Keywords>
-            <Keywords name="Keywords8">and or xor bitand bitor mod not bitnot pow instanceof typeof issubclass</Keywords>
+            <Keywords name="Keywords8">println readln exec sleep dir exit print printerrln printerr</Keywords>
             <Keywords name="Delimiters">00&quot; 01\ 02&quot; 03&apos; 04\ 05&apos; 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23</Keywords>
         </KeywordLists>
         <Styles>

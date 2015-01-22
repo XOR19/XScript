@@ -737,11 +737,11 @@ public class XTreeMaker {
 				expr = new XTreeOperator(endPosition(), exprs, operators);
 			}else if(token.data==XKeyword.INSTANCEOF){
 				tokenizer.next();
-				XTreeExpr type = makeExpr2(inList);
+				XTreeExpr type = makeExprPrefixSuffix(inList);
 				expr = new XTreeInstanceof(endPosition(), expr, type);
 			}else if(token.data==XKeyword.ISSUBCLASS){
 				tokenizer.next();
-				XTreeExpr type = makeExpr2(inList);
+				XTreeExpr type = makeExprPrefixSuffix(inList);
 				expr = new XTreeIssubclass(endPosition(), expr, type);
 			}
 			suffix = new ArrayList<XOperator>();

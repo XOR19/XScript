@@ -63,7 +63,7 @@ public final class XValueInt extends XValueNumber {
 			return true;
 		if (obj == null)
 			return false;
-		if (obj instanceof XValueInt)
+		if (!(obj instanceof XValueInt))
 			return false;
 		XValueInt other = (XValueInt) obj;
 		return value == other.value;

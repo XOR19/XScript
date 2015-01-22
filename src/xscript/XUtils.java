@@ -123,9 +123,6 @@ public class XUtils {
 								typeData = (XTypeData)typeObj.getData();
 								v2 = typeData.setAttr(runtime, value, typeObj, ((XValueAttr)v2).getAttrID(), v);
 								ok = true;
-							}else if(v2 instanceof XValueAccess){
-								v2 = null;
-								ok = true;
 							}
 							break;
 						}
@@ -143,9 +140,6 @@ public class XUtils {
 							typeObj = runtime.getObject(t);
 							typeData = (XTypeData)typeObj.getData();
 							v2 = typeData.setAttr(runtime, value, typeObj, ((XValueAttr)v2).getAttrID(), v);
-							ok = true;
-						}else if(v2 instanceof XValueAccess){
-							v2 = null;
 							ok = true;
 						}
 						break;

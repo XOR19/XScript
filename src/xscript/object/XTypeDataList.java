@@ -8,6 +8,7 @@ import java.util.Map;
 
 import xscript.XExec;
 import xscript.values.XValue;
+import xscript.values.XValueBool;
 import xscript.values.XValueInt;
 
 public class XTypeDataList extends XTypeData {
@@ -26,7 +27,7 @@ public class XTypeDataList extends XTypeData {
 		
 	};
 	
-	private static final String[] METHODS = {"__getIndex__(index)", "length", "__setIndex__(index,value)"};
+	private static final String[] METHODS = {"__getIndex__(index)", "length", "__setIndex__(index,value)", "add(value,#index)", "removeAt(index)", "isEmpty"};
 	
 	public XTypeDataList(XRuntime runtime, XObject obj){
 		super(runtime, obj, "List");
@@ -59,6 +60,12 @@ public class XTypeDataList extends XTypeData {
 			return length(l);
 		case 2:
 			return setIndex(l, params[0], params[1]);
+		case 3:
+			return add(l, params[0], params[1]);
+		case 4:
+			return removeAt(l, params[0]);
+		case 5:
+			return XValueBool.valueOf(l.isEmpty());
 		}
 		return super.invoke(runtime, exec, id, thiz, params, list, map);
 	}
@@ -74,6 +81,19 @@ public class XTypeDataList extends XTypeData {
 	private XValue setIndex(XObjectDataList thiz, XValue index, XValue value){
 		thiz.set((int)index.getInt(), value);
 		return value;
+	}
+	
+	private XValue add(XObjectDataList thiz, XValue value, XValue index){
+		if(index==null){
+			thiz.add(value);
+		}else{
+			thiz.add((int) index.getInt(), value);
+		}
+		return value;
+	}
+	
+	private XValue removeAt(XObjectDataList thiz, XValue index){
+		return thiz.remove((int)index.getInt());
 	}
 	
 	@Override

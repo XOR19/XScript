@@ -12,7 +12,7 @@ public class XObjectDataString implements XObjectData {
 	}
 	
 	@Override
-	public void delete(XRuntime runtime) {}
+	public void delete(XRuntime runtime, boolean cleanup) {}
 
 	@Override
 	public void setVisible(XRuntime runtime) {}

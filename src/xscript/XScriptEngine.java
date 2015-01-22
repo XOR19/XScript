@@ -108,6 +108,7 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 			put(XScriptLang.ENGINE_ATTR_FILE_SYSTEM_ROOTS, roots);
 			
 			put(XScriptLang.ENGINE_ATTR_OUT, System.out);
+			put(XScriptLang.ENGINE_ATTR_ERR, System.err);
 			put(XScriptLang.ENGINE_ATTR_IN, System.in);
 			
 			put(XScriptLang.ENGINE_ATTR_INSTS_TO_RUN_ON_DIRECT_INVOKE, -1);
@@ -202,16 +203,16 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 		if(XFlags.DEBUG)
 			System.out.println(Arrays.toString(bytes));
 		ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-		XConstPoolImpl module;
+		XConstPoolImpl constpool;
 		try{
 			XFakeObjectInput ois = new XFakeObjectInput(bais);
-			module = new XConstPoolImpl(ois);
+			constpool = new XConstPoolImpl(ois);
 		}catch(IOException e){
 			throw new AssertionError(e);
 		}
 		if(XFlags.DEBUG)
-			System.out.println(module);
-		XValue constPool = alloc(getBaseType(XUtils.CONST_POOL), module);
+			System.out.println(constpool);
+		XValue constPool = alloc(getBaseType(XUtils.CONST_POOL), constpool);
 		XValue m = modules.get(source);
 		if(m==null){
 			modules.put(source, m = alloc(getBaseType(XUtils.MODULE), constPool, source));
@@ -317,7 +318,7 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 			do{
 				t = threads.get(nextThread);
 				nextThread = (nextThread+1) % threads.size();
-			}while(nextThread!=start && !t.updateWaiting());
+			}while(!t.updateWaiting() && nextThread!=start);
 			if(t.getState()!=State.RUNNING)
 				return;
 			t.run(instsToRun);
@@ -566,7 +567,7 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 		for(XObject[] m:memory){
 			for(int i=0; i<m.length; i++){
 				if(!m[i].isVisible()){
-					m[i].delete(this);
+					m[i].delete(this, false);
 				}
 			}
 		}
@@ -759,6 +760,12 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 	@Override
 	public PrintStream getOut() {
 		return (PrintStream)get(XScriptLang.ENGINE_ATTR_OUT);
+	}
+	
+	@Override
+	public PrintStream getErr() {
+		PrintStream ps = (PrintStream)get(XScriptLang.ENGINE_ATTR_ERR);
+		return ps==null?getOut():ps;
 	}
 
 	@Override

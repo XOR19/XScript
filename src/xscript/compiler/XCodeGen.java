@@ -305,7 +305,7 @@ public class XCodeGen{
 			if(stackSize<0){
 				int i = 0;
 				for(XInst instr:instructions){
-					System.out.println(sizes[i++]+"\t"+instr.toString());
+					System.out.println(i+":\t"+sizes[i++]+"\t"+instr.toString());
 				}
 				throw new AssertionError("stacksize smaller than 0 at "+programPointer);
 			}
@@ -315,9 +315,9 @@ public class XCodeGen{
 				if(size != stackSize){
 					int i = 0;
 					for(XInst instr:instructions){
-						System.out.println(sizes[i++]+"\t"+instr.toString());
+						System.out.println(i+":\t"+sizes[i++]+"\t"+instr.toString());
 					}
-					throw new AssertionError();
+					throw new AssertionError("AT:"+programPointer);
 				}
 				return;
 			}

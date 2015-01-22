@@ -1,11 +1,23 @@
 package xscript;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
+import javax.tools.Diagnostic;
+import javax.tools.DiagnosticCollector;
+import javax.tools.Diagnostic.Kind;
+
+import xscript.compiler.XFileReader;
+import xscript.object.XConstPoolImpl;
 import xscript.object.XFunction;
 import xscript.object.XFunctionData;
 import xscript.object.XObjectDataModule;
@@ -24,11 +36,12 @@ class XNativeFunctions {
 		map.put("__builtin__.__importModule", new XFunctionData(new __builtin__.__importModule(), "module"));
 		map.put("__builtin__.__initModule", new XFunctionData(new __builtin__.__initModule(), "module"));
 		map.put("__builtin__.__fillStackTrace", new XFunctionData(new __builtin__.__fillStackTrace()));
-		map.put("__builtin__.__print", new XFunctionData(new __builtin__.__print(), "string"));
+		map.put("__builtin__.__print", new XFunctionData(new __builtin__.__print(), "string", "nl", "err"));
 		map.put("__builtin__.__pollInput", new XFunctionData(new __builtin__.__pollInput()));
 		map.put("__builtin__.__sleep", new XFunctionData(new __builtin__.__sleep(), "time"));
 		map.put("__builtin__.__exit", new XFunctionData(new __builtin__.__exit(), "state"));
 		map.put("__builtin__.__dir", new XFunctionData(new __builtin__.__dir(), "obj"));
+		map.put("__builtin__.__exec", new XFunctionData(new __builtin__.__exec(), "code"));
 		functions = Collections.unmodifiableMap(map);
 	}
 
@@ -110,7 +123,17 @@ class XNativeFunctions {
 			@Override
 			public XValue invoke(XRuntime runtime, XExec exec, XValue thiz, XValue[] params, List<XValue> list, Map<String, XValue> map) throws Throwable {
 				String s = XUtils.getString(runtime, params[0]);
-				runtime.getOut().println(s);
+				PrintStream ps;
+				if(params[2].noneZero()){
+					ps = runtime.getErr();
+				}else{
+					ps = runtime.getOut();
+				}
+				if(params[1].noneZero()){
+					ps.println(s);
+				}else{
+					ps.print(s);
+				}
 				return XValueNull.NULL;
 			}
 			
@@ -156,7 +179,11 @@ class XNativeFunctions {
 			public XValue invoke(XRuntime runtime, XExec exec, XValue thiz, XValue[] params, List<XValue> list, Map<String, XValue> map) throws Throwable {
 				XValue value = params[0];
 				if(value==XValueNull.NULL || value==null){
-					value = exec.getCallFrame().getParent().getModule();
+					XCallFrame callFrame = exec.getCallFrame();
+					value = callFrame.getModule();
+					if(value==runtime.getModule("sys")){
+						value = callFrame.getParent().getModule();
+					}
 				}
 				List<String> li = XUtils.dir(runtime, value);
 				List<XValue> l = new ArrayList<XValue>();
@@ -164,6 +191,54 @@ class XNativeFunctions {
 					l.add(runtime.alloc(s));
 				}
 				return runtime.createTuple(l);
+			}
+			
+		}
+		
+		private static class __exec implements XFunction{
+			
+			@SuppressWarnings("unchecked")
+			@Override
+			public XValue invoke(XRuntime runtime, XExec exec, XValue thiz, XValue[] params, List<XValue> list, Map<String, XValue> map) throws Throwable {
+				String source = XUtils.getString(runtime, params[0]);
+				XFileReader reader = new XFileReader(".exec", new StringReader(source));
+				DiagnosticCollector<String> diagnosticCollector = new DiagnosticCollector<String>();
+				Throwable thr = null;
+				byte[] bytes = null;
+				try{
+					bytes = runtime.compile((Map<String, Object>) runtime.get(XScriptLang.COMPILER_OPT_COMPILER), ".exec", reader, diagnosticCollector, true);
+				}catch(Throwable e){
+					thr = e;
+				}
+				for(Diagnostic<? extends String> diagnostic:diagnosticCollector.getDiagnostics()){
+					if(diagnostic.getKind()==Kind.ERROR){
+						throw new XScriptException(diagnostic.getMessage(Locale.US), diagnostic.getSource(), (int) diagnostic.getLineNumber());
+					}
+				}
+				if(thr!=null){
+					throw new XScriptException(thr);
+				}
+				if(XFlags.DEBUG)
+					System.out.println(Arrays.toString(bytes));
+				ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+				XConstPoolImpl constpool;
+				try{
+					XFakeObjectInput ois = new XFakeObjectInput(bais);
+					constpool = new XConstPoolImpl(ois);
+				}catch(IOException e){
+					throw new AssertionError(e);
+				}
+				if(XFlags.DEBUG)
+					System.out.println(constpool);
+				XValue constPool = runtime.alloc(runtime.getBaseType(XUtils.CONST_POOL), constpool);
+				XCallFrame callFrame = exec.getCallFrame();
+				XValue m = callFrame.getModule();
+				if(m==runtime.getModule("sys")){
+					m = callFrame.getParent().getModule();
+				}
+				XValue method = runtime.alloc(runtime.getBaseType(XUtils.FUNC), "<init>", new String[0], -1, -1, -1, XValueNull.NULL, m, constPool, XValueNull.NULL, 0, new XClosure[0]);
+				exec.call(method, XValueNull.NULL, Collections.<XValue>emptyList(), null);
+				return NO_PUSH;
 			}
 			
 		}

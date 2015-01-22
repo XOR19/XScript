@@ -26,7 +26,7 @@ public class XTypeDataString extends XTypeData {
 		
 	};
 	
-	private static final String[] METHODS = {"__str__", "__add__(other)", "indexOf(ch)", "substring(start,#end)"};
+	private static final String[] METHODS = {"__str__", "__add__(other)", "indexOf(ch)", "substring(start,#end)", "length", "charAt(index)"};
 	
 	public XTypeDataString(XRuntime runtime, XObject obj) {
 		super(runtime, obj, "String");
@@ -91,6 +91,10 @@ public class XTypeDataString extends XTypeData {
 			return indexOf(runtime, thiz, params[0]);
 		case 3:
 			return substring(runtime, thiz, params[0], params[1]);
+		case 4:
+			return length(runtime, thiz);
+		case 5:
+			return charAt(runtime, thiz, params[0]);
 		default:
 			break;
 		}
@@ -124,6 +128,17 @@ public class XTypeDataString extends XTypeData {
 			ss = str.substring(s, e);
 		}
 		return runtime.alloc(ss);
+	}
+	
+	private XValue length(XRuntime runtime, XValue thiz) {
+		String str = XUtils.getString(runtime, thiz);
+		return XValueInt.valueOf(str.length());
+	}
+	
+	private XValue charAt(XRuntime runtime, XValue thiz, XValue index) {
+		int i = (int)index.getInt();
+		String str = XUtils.getString(runtime, thiz);
+		return XValueInt.valueOf(str.charAt(i));
 	}
 	
 	@Override

@@ -21,6 +21,7 @@ public final class XScriptLang {
 	public static final String ENGINE_ATTR_FILE_SYSTEM = "FILE_SYSTEM";
 	public static final String ENGINE_ATTR_FILE_SYSTEM_ROOTS = "FILE_SYSTEM_ROOTS";
 	public static final String ENGINE_ATTR_OUT = "OUT";
+	public static final String ENGINE_ATTR_ERR = "ERR";
 	public static final String ENGINE_ATTR_IN = "IN";
 	public static final String ENGINE_ATTR_INTERACTIVE = "INTERACTIVE";
 	public static final String ENGINE_ATTR_INSTS_TO_RUN_ON_DIRECT_INVOKE = "INSTS_TO_RUN_ON_DIRECT_INVOKE";

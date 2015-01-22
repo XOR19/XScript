@@ -52,7 +52,7 @@ public class XObjectDataFunc implements XObjectData {
 	}
 
 	@Override
-	public void delete(XRuntime runtime) {
+	public void delete(XRuntime runtime, boolean cleanup) {
 		for(XClosure closure:closures){
 			closure.decRefs();
 		}
