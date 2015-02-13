@@ -218,7 +218,7 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 			modules.put(source, m = alloc(getBaseType(XUtils.MODULE), constPool, source));
 		}
 		XValue method = alloc(getBaseType(XUtils.FUNC), "<init>", new String[0], -1, -1, -1, XValueNull.NULL, m, constPool, XValueNull.NULL, 0, new XClosure[0]);
-		return createThreadAndInvoke(method, null);
+		return createThreadAndInvoke(method, -2, null);
 	}
 
 	@Override
@@ -233,16 +233,24 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 
 	@Override
 	public Object invokeMethod(Object thiz, String name, Object... args) throws ScriptException, NoSuchMethodException {
+		return invokeMethod(thiz, -2, name, args);
+	}
+	
+	public Object invokeMethod(Object thiz, int stepsToExecute, String name, Object... args) throws ScriptException, NoSuchMethodException {
 		XValue obj = XUtils.wrap(this, thiz);
 		XValue method = XUtils.lookupTry(this, obj, name, XValue.REF_NONE);
 		if(method==null){
 			throw new NoSuchMethodException();
 		}
-		return createThreadAndInvoke(method, obj, XUtils.wrap(this, args));
+		return createThreadAndInvoke(method, stepsToExecute, obj, XUtils.wrap(this, args));
 	}
 
 	@Override
 	public Object invokeFunction(String name, Object... args) throws ScriptException, NoSuchMethodException {
+		return invokeFunction(name, -2, args);
+	}
+	
+	public Object invokeFunction(String name, int stepsToExecute, Object... args) throws ScriptException, NoSuchMethodException {
 		if(name.endsWith(".<init>")){
 			name = name.substring(0, name.length()-7);
 			XValue module = getModule(name);
@@ -251,7 +259,7 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 				module = alloc(baseTypes[XUtils.MODULE], constPool, name);
 				module.setRaw(this, "__args__", createTuple(XUtils.wrap(this, args)));
 				XValue method = alloc(getBaseType(XUtils.FUNC), "<init>", new String[0], -1, -1, -1, XValueNull.NULL, module, constPool, XValueNull.NULL, 0, new XClosure[0]);
-				return createThreadAndInvoke(method, null);
+				return createThreadAndInvoke(method, -2, null);
 			}else{
 				return null;
 			}
@@ -269,7 +277,7 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 		if(method==null){
 			throw new NoSuchMethodException();
 		}
-		return createThreadAndInvoke(method, XValueNull.NULL, XUtils.wrap(this, args));
+		return createThreadAndInvoke(method, stepsToExecute, XValueNull.NULL, XUtils.wrap(this, args));
 	}
 	
 	@Override
@@ -277,14 +285,19 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 		return modules.get(name);
 	}
 	
-	private Object createThreadAndInvoke(XValue method, XValue thiz, XValue...args) throws ScriptException{
+	private Object createThreadAndInvoke(XValue method, int stepsToExecute, XValue thiz, XValue...args) throws ScriptException{
 		XObjectDataFunc func = XUtils.getDataAs(this, method, XObjectDataFunc.class);
 		String[] params = func.getParamNames();
 		if(params.length!=args.length)
 			throw new IllegalArgumentException();
 		XExec exec = new XExec(this, false, 128, method, thiz, args);
 		threads.add(exec);
-		int instrs = (Integer) get(XScriptLang.ENGINE_ATTR_INSTS_TO_RUN_ON_DIRECT_INVOKE);
+		int instrs;
+		if(stepsToExecute!=-2){
+		    instrs = stepsToExecute;
+	    }else{
+		    instrs = (Integer) get(XScriptLang.ENGINE_ATTR_INSTS_TO_RUN_ON_DIRECT_INVOKE);
+		}
 		if(running)
 			exec.run(instrs);
 		State state = exec.getState();
@@ -307,32 +320,36 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable, Ex
 	public void run(){
 		int blocksToRun = (Integer) get(XScriptLang.ENGINE_ATTR_BLOCKS_TO_RUN_ON_INVOKE);
 		int instsToRun = (Integer) get(XScriptLang.ENGINE_ATTR_INSTS_TO_RUN_ON_BLOCK);
-		if(instsToRun<=0)
-			throw new IllegalArgumentException();
-		while((blocksToRun==-1||blocksToRun>0) && running){
-			if(blocksToRun>0)
-				blocksToRun--;
-			nextThread %= threads.size();
-			int start = nextThread;
-			XExec t;
-			do{
-				t = threads.get(nextThread);
-				nextThread = (nextThread+1) % threads.size();
-			}while(!t.updateWaiting() && nextThread!=start);
-			if(t.getState()!=State.RUNNING)
-				return;
-			t.run(instsToRun);
-			switch(t.getState()){
-			case ERRORED:
-				threads.remove(t);
-				break;
-			case TERMINATED:
-				threads.remove(t);
-				break;
-			default:
-				break;
-			}
-		}
+		run(blocksToRun, instsToRun);
+	}
+	
+	public void run(int blocksToRun, int instsToRun){
+	       if(instsToRun<=0)
+	            throw new IllegalArgumentException();
+	        while((blocksToRun==-1||blocksToRun>0) && running){
+	            if(blocksToRun>0)
+	                blocksToRun--;
+	            nextThread %= threads.size();
+	            int start = nextThread;
+	            XExec t;
+	            do{
+	                t = threads.get(nextThread);
+	                nextThread = (nextThread+1) % threads.size();
+	            }while(!t.updateWaiting() && nextThread!=start);
+	            if(t.getState()!=State.RUNNING)
+	                return;
+	            t.run(instsToRun);
+	            switch(t.getState()){
+	            case ERRORED:
+	                threads.remove(t);
+	                break;
+	            case TERMINATED:
+	                threads.remove(t);
+	                break;
+	            default:
+	                break;
+	            }
+	        }
 	}
 	
 	@Override
