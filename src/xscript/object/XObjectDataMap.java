@@ -100,5 +100,10 @@ public class XObjectDataMap implements XObjectData, Map<String, XValue> {
 	public Set<Entry<String, XValue>> entrySet() {
 		return map.entrySet();
 	}
+	
+	@Override
+	public Object toJava(XRuntime runtime, XObject object) {
+		return this;
+	}
 
 }

@@ -289,6 +289,11 @@ public class XTypeData implements XObjectData {
 	public XValue alloc(XRuntime runtime, XValue type, List<XValue> list, Map<String, XValue> map){
 		return runtime.alloc(type);
 	}
+
+	@Override
+	public Object toJava(XRuntime runtime, XObject object) {
+		return null;
+	}
 	
 	
 }

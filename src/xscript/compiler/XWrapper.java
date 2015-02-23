@@ -1,7 +1,7 @@
 package xscript.compiler;
 
 
-public final class XWrapper {
+final class XWrapper {
 
 	private XWrapper(){}
 	

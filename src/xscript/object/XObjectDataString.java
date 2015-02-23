@@ -25,5 +25,10 @@ public class XObjectDataString implements XObjectData {
 	public String getString(){
 		return string;
 	}
+	
+	@Override
+	public Object toJava(XRuntime runtime, XObject object) {
+		return string;
+	}
 
 }

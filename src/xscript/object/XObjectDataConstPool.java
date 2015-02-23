@@ -27,5 +27,10 @@ public class XObjectDataConstPool implements XObjectData {
 	public XConstPool getConstPool(){
 		return constPool;
 	}
+
+	@Override
+	public Object toJava(XRuntime runtime, XObject object) {
+		return null;
+	}
 	
 }

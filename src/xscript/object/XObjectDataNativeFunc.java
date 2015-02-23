@@ -51,4 +51,9 @@ public class XObjectDataNativeFunc implements XObjectData {
 		return function.useMap;
 	}
 	
+	@Override
+	public Object toJava(XRuntime runtime, XObject object) {
+		return null;
+	}
+	
 }

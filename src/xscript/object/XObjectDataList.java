@@ -9,18 +9,19 @@ import java.util.List;
 
 import xscript.values.XValue;
 
-public class XObjectDataList extends AbstractList<XValue> implements XObjectData {
+public class XObjectDataList extends AbstractList<XValue> implements
+		XObjectData {
 
 	private List<XValue> list;
-	
-	public XObjectDataList(List<XValue> list){
+
+	public XObjectDataList(List<XValue> list) {
 		this.list = list;
 	}
-	
+
 	@Override
 	public void delete(XRuntime runtime, boolean cleanup) {
-		if(cleanup){
-			for(XValue value:list){
+		if (cleanup) {
+			for (XValue value : list) {
 				value.decRef(runtime);
 			}
 		}
@@ -28,7 +29,7 @@ public class XObjectDataList extends AbstractList<XValue> implements XObjectData
 
 	@Override
 	public void setVisible(XRuntime runtime) {
-		for(XValue value:list){
+		for (XValue value : list) {
 			value.setVisible(runtime);
 		}
 	}
@@ -36,21 +37,21 @@ public class XObjectDataList extends AbstractList<XValue> implements XObjectData
 	@Override
 	public void save(ObjectOutput out) throws IOException {
 		out.writeInt(list.size());
-		for(XValue value:list){
+		for (XValue value : list) {
 			XValue.write(out, value);
 		}
 	}
 
 	@Override
 	public boolean add(XValue e) {
-		if(e==null)
+		if (e == null)
 			throw new NullPointerException();
 		return list.add(e);
 	}
 
 	@Override
 	public void add(int index, XValue element) {
-		if(element==null)
+		if (element == null)
 			throw new NullPointerException();
 		list.add(index, element);
 	}
@@ -117,7 +118,7 @@ public class XObjectDataList extends AbstractList<XValue> implements XObjectData
 
 	@Override
 	public XValue set(int index, XValue element) {
-		if(element==null)
+		if (element == null)
 			throw new NullPointerException();
 		return list.set(index, element);
 	}
@@ -137,5 +138,9 @@ public class XObjectDataList extends AbstractList<XValue> implements XObjectData
 		return list.toArray(a);
 	}
 
-	
+	@Override
+	public Object toJava(XRuntime runtime, XObject object) {
+		return this;
+	}
+
 }

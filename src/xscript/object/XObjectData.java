@@ -10,5 +10,7 @@ public interface XObjectData {
 	void setVisible(XRuntime runtime);
 
 	void save(ObjectOutput out) throws IOException;
+
+	Object toJava(XRuntime runtime, XObject object);
 	
 }

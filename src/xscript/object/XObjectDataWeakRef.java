@@ -38,4 +38,9 @@ public class XObjectDataWeakRef implements XObjectData {
 		value = XValueNull.NULL;
 	}
 	
+	@Override
+	public Object toJava(XRuntime runtime, XObject object) {
+		return value.toJava(runtime);
+	}
+	
 }

@@ -132,4 +132,9 @@ public class XObjectDataFunc implements XObjectData {
 		return constPool;
 	}
 	
+	@Override
+	public Object toJava(XRuntime runtime, XObject object) {
+		return null;
+	}
+	
 }

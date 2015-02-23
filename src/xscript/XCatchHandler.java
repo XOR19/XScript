@@ -1,6 +1,6 @@
 package xscript;
 
-public class XCatchHandler {
+class XCatchHandler {
 
 	private XCatchHandler next;
 	

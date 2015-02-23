@@ -8,18 +8,19 @@ import java.util.List;
 
 import xscript.values.XValue;
 
-public class XObjectDataTuple extends AbstractList<XValue> implements XObjectData {
+public class XObjectDataTuple extends AbstractList<XValue> implements
+		XObjectData {
 
 	private List<XValue> list;
-	
-	public XObjectDataTuple(List<XValue> list){
+
+	public XObjectDataTuple(List<XValue> list) {
 		this.list = list;
 	}
-	
+
 	@Override
 	public void delete(XRuntime runtime, boolean cleanup) {
-		if(cleanup){
-			for(XValue value:list){
+		if (cleanup) {
+			for (XValue value : list) {
 				value.decRef(runtime);
 			}
 		}
@@ -27,7 +28,7 @@ public class XObjectDataTuple extends AbstractList<XValue> implements XObjectDat
 
 	@Override
 	public void setVisible(XRuntime runtime) {
-		for(XValue value:list){
+		for (XValue value : list) {
 			value.setVisible(runtime);
 		}
 	}
@@ -35,7 +36,7 @@ public class XObjectDataTuple extends AbstractList<XValue> implements XObjectDat
 	@Override
 	public void save(ObjectOutput out) throws IOException {
 		out.writeInt(list.size());
-		for(XValue value:list){
+		for (XValue value : list) {
 			XValue.write(out, value);
 		}
 	}
@@ -90,5 +91,9 @@ public class XObjectDataTuple extends AbstractList<XValue> implements XObjectDat
 		return list.toArray(a);
 	}
 
-	
+	@Override
+	public Object toJava(XRuntime runtime, XObject object) {
+		return this;
+	}
+
 }

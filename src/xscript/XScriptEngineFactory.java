@@ -11,14 +11,36 @@ public class XScriptEngineFactory implements ScriptEngineFactory {
 
 	private static final Map<String, Object> PARAMETERS = new HashMap<String, Object>();
 
-	static{
+	private static XScriptEngineFactory defaultEngineFactory;
+
+	static {
 		PARAMETERS.put(ScriptEngine.ENGINE, XScriptLang.ENGINE_NAME);
 		PARAMETERS.put(ScriptEngine.ENGINE_VERSION, XScriptLang.ENGINE_VERSION);
 		PARAMETERS.put(ScriptEngine.LANGUAGE, XScriptLang.LANG_NAME);
 		PARAMETERS.put(ScriptEngine.LANGUAGE_VERSION, XScriptLang.LANG_VERSION);
 		PARAMETERS.put(ScriptEngine.NAME, XScriptLang.NAMES);
 	}
-	
+
+	public static XScriptEngineFactory getDefaultEngineFactory() {
+		if (defaultEngineFactory == null) {
+			defaultEngineFactory = new XScriptEngineFactory();
+		}
+		return defaultEngineFactory;
+	}
+
+	public static void setDefaultEngineFactory(
+			XScriptEngineFactory scriptEngineFactory) {
+		if (scriptEngineFactory == null)
+			throw new NullPointerException();
+		defaultEngineFactory = scriptEngineFactory;
+	}
+
+	public XScriptEngineFactory() {
+		if (defaultEngineFactory == null) {
+			defaultEngineFactory = this;
+		}
+	}
+
 	@Override
 	public String getEngineName() {
 		return XScriptLang.ENGINE_NAME;
@@ -47,26 +69,26 @@ public class XScriptEngineFactory implements ScriptEngineFactory {
 	@Override
 	public String getMethodCallSyntax(String obj, String m, String... args) {
 		int l = args.length;
-		int size = 2+m.length();
-		if(obj!=null){
-			size += obj.length()+1;
+		int size = 2 + m.length();
+		if (obj != null) {
+			size += obj.length() + 1;
 		}
-		if(l>0){
-			size += (l-1)*2;
+		if (l > 0) {
+			size += (l - 1) * 2;
 		}
-		for(String arg:args){
+		for (String arg : args) {
 			size += arg.length();
 		}
 		StringBuilder sb = new StringBuilder(size);
-		if(obj!=null){
+		if (obj != null) {
 			sb.append(obj);
 			sb.append('.');
 		}
 		sb.append(m);
 		sb.append('(');
-		if(l>0){
+		if (l > 0) {
 			sb.append(args[0]);
-			for(int i=1; i<l; i++){
+			for (int i = 1; i < l; i++) {
 				sb.append(',');
 				sb.append(' ');
 				sb.append(args[0]);
@@ -89,14 +111,14 @@ public class XScriptEngineFactory implements ScriptEngineFactory {
 	@Override
 	public String getOutputStatement(String toDisplay) {
 		int l = toDisplay.length();
-		int dl = l*2+11;
-		if(dl<0)
+		int dl = l * 2 + 11;
+		if (dl < 0)
 			dl = l;
 		StringBuilder sb = new StringBuilder(dl);
 		sb.append("println(\"");
-		for(int i=0; i<l; i++){
+		for (int i = 0; i < l; i++) {
 			char c = toDisplay.charAt(i);
-			switch(c){
+			switch (c) {
 			case '\\':
 				sb.append('\\');
 				sb.append('\\');
@@ -138,14 +160,14 @@ public class XScriptEngineFactory implements ScriptEngineFactory {
 	@Override
 	public String getProgram(String... statements) {
 		int l = statements.length;
-		int size = l*2-1;
-		for(String statement:statements){
+		int size = l * 2 - 1;
+		for (String statement : statements) {
 			size += statement.length();
 		}
 		StringBuilder sb = new StringBuilder(size);
-		if(l>0){
+		if (l > 0) {
 			sb.append(statements[0]);
-			for(int i=1; i<l; i++){
+			for (int i = 1; i < l; i++) {
 				sb.append(";\n");
 				sb.append(statements[i]);
 			}

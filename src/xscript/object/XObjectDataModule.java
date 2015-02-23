@@ -9,32 +9,39 @@ import xscript.values.XValue;
 public class XObjectDataModule implements XObjectData {
 
 	private XValue constPool;
-	
+
 	private String name;
-	
-	public XObjectDataModule(XRuntime rt, XValue constPool, String name){
+
+	public XObjectDataModule(XRuntime rt, XValue constPool, String name) {
 		XUtils.check(rt, constPool, XUtils.CONST_POOL);
 		this.constPool = constPool;
 		this.name = name;
 	}
-	
-	@Override
-	public void delete(XRuntime runtime, boolean cleanup) {}
 
 	@Override
-	public void setVisible(XRuntime runtime) {}
+	public void delete(XRuntime runtime, boolean cleanup) {
+	}
+
+	@Override
+	public void setVisible(XRuntime runtime) {
+	}
 
 	@Override
 	public void save(ObjectOutput out) throws IOException {
 		XValue.write(out, constPool);
 	}
 
-	public XValue getConstPool(){
+	public XValue getConstPool() {
 		return constPool;
 	}
-	
-	public String getName(){
+
+	public String getName() {
 		return name;
+	}
+
+	@Override
+	public Object toJava(XRuntime runtime, XObject object) {
+		return null;
 	}
 
 }

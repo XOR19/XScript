@@ -87,7 +87,7 @@ public final class XValueObj extends XValue {
 
 	@Override
 	public Object toJava(XRuntime runtime) {
-		return runtime.getObject(pointer).toJava();
+		return runtime.getObject(pointer).toJava(runtime);
 	}
 	
 	@Override
