@@ -49,6 +49,10 @@ func exec(code){
 	return __builtin__.__exec(code);
 }
 
+func linkNative(name){
+	return __builtin__.__linkNative(name);
+}
+
 class Exception{
 
 	_message;
