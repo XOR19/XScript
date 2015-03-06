@@ -400,7 +400,7 @@ public class XScriptEngine extends AbstractScriptEngine implements Invocable,
 	public void run(int blocksToRun, int instsToRun) {
 		if (instsToRun <= 0)
 			throw new IllegalArgumentException();
-		while ((blocksToRun == -1 || blocksToRun > 0) && running) {
+		while ((blocksToRun == -1 || blocksToRun > 0) && running && !threads.isEmpty()) {
 			if (blocksToRun > 0)
 				blocksToRun--;
 			nextThread %= threads.size();

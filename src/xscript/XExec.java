@@ -484,6 +484,8 @@ public class XExec {
 	}
 
 	public int run(int instrs) {
+		if (instrs == 0)
+			return 0;
 		while ((instrs == -1 || instrs > 0) && timeout == 0 && rt.isRunning()) {
 			if (instrs > 0)
 				instrs--;

@@ -6,6 +6,7 @@ class XArrayList<T> extends AbstractList<T>{
 
 	private T[] array;
 	
+	@SafeVarargs
 	XArrayList(T...array){
 		this.array = array;
 	}
