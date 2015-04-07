@@ -2,12 +2,12 @@ package xscript;
 
 import java.util.AbstractList;
 
-class XArrayList<T> extends AbstractList<T>{
+public class XArrayList<T> extends AbstractList<T>{
 
 	private T[] array;
 	
 	@SafeVarargs
-	XArrayList(T...array){
+	public XArrayList(T...array){
 		this.array = array;
 	}
 	

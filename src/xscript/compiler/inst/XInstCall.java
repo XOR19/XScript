@@ -23,10 +23,10 @@ public class XInstCall extends XInst {
 		this.unpackMap = unpackMap;
 		this.params = params;
 	}
-
+	
 	@Override
-	public int getStackChange() {
-		return -params-1;
+	public int getI(){
+		return params;
 	}
 
 	@Override

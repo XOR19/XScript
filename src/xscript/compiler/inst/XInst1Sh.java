@@ -22,10 +22,10 @@ public class XInst1Sh extends XInst {
 	public String toString() {
 		return super.toString()+" "+i;
 	}
-
+	
 	@Override
-	public int getStackChange() {
-		return opcode.getStackChange(i);
+	public int getI(){
+		return i;
 	}
 	
 	@Override

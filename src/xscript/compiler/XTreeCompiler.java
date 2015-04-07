@@ -152,7 +152,7 @@ public class XTreeCompiler implements XVisitor {
 			treePart.setDead(true);
 		code.addInstructionB(scope, XOpcode.POP, this.scope.getLocalsCount());
 		this.scope = this.scope.getParent();
-		code.addInstruction(scope, _break);
+		code.addTarget(scope, _break);
 	}
 
 	@Override
@@ -285,7 +285,7 @@ public class XTreeCompiler implements XVisitor {
 				code.addInstruction(importEntry, XOpcode.POP_1);
 				code.addInstruction(importEntry, XOpcode.MAKE_MAP, 0);
 				parts.set(this, code);
-				code.addInstruction(importEntry, target);
+				code.addTarget(importEntry, target);
 				code.addInstruction(importEntry, XOpcode.IMPORT_SAVE, asName.substring(index + 1));
 			}
 		}
@@ -338,16 +338,17 @@ public class XTreeCompiler implements XVisitor {
 			code.addInstruction(_if, XOpcode.JUMP_IF_ZERO, onFalse);
 			visitInScope(_if.onTrue).asStatement(this, code);
 			if (_if.onFalse == null) {
-				code.addInstruction(_if, onFalse);
+				code.addTarget(_if, onFalse);
 			} else {
+				code.setNext(_if, _break);
 				code.addInstruction(_if, XOpcode.JUMP, _break);
-				code.addInstruction(_if, onFalse);
+				code.addTarget(_if, onFalse);
 				visitInScope(_if.onFalse).asStatement(this, code);
 			}
 		}
 		code.addInstructionB(_if, XOpcode.POP, this.scope.getLocalsCount());
 		scope = scope.getParent();
-		code.addInstruction(_if, _break);
+		code.addTarget(_if, _break);
 	}
 
 	@Override
@@ -360,7 +361,7 @@ public class XTreeCompiler implements XVisitor {
 		scope = new XScope(scope, true, _break, _continue, labels, 0);
 		labels = null;
 		visit(_for.init).asStatement(this, code);
-		code.addInstruction(_for, start);
+		code.addTarget(_for, start);
 		XCompiledPart part = visit(_for.condition);
 		if (part.isConstValue()) {
 			if (part.isFalse()) {
@@ -368,7 +369,7 @@ public class XTreeCompiler implements XVisitor {
 				addDiagnostic(_for.body, "dead.code");
 			} else {
 				visitInScope(_for.body).asStatement(this, code);
-				code.addInstruction(_for, _continue);
+				code.addTarget(_for, _continue);
 				visit(_for.inc).asStatement(this, code);
 				code.addInstruction(_for, XOpcode.JUMP, start);
 				if (_break.jumps() == 0)
@@ -378,14 +379,14 @@ public class XTreeCompiler implements XVisitor {
 			part.setupAndGet(this, code);
 			code.addInstruction(_for, XOpcode.JUMP_IF_ZERO, stop);
 			visitInScope(_for.body).asStatement(this, code);
-			code.addInstruction(_for, _continue);
+			code.addTarget(_for, _continue);
 			visit(_for.inc).asStatement(this, code);
 			code.addInstruction(_for, XOpcode.JUMP, start);
 		}
-		code.addInstruction(_for, stop);
+		code.addTarget(_for, stop);
 		code.addInstructionB(_for, XOpcode.POP, this.scope.getLocalsCount());
 		scope = scope.getParent();
-		code.addInstruction(_for, _break);
+		code.addTarget(_for, _break);
 	}
 
 	@Override
@@ -400,7 +401,7 @@ public class XTreeCompiler implements XVisitor {
 		code.addInstruction(foreach, XOpcode.DUP);
 		code.addInstruction(foreach, XOpcode.GET_ATTR, "iter");
 		code.addInstruction(foreach, null, -1, -1, 0);
-		code.addInstruction(foreach, _continue);
+		code.addTarget(foreach, _continue);
 		code.addInstruction(foreach, XOpcode.DUP);
 		code.addInstruction(foreach, XOpcode.DUP);
 		code.addInstruction(foreach, XOpcode.GET_ATTR, "hasNext");
@@ -417,9 +418,9 @@ public class XTreeCompiler implements XVisitor {
 		code.addInstruction(foreach, XOpcode.JUMP, _continue);
 		code.addInstructionB(foreach, XOpcode.POP, this.scope.getLocalsCount());
 		scope = scope.getParent();
-		code.addInstruction(foreach, end);
+		code.addTarget(foreach, end);
 		code.addInstruction(foreach, XOpcode.POP_1);
-		code.addInstruction(foreach, _break);
+		code.addTarget(foreach, _break);
 	}
 
 	@Override
@@ -429,7 +430,7 @@ public class XTreeCompiler implements XVisitor {
 		XJumpTarget _continue = new XJumpTarget();
 		scope = new XScope(scope, true, _break, _continue, labels, 0);
 		labels = null;
-		code.addInstruction(_while, _continue);
+		code.addTarget(_while, _continue);
 		XCompiledPart part = visit(_while.condition);
 		if (part.isConstValue()) {
 			if (part.isFalse()) {
@@ -448,7 +449,7 @@ public class XTreeCompiler implements XVisitor {
 		}
 		code.addInstructionB(_while, XOpcode.POP, this.scope.getLocalsCount());
 		scope = scope.getParent();
-		code.addInstruction(_while, _break);
+		code.addTarget(_while, _break);
 	}
 
 	@Override
@@ -459,9 +460,9 @@ public class XTreeCompiler implements XVisitor {
 		XJumpTarget start = new XJumpTarget();
 		scope = new XScope(scope, true, _break, _continue, labels, 0);
 		labels = null;
-		code.addInstruction(_do, start);
+		code.addTarget(_do, start);
 		visitInScope(_do.body).asStatement(this, code);
-		code.addInstruction(_do, _continue);
+		code.addTarget(_do, _continue);
 		XCompiledPart part = visit(_do.condition);
 		if (part.isConstValue()) {
 			if (!part.isFalse()) {
@@ -475,7 +476,7 @@ public class XTreeCompiler implements XVisitor {
 		}
 		code.addInstructionB(_do, XOpcode.POP, this.scope.getLocalsCount());
 		scope = scope.getParent();
-		code.addInstruction(_do, _break);
+		code.addTarget(_do, _break);
 	}
 
 	@Override
@@ -602,7 +603,7 @@ public class XTreeCompiler implements XVisitor {
 				code.addInstruction(new XInstCall(_assert.position.position.line, null, -1, -1, 1));
 			}
 			code.addInstruction(_assert, XOpcode.THROW);
-			code.addInstruction(_assert, end);
+			code.addTarget(_assert, end);
 		}
 	}
 
@@ -651,7 +652,7 @@ public class XTreeCompiler implements XVisitor {
 			code.addInstruction(_try, XOpcode.JUMP, _finally);
 		}
 		if (_try.catches != null) {
-			code.addInstruction(_try, onExc);
+			code.addTarget(_try, onExc);
 			for (XTreeCatch _catch : _try.catches) {
 				XJumpTarget not = new XJumpTarget();
 				if (_catch.excType.size() == 1) {
@@ -670,7 +671,7 @@ public class XTreeCompiler implements XVisitor {
 						code.addInstruction(_catch, XOpcode.JUMP_IF_NON_ZERO, is);
 					}
 					code.addInstruction(_catch, XOpcode.JUMP, not);
-					code.addInstruction(_catch, is);
+					code.addTarget(_catch, is);
 				}
 				this.scope = new XScope(this.scope, true);
 				if (_catch.varName == null) {
@@ -693,16 +694,16 @@ public class XTreeCompiler implements XVisitor {
 					code.addInstruction(_try, XOpcode.LOADI_1);
 					code.addInstruction(_try, XOpcode.JUMP, _finally);
 				}
-				code.addInstruction(_catch, not);
+				code.addTarget(_catch, not);
 			}
 			if (_finally == null) {
 				code.addInstruction(_try, XOpcode.POP_1);
 			}
 		}
 		if (_finally != null) {
-			code.addInstruction(_try, onFinallyExc);
+			code.addTarget(_try, onFinallyExc);
 			code.addInstruction(_try, XOpcode.LOADI_0);
-			code.addInstruction(_try, _finally);
+			code.addTarget(_try, _finally);
 			this.scope = new XScope(this.scope, true);
 			visit(_try._finally).asStatement(this, code);
 			code.addInstructionB(_try, XOpcode.POP, this.scope.getLocalsCount());
@@ -710,7 +711,7 @@ public class XTreeCompiler implements XVisitor {
 			code.addInstruction(_try, XOpcode.END_FINALLY);
 		}
 		this.scope = this.scope.getParent();
-		code.addInstruction(_try, _break);
+		code.addTarget(_try, _break);
 	}
 
 	@Override
@@ -789,10 +790,10 @@ public class XTreeCompiler implements XVisitor {
 			if (operator.exprs.size() > 2) {
 				XJumpTarget t = new XJumpTarget();
 				code.addInstruction(operator, XOpcode.JUMP, t);
-				code.addInstruction(operator, target);
+				code.addTarget(operator, target);
 				code.addInstruction(operator, XOpcode.POP_1);
 				code.addInstruction(operator, XOpcode.LOAD_FALSE);
-				code.addInstruction(operator, t);
+				code.addTarget(operator, t);
 			}
 		} else if (o == XOperator.OR) {
 			XCodeGen code = getCodeExpr(operator);
@@ -831,9 +832,9 @@ public class XTreeCompiler implements XVisitor {
 			}
 			XJumpTarget t = new XJumpTarget();
 			code.addInstruction(operator, XOpcode.JUMP, t);
-			code.addInstruction(operator, target);
+			code.addTarget(operator, target);
 			code.addInstruction(operator, XOpcode.LOAD_TRUE);
-			code.addInstruction(operator, t);
+			code.addTarget(operator, t);
 		} else if (o == XOperator.AND) {
 			XCodeGen code = getCodeExpr(operator);
 			XCompiledPart part = visit(operator.exprs.get(0));
@@ -871,9 +872,9 @@ public class XTreeCompiler implements XVisitor {
 			}
 			XJumpTarget t = new XJumpTarget();
 			code.addInstruction(operator, XOpcode.JUMP, t);
-			code.addInstruction(operator, target);
+			code.addTarget(operator, target);
 			code.addInstruction(operator, XOpcode.LOAD_FALSE);
-			code.addInstruction(operator, t);
+			code.addTarget(operator, t);
 		} else {
 			XCodeGen code = getCodeExpr(operator);
 			XCompiledPart part = visit(operator.exprs.get(0));
@@ -929,9 +930,9 @@ public class XTreeCompiler implements XVisitor {
 			visit(operatorIf.onTrue).setupAndGet(this, code);
 			XJumpTarget end = new XJumpTarget();
 			code.addInstruction(operatorIf, XOpcode.JUMP, end);
-			code.addInstruction(operatorIf, onFalse);
+			code.addTarget(operatorIf, onFalse);
 			visit(operatorIf.onFalse).setupAndGet(this, code);
-			code.addInstruction(operatorIf, end);
+			code.addTarget(operatorIf, end);
 		}
 	}
 
@@ -1067,16 +1068,14 @@ public class XTreeCompiler implements XVisitor {
 		code.addInstruction(s);
 		for (XTreeCase _case : _switch.cases) {
 			XJumpTarget jumpTo = new XJumpTarget();
-			code.addInstruction(_switch, jumpTo);
+			code.addTarget(_switch, jumpTo);
 			if (_case.key instanceof XTreeConstant) {
 				XTreeConstant c = (XTreeConstant) _case.key;
 				if (!s.putIfNonExist(c.value, jumpTo)) {
 					addDiagnostic(_case.key, "case.duplicated.key", c.value);
 				}
 			} else if (_case.key == null) {
-				if (s._default == null) {
-					s._default = jumpTo;
-				} else {
+				if (!s.putIfNonExist(XInstSwitch.DEFAULT, jumpTo)) {
 					addDiagnostic(_case.key, "case.duplicated.default");
 				}
 			} else {
@@ -1084,11 +1083,9 @@ public class XTreeCompiler implements XVisitor {
 			}
 			visit(_case, _case.block).asStatement(this, code);
 		}
-		if (s._default == null) {
-			s._default = _break;
-		}
+		s.putIfNonExist(XInstSwitch.DEFAULT, _break);
 		code.addInstructionB(_switch, XOpcode.POP, this.scope.getLocalsCount());
-		code.addInstruction(_switch, _break);
+		code.addTarget(_switch, _break);
 		this.scope = this.scope.getParent();
 	}
 

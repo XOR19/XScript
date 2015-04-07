@@ -3,7 +3,6 @@ package xscript.compiler.optimizers;
 import java.util.List;
 import java.util.ListIterator;
 
-import xscript.compiler.XOptimizer;
 import xscript.compiler.inst.XInst;
 
 public class XOptimizerDeleteDeadCode implements XOptimizer {

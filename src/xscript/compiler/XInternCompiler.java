@@ -21,11 +21,17 @@ public class XInternCompiler implements XCompiler {
 		XCompilerOptions options = new XCompilerOptions();
 		if(o!=null)
 			options.from(o);
+		XTreeCompiler treeCompiler;
+		try{
 		XTokenizer tokenizer = new XTokenizer(reader, diagnosticListener);
 		XTreeMaker treeMaker = new XTreeMaker(tokenizer, diagnosticListener);
 		XTree tree = interactive?treeMaker.makeModuleInteractive():treeMaker.makeModule();
-		XTreeCompiler treeCompiler = new XTreeCompiler(diagnosticListener, options);
+		treeCompiler = new XTreeCompiler(diagnosticListener, options);
 		tree.accept(treeCompiler);
+		}catch(Throwable e){
+			e.printStackTrace();
+			return null;
+		}
 		return treeCompiler.getBytes();
 	}
 	

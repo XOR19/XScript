@@ -155,6 +155,14 @@ public class XExec {
 	private boolean handles__getItem__(XValue value) {
 		return XUtils.isOverwritten(rt, value, "__getItem__");
 	}
+	
+	private boolean handles__setItem__(XValue value) {
+		return XUtils.isOverwritten(rt, value, "__setItem__");
+	}
+	
+	private boolean handles__delItem__(XValue value) {
+		return XUtils.isOverwritten(rt, value, "__delItem__");
+	}
 
 	private void callSingleOperator(String op, String method, XValue value) {
 		if (handles__getItem__(value)) {
@@ -762,7 +770,7 @@ public class XExec {
 		case DEL_ATTR:
 			s = callFrame.readStringP();
 			v1 = pop();
-			if (handles__getItem__(v1)) {
+			if (handles__delItem__(v1)) {
 				v2 = XUtils.lookup(rt, v1, "__delItem__", XValue.REF_NONE);
 				v3 = rt.alloc(s);
 				call(v2, v1, new XArrayList<XValue>(v3), null);
@@ -1530,7 +1538,7 @@ public class XExec {
 			s = callFrame.readStringP();
 			v1 = pop();
 			v2 = pop();
-			if (handles__getItem__(v1)) {
+			if (handles__setItem__(v1)) {
 				v3 = XUtils.lookup(rt, v2, "__setItem__", XValue.REF_NONE);
 				v4 = rt.alloc(s);
 				call(v3, v2, new XArrayList<XValue>(v4, v1), null);

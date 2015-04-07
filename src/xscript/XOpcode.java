@@ -2,202 +2,215 @@ package xscript;
 
 public enum XOpcode {
 
-	NOP(0),
-	
-	LINE1(0),
-	LINE2(0),
-	LINE4(0),
-	
-	LOADN(1),
-	LOADB(1),
-	LOADS(1),
-	LOADI(1),
-	LOADL(1),
-	LOADF(1),
-	LOADD(1),
-	LOADT(1),
-	
-	LOAD_TRUE(1),
-	LOAD_FALSE(1),
-	
-	LOADI_M1(1),
-	LOADI_0(1),
-	LOADI_1(1),
-	LOADI_2(1),
-	
-	LOADD_M1(1),
-	LOADD_0(1),
-	LOADD_1(1),
-	LOADD_2(1),
-	
-	LOADT_E(1),
-	
-	SWAP(0),
-	DUP(1),
-	
-	GETTOP1(1),
-	SETTOP1(-1),
-	GETTOP2(1),
-	SETTOP2(-1),
-	
-	GETBOTTOM1(1),
-	SETBOTTOM1(-1),
-	GETBOTTOM2(1),
-	SETBOTTOM2(-1),
-	
-	POP(-1){
-		@Override
-		public int getStackChange(int i){
-			return -i;
-		}
-	},
-	POP_1(-1),
-	
-	RET(0),
-	RETN(1),
-	
-	JUMP(0),
-	JUMP_IF_ZERO(-1),
-	JUMP_IF_NON_ZERO(-1),
-	
-	GET_GLOBAL(1),
-	SET_GLOBAL(-1),
-	DEL_GLOBAL(0),
-	
-	GET_CLOSURE(1),
-	SET_CLOSURE(-1),
-	
-	GET_ATTR(0),
-	SET_ATTR(-1),
-	DEL_ATTR(-1),
-	
-	GET_INDEX(-1),
-	SET_INDEX(-2),
-	DEL_INDEX(-2),
-	
-	ADD(-1),//[..., a, b]=>[..., a+b]
-	LADD(-1),//[..., a, b]=>[..., a+=b]
-	
-	SUB(-1),
-	LSUB(-1),
-	
-	MUL(-1),
-	LMUL(-1),
-	
-	DIV(-1),
-	LDIV(-1),
-	
-	IDIV(-1),
-	LIDIV(-1),
-	
-	MOD(-1),
-	LMOD(-1),
-	
-	POW(-1),
-	LPOW(-1),
-	
-	OR(-1),
-	LOR(-1),
-	
-	AND(-1),
-	LAND(-1),
-	
-	XOR(-1),
-	LXOR(-1),
-	
-	SHL(-1),
-	LSHL(-1),
-	
-	SHR(-1),
-	LSHR(-1),
-	
-	ISHR(-1),
-	LISHR(-1),
-	
-	POS(0),//[..., a]=>[..., +a]
-	NEG(0),//[..., a]=>[..., -a]
-	NOT(0),//[..., a]=>[..., !a]
-	INVERT(0),//[..., a]=>[..., ~a]
-	
-	EQUAL(-1),//[..., a, b]=>[..., a===b]
-	NOT_EQUAL(-1),//[..., a, b]=>[..., a!==b]
-	SAME(-1),//[..., a, b]=>[..., a==b]
-	NOT_SAME(-1),//[..., a, b]=>[..., a!=b]
-	SMALLER(-1),//[..., a, b]=>[..., a==b]
-	GREATER(-1),//[..., a, b]=>[..., a==b]
-	SMALLER_EQUAL(-1),//[..., a, b]=>[..., a==b]
-	GREATER_EQUAL(-1),//[..., a, b]=>[..., a==b]
-	
-	COMPARE(-1),//[..., a, b]=>[..., a<=>b]
-	
-	COPY(0),//[..., a]=>[..., <:a]
-	INC(0),//[..., a]=>[..., ++a]
-	SINC(0),//[..., a]=>[..., a++]
-	DEC(0),//[..., a]=>[..., --a]
-	SDEC(0),//[..., a]=>[..., a--]
-	
-	CALL(-1),
-	CALL_LIST(-1),
-	CALL_MAP(-1),
-	CALL_LIST_MAP(-1),
-	CALL_KW(-1),
-	CALL_LIST_KW(-1),
-	CALL_MAP_KW(-1),
-	CALL_LIST_MAP_KW(-1),
-	
-	MAKE_LIST(1){
-		@Override
-		public int getStackChange(int i){
-			return -i+1;
-		}
-	},
-	MAKE_TUPLE(1){
-		@Override
-		public int getStackChange(int i){
-			return -i+1;
-		}
-	},
-	MAKE_MAP(1){
-		@Override
-		public int getStackChange(int i){
-			return -i*2+1;
-		}
-	},
-	MAKE_CLASS(0),
-	MAKE_FUNC(0),
-	MAKE_METH(-1),
-	
-	TYPEOF(0),
-	INSTANCEOF(-1),
-	ISDERIVEDOF(-1),
-	
-	YIELD(0),
-	THROW(-1),
-	
-	START_TRY(0),
-	END_TRY(0),
-	
-	IMPORT(1),
-	IMPORT_SAVE(-2),
+	NOP(0, 0),
 
-	SWITCH(-1), 
-	
-	END_FINALLY(-2), 
-	
-	SUPER(1);
-	
-	private int stackChange;
-	
-	XOpcode(int stackChange){
-		this.stackChange = stackChange;
+	LINE1(0, 0), LINE2(0, 0), LINE4(0, 0),
+
+	LOADN(0, 1), LOADB(0, 1), LOADS(0, 1), LOADI(0, 1), LOADL(0, 1), LOADF(0, 1), LOADD(0, 1), LOADT(0, 1),
+
+	LOAD_TRUE(0, 1), LOAD_FALSE(0, 1),
+
+	LOADI_M1(0, 1), LOADI_0(0, 1), LOADI_1(0, 1), LOADI_2(0, 1),
+
+	LOADD_M1(0, 1), LOADD_0(0, 1), LOADD_1(0, 1), LOADD_2(0, 1),
+
+	LOADT_E(0, 1),
+
+	SWAP(2, 2), DUP(1, 2),
+
+	GETTOP1(0, 1), SETTOP1(1, 0), GETTOP2(0, 1), SETTOP2(1, 0),
+
+	GETBOTTOM1(0, 1), SETBOTTOM1(1, 0), GETBOTTOM2(0, 1), SETBOTTOM2(1, 0),
+
+	POP(0, 0) {
+		@Override
+		public int getStackRemove(int i) {
+			return i;
+		}
+	},
+	POP_1(1, 0),
+
+	RET(0, 0), RETN(0, 1),
+
+	JUMP(0, 0), JUMP_IF_ZERO(1, 0), JUMP_IF_NON_ZERO(1, 0),
+
+	GET_GLOBAL(0, 1), SET_GLOBAL(1, 0), DEL_GLOBAL(0, 0),
+
+	GET_CLOSURE(0, 1), SET_CLOSURE(1, 0),
+
+	GET_ATTR(1, 1), SET_ATTR(2, 1), DEL_ATTR(1, 0),
+
+	GET_INDEX(2, 1), SET_INDEX(3, 1), DEL_INDEX(2, 0),
+
+	ADD(2, 1), // [..., a, b]=>[..., a+b]
+	LADD(2, 1), // [..., a, b]=>[..., a+=b]
+
+	SUB(2, 1), LSUB(2, 1),
+
+	MUL(2, 1), LMUL(2, 1),
+
+	DIV(2, 1), LDIV(2, 1),
+
+	IDIV(2, 1), LIDIV(2, 1),
+
+	MOD(2, 1), LMOD(2, 1),
+
+	POW(2, 1), LPOW(2, 1),
+
+	OR(2, 1), LOR(2, 1),
+
+	AND(2, 1), LAND(2, 1),
+
+	XOR(2, 1), LXOR(2, 1),
+
+	SHL(2, 1), LSHL(2, 1),
+
+	SHR(2, 1), LSHR(2, 1),
+
+	ISHR(2, 1), LISHR(2, 1),
+
+	POS(1, 1), // [..., a]=>[..., +a]
+	NEG(1, 1), // [..., a]=>[..., -a]
+	NOT(1, 1), // [..., a]=>[..., !a]
+	INVERT(1, 1), // [..., a]=>[..., ~a]
+
+	EQUAL(2, 1), // [..., a, b]=>[..., a===b]
+	NOT_EQUAL(2, 1), // [..., a, b]=>[..., a!==b]
+	SAME(2, 1), // [..., a, b]=>[..., a==b]
+	NOT_SAME(2, 1), // [..., a, b]=>[..., a!=b]
+	SMALLER(2, 1), // [..., a, b]=>[..., a==b]
+	GREATER(2, 1), // [..., a, b]=>[..., a==b]
+	SMALLER_EQUAL(2, 1), // [..., a, b]=>[..., a==b]
+	GREATER_EQUAL(2, 1), // [..., a, b]=>[..., a==b]
+
+	COMPARE(2, 1), // [..., a, b]=>[..., a<=>b]
+
+	COPY(1, 1), // [..., a]=>[..., <:a]
+	INC(1, 1), // [..., a]=>[..., ++a]
+	SINC(1, 1), // [..., a]=>[..., a++]
+	DEC(1, 1), // [..., a]=>[..., --a]
+	SDEC(1, 1), // [..., a]=>[..., a--]
+
+	CALL(0, 1) {
+
+		@Override
+		public int getStackRemove(int i) {
+			return i + 2;
+		}
+
+	},
+	CALL_LIST(0, 1) {
+
+		@Override
+		public int getStackRemove(int i) {
+			return i + 2;
+		}
+
+	},
+	CALL_MAP(0, 1) {
+
+		@Override
+		public int getStackRemove(int i) {
+			return i + 2;
+		}
+
+	},
+	CALL_LIST_MAP(0, 1) {
+
+		@Override
+		public int getStackRemove(int i) {
+			return i + 2;
+		}
+
+	},
+	CALL_KW(0, 1) {
+
+		@Override
+		public int getStackRemove(int i) {
+			return i + 2;
+		}
+
+	},
+	CALL_LIST_KW(0, 1) {
+
+		@Override
+		public int getStackRemove(int i) {
+			return i + 2;
+		}
+
+	},
+	CALL_MAP_KW(0, 1) {
+
+		@Override
+		public int getStackRemove(int i) {
+			return i + 2;
+		}
+
+	},
+	CALL_LIST_MAP_KW(0, 1) {
+
+		@Override
+		public int getStackRemove(int i) {
+			return i + 2;
+		}
+
+	},
+
+	MAKE_LIST(0, 1) {
+
+		@Override
+		public int getStackRemove(int i) {
+			return i;
+		}
+
+	},
+	MAKE_TUPLE(0, 1) {
+		@Override
+		public int getStackRemove(int i) {
+			return i;
+		}
+	},
+	MAKE_MAP(0, 1) {
+		@Override
+		public int getStackChange(int i) {
+			return i * 2;
+		}
+	},
+	MAKE_CLASS(0, 0), MAKE_FUNC(0, 0), MAKE_METH(1, 0),
+
+	TYPEOF(1, 1), INSTANCEOF(2, 1), ISDERIVEDOF(2, 1),
+
+	YIELD(1, 1), THROW(1, 0),
+
+	START_TRY(0, 0), END_TRY(0, 0),
+
+	IMPORT(0, 1), IMPORT_SAVE(2, 0),
+
+	SWITCH(1, 0),
+
+	END_FINALLY(2, 0),
+
+	SUPER(0, 1);
+
+	private int stackRemove;
+
+	private int stackAdd;
+
+	XOpcode(int stackRemove, int stackAdd) {
+		this.stackRemove = stackRemove;
+		this.stackAdd = stackAdd;
 	}
-	
-	public int getStackChange(){
-		return stackChange;
+
+	public int getStackChange(int i) {
+		return getStackAdd(i) - getStackRemove(i);
 	}
-	
-	public int getStackChange(int i){
-		return stackChange;
+
+	public int getStackAdd(int i) {
+		return stackAdd;
 	}
-	
+
+	public int getStackRemove(int i) {
+		return stackRemove;
+	}
+
 }
